@@ -27,7 +27,7 @@
 
 ## Features
 
-- TODO
+- Masse
 
 ## Requirements
 
