@@ -1,10 +1,9 @@
 from datetime import datetime
 
 import pytest
-
-from ssb_konjunk_fagfunksjoner.prompts import days_in_month
-from ssb_konjunk_fagfunksjoner.prompts import extract_start_end_dates
-from ssb_konjunk_fagfunksjoner.prompts import next_month
+from ssb_konjunk.prompts import days_in_month
+from ssb_konjunk.prompts import extract_start_end_dates
+from ssb_konjunk.prompts import next_month
 
 """Test of function days in month"""
 
