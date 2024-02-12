@@ -1,8 +1,9 @@
 """Test cases for the __main__ module."""
+
 import pytest
 from click.testing import CliRunner
 
-from ssb_konjunk import __main__
+from ssb_konjunk_fagfunksjoner import __main__
 
 
 @pytest.fixture()

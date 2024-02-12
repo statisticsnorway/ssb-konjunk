@@ -1,4 +1,4 @@
-from ssb_konjunk.functions import example_function
+from ssb_konjunk_fagfunksjoner.functions import example_function
 
 
 def test_example_function() -> None:

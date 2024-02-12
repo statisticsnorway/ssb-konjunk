@@ -5,6 +5,8 @@ https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 
 """
 
+import pandas as pd
+
 
 def example_function(number1: int, number2: int) -> str:
     """Compare two integers.
@@ -33,3 +35,20 @@ def example_function(number1: int, number2: int) -> str:
         return f"{number1} is less than {number2}"
 
     return f"{number1} is greater than or equal to {number2}"
+
+
+def remove_dot_nace(df: pd.DataFrame, column_name: str) -> pd.DataFrame:
+    """Function to remove dot from nace. Vof uses for example 47.111 where as som bases have 47111, so its sometimes nessecary to remove the dot.
+
+    Parameters
+    ----------
+        df (pd.DataFrame): Pandas df to work on.
+        column_name (str): String of column name for containing nace with dot.
+
+    Returns:
+    -------
+        df (pd.DataFrame): Pandas df without dot in nace column.
+    """
+    df = df.copy()
+    df[column_name] = df[column_name].str.replace(r"^(..).(.*)$", r"\1\2", regex=True)
+    return df
