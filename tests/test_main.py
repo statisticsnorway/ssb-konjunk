@@ -2,6 +2,7 @@
 
 import pytest
 from click.testing import CliRunner
+
 from ssb_konjunk import __main__
 
 
