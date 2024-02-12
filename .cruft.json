@@ -1,0 +1,30 @@
+{
+  "template": "https://github.com/statisticsnorway/ssb-pypitemplate.git",
+  "commit": "6f05a1849ca259b5b19e9c213b41d42cab872644",
+  "checkout": "2023.11.15",
+  "context": {
+    "cookiecutter": {
+      "project_name": "ssb-konjunk",
+      "package_name": "ssb_konjunk",
+      "friendly_name": "SSB Konjunk",
+      "copyright_owner": "Statistics Norway",
+      "copyright_year": "2024",
+      "author": "Edvard Garmannslund",
+      "email": "ged@ssb.no",
+      "github_organization": "statisticsnorway",
+      "version": "0.0.0",
+      "license": "MIT",
+      "development_status": "Development Status :: 1 - Planning",
+      "code_quality_level": "Medium",
+      "_copy_without_render": [
+        "*.rst_t"
+      ],
+      "_jinja2_env_vars": {
+        "lstrip_blocks": true,
+        "trim_blocks": true
+      },
+      "_template": "https://github.com/statisticsnorway/ssb-pypitemplate.git"
+    }
+  },
+  "directory": null
+}
