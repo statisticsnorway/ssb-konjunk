@@ -5,8 +5,6 @@ https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 
 """
 
-import pandas as pd
-
 
 def example_function(number1: int, number2: int) -> str:
     """Compare two integers.
