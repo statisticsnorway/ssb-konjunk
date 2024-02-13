@@ -79,7 +79,7 @@ def next_month(desired_year: int, desired_month: int) -> str:
     return next_month_str
 
 
-def input_valid_int() -> int:
+def _input_valid_int() -> int:
     """Input function for valid int.
 
     Returns:
