@@ -7,7 +7,6 @@ import re
 from calendar import monthrange
 from datetime import datetime
 from datetime import timedelta
-from _functions import input_valid_int
 
 
 def days_in_month(year: int, month: int) -> list[str]:
@@ -80,6 +79,26 @@ def next_month(desired_year: int, desired_month: int) -> str:
     return next_month_str
 
 
+def input_valid_int() -> int:
+    """Input function for valid int.
+
+    Returns:
+    -------
+        valid_int (int): valid_int
+    """
+    # Get the desired year from the user
+    while True:
+        user_input = input("Input: ")
+
+        try:
+            valid_int = int(user_input)
+            break  # Break the loop if a valid integer is entered
+        except ValueError:
+            print("Vennligst skriv inn ett gyldig tall som,", 42)
+
+    return valid_int
+
+
 def input_year() -> int:
     """Input function for year.
 
@@ -88,14 +107,14 @@ def input_year() -> int:
         year (int): year
     """
     # Get the desired year from the user
-    print("Skriv inn år i format YYYY som",2024)
+    print("Skriv inn år i format YYYY som", 2024)
     while True:
         year = input_valid_int()
         if 2000 <= year <= 2030:
             return year
         else:
-            print("Er du sikker på at du skal kjøre statistikk for dette året,",year)
-            if input("y/n")=="y":
+            print("Er du sikker på at du skal kjøre statistikk for dette året,", year)
+            if input("y/n") == "y":
                 return year
 
 
@@ -107,7 +126,7 @@ def input_month() -> int:
         month (int): month
     """
     # Get the desired month from the user
-    print("Skriv inn måned i format m, som:",8)
+    print("Skriv inn måned i format m, som:", 8)
     while True:
         month = input_valid_int()
         if 1 <= month <= 12:
@@ -123,7 +142,7 @@ def input_term() -> int:
     -------
         term (int): term
     """
-    print("Skriv inn termin i format t, som:",3)
+    print("Skriv inn termin i format t, som:", 3)
     while True:
         term = input_valid_int()
         if 1 <= term <= 6:
@@ -139,7 +158,7 @@ def input_quarter() -> int:
     -------
         quarter (int): quarter
     """
-    print("Skriv inn kvartal i format q, som:",2)
+    print("Skriv inn kvartal i format q, som:", 2)
     while True:
         quarter = input_valid_int()
         if 1 <= quarter <= 4:
