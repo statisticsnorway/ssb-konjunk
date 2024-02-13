@@ -13,14 +13,21 @@ delete the .rst file afterwards.
 
 ```{eval-rst}
 ssb\_konjunk package
-=============================================================================
+====================
 
 
 ssb\_konjunk.functions module
------------------------------------------------------------------------------
+-----------------------------
 
 .. automodule:: ssb_konjunk.functions
    :members:
    :undoc-members:
    :show-inheritance:
-```
+
+ssb\_konjunk.prompts module
+---------------------------
+
+.. automodule:: ssb_konjunk.prompts
+   :members:
+   :undoc-members:
+   :show-inheritance:

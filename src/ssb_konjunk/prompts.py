@@ -79,67 +79,92 @@ def next_month(desired_year: int, desired_month: int) -> str:
     return next_month_str
 
 
-def input_desired_year() -> int:
-    """Get the desired year from the user.
+def _input_valid_int() -> int:
+    """Input function for valid int.
 
     Returns:
     -------
-        desired_year (int): year
+        valid_int (int): valid_int
     """
     # Get the desired year from the user
     while True:
-        user_input = input("Skriv inn år(åååå): ")
+        user_input = input("Input: ")
 
         try:
-            desired_year = int(user_input)
+            valid_int = int(user_input)
             break  # Break the loop if a valid integer is entered
         except ValueError:
-            print("Vennligst sett inn gyldig år, som:", 2023)
+            print("Vennligst skriv inn ett gyldig tall som,", 42)
 
-    return desired_year
+    return valid_int
 
 
-def input_desired_month() -> int:
-    """Get the desired month from the user.
+def input_year() -> int:
+    """Input function for year.
 
     Returns:
     -------
-        desired_month (int): month
+        year (int): year
     """
-    # Get the desired month from the user
+    # Get the desired year from the user
+    print("Skriv inn år i format YYYY som", 2024)
     while True:
-        user_input = input("Skriv inn måned(m): ")
-
-        try:
-            desired_month = int(user_input)
-            print("Leter i måned:", desired_month)
-            break  # Break the loop if a valid integer is entered
-        except ValueError:
-            print("Vennligst sett inn gyldig måned, som:", 1)
-
-    return desired_month
+        year = _input_valid_int()
+        if 2000 <= year <= 2030:
+            return year
+        else:
+            print("Er du sikker på at du skal kjøre statistikk for dette året,", year)
+            if input("y/n") == "y":
+                return year
 
 
-def input_desired_term() -> int:
-    """Get the desired term from the user.
+def input_month() -> int:
+    """Input function for month.
 
     Returns:
     -------
-        desired_term (int): term
+        month (int): month
     """
     # Get the desired month from the user
+    print("Skriv inn måned i format m, som:", 8)
     while True:
-        user_input = input("Skriv inn termin(t): ")
+        month = _input_valid_int()
+        if 1 <= month <= 12:
+            return month
+        else:
+            print("Ikke en gyldig måned, vennligst skriv inn et tall fra 1 til 12.")
 
-        try:
-            desired_term = int(user_input)
-            if desired_term < 7:
-                print("Leter i termin:", desired_term)
-                break  # Break the loop if a valid integer is entered
-        except ValueError:
-            print("Vennligst sett inn gyldig termin, som:", 1)
 
-    return desired_term
+def input_term() -> int:
+    """Input function for term.
+
+    Returns:
+    -------
+        term (int): term
+    """
+    print("Skriv inn termin i format t, som:", 3)
+    while True:
+        term = _input_valid_int()
+        if 1 <= term <= 6:
+            return term
+        else:
+            print("Ikke en gyldig termin, vennligst skriv inn et tall fra 1 til 6.")
+
+
+def input_quarter() -> int:
+    """Input function for quarter.
+
+    Returns:
+    -------
+        quarter (int): quarter
+    """
+    print("Skriv inn kvartal i format q, som:", 2)
+    while True:
+        quarter = _input_valid_int()
+        if 1 <= quarter <= 4:
+            return quarter
+        else:
+            print("Ikke en gyldig kvartal, vennligst skriv inn et tall fra 1 til 4.")
 
 
 def months_in_term(term: int) -> tuple[int, int]:
