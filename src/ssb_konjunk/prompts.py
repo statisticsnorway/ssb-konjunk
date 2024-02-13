@@ -109,7 +109,7 @@ def input_year() -> int:
     # Get the desired year from the user
     print("Skriv inn år i format YYYY som", 2024)
     while True:
-        year = input_valid_int()
+        year = _input_valid_int()
         if 2000 <= year <= 2030:
             return year
         else:
@@ -128,7 +128,7 @@ def input_month() -> int:
     # Get the desired month from the user
     print("Skriv inn måned i format m, som:", 8)
     while True:
-        month = input_valid_int()
+        month = _input_valid_int()
         if 1 <= month <= 12:
             return month
         else:
@@ -144,7 +144,7 @@ def input_term() -> int:
     """
     print("Skriv inn termin i format t, som:", 3)
     while True:
-        term = input_valid_int()
+        term = _input_valid_int()
         if 1 <= term <= 6:
             return term
         else:
@@ -160,7 +160,7 @@ def input_quarter() -> int:
     """
     print("Skriv inn kvartal i format q, som:", 2)
     while True:
-        quarter = input_valid_int()
+        quarter = _input_valid_int()
         if 1 <= quarter <= 4:
             return quarter
         else:
