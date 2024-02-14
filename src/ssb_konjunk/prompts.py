@@ -9,82 +9,11 @@ from datetime import datetime
 from datetime import timedelta
 
 
-def days_in_month(year: int, month: int) -> list[str]:
-    """Function to get number of days in month.
-
-    Parameters
-    ----------
-        year (int): Year.
-        month (int): Month.
-
-    Returns:
-    -------
-        days_list (list): List with days in month.
-    """
-    num_days = monthrange(year, month)[
-        1
-    ]  # Get the number of days in the specified month
-    days_list = [f"{year}-{month:02d}-{day:02d}" for day in range(1, num_days + 1)]
-    return days_list
-
-
-def extract_start_end_dates(file_name: str) -> tuple[datetime, datetime]:
-    """Function to extract start and end dates from file name.
-
-    Parameters
-    ----------
-        file_name (str): String value with name of file.
-
-    Returns:
-    -------
-        start_date (datetime): Start date of file.
-        end_date (datetime): End date of file.
-    """
-    match = re.search(r"_p(\d{4})-(\d{2})-(\d{2})_p(\d{4})-(\d{2})-(\d{2})_", file_name)
-    if match:
-        start_date = datetime.strptime(
-            f"{match.group(1)}-{match.group(2)}-{match.group(3)}", "%Y-%m-%d"
-        )
-        end_date = datetime.strptime(
-            f"{match.group(4)}-{match.group(5)}-{match.group(6)}", "%Y-%m-%d"
-        )
-    return start_date, end_date
-
-
-def next_month(desired_year: int, desired_month: int) -> str:
-    """Get the next month of a given year and month.
-
-    Parameters
-    ----------
-        desired_year (int): year
-        desired_month (int): month
-
-    Returns:
-    -------
-        next_month_str (str): next month in the format 'YYYY-MM'
-    """
-    # Create a datetime object for the desired year and month
-    current_date = datetime(desired_year, desired_month, 1)
-
-    # Add one month to the current date
-    next_date = current_date + timedelta(days=32)
-
-    # Get the year and month of the next date
-    next_year = next_date.year
-    next_month = next_date.month
-
-    # Format the year and month as 'YYYY-MM'
-    next_month_str = f"{next_year}-{next_month:02d}"
-
-    return next_month_str
-
-
-def input_valid_int() -> int:
+def _input_valid_int() -> int:
     """Input function for valid int.
 
     Returns:
-    -------
-        valid_int (int): valid_int
+        valid_int: valid_int
     """
     # Get the desired year from the user
     while True:
@@ -103,13 +32,12 @@ def input_year() -> int:
     """Input function for year.
 
     Returns:
-    -------
-        year (int): year
+        year: Year as int
     """
     # Get the desired year from the user
     print("Skriv inn år i format YYYY som", 2024)
     while True:
-        year = input_valid_int()
+        year = _input_valid_int()
         if 2000 <= year <= 2030:
             return year
         else:
@@ -122,13 +50,12 @@ def input_month() -> int:
     """Input function for month.
 
     Returns:
-    -------
-        month (int): month
+        month: month
     """
     # Get the desired month from the user
     print("Skriv inn måned i format m, som:", 8)
     while True:
-        month = input_valid_int()
+        month = _input_valid_int()
         if 1 <= month <= 12:
             return month
         else:
@@ -139,12 +66,11 @@ def input_term() -> int:
     """Input function for term.
 
     Returns:
-    -------
-        term (int): term
+        term: term
     """
     print("Skriv inn termin i format t, som:", 3)
     while True:
-        term = input_valid_int()
+        term = _input_valid_int()
         if 1 <= term <= 6:
             return term
         else:
@@ -155,28 +81,89 @@ def input_quarter() -> int:
     """Input function for quarter.
 
     Returns:
-    -------
-        quarter (int): quarter
+        quarter: quarter
     """
     print("Skriv inn kvartal i format q, som:", 2)
     while True:
-        quarter = input_valid_int()
+        quarter = _input_valid_int()
         if 1 <= quarter <= 4:
             return quarter
         else:
             print("Ikke en gyldig kvartal, vennligst skriv inn et tall fra 1 til 4.")
 
 
+def days_in_month(year: int, month: int) -> list[str]:
+    """Function to get number of days in month.
+
+    Args:
+        year: Year.
+        month: Month.
+
+    Returns:
+        days_list: List with days in month.
+    """
+    num_days = monthrange(year, month)[
+        1
+    ]  # Get the number of days in the specified month
+    days_list = [f"{year}-{month:02d}-{day:02d}" for day in range(1, num_days + 1)]
+    return days_list
+
+
+def extract_start_end_dates(file_name: str) -> tuple[datetime, datetime]:
+    """Function to extract start and end dates from file name.
+
+    Args:
+        file_name: String value with name of file.
+
+    Returns:
+        start_date: Start date of file.
+        end_date: End date of file.
+    """
+    match = re.search(r"_p(\d{4})-(\d{2})-(\d{2})_p(\d{4})-(\d{2})-(\d{2})_", file_name)
+    if match:
+        start_date = datetime.strptime(
+            f"{match.group(1)}-{match.group(2)}-{match.group(3)}", "%Y-%m-%d"
+        )
+        end_date = datetime.strptime(
+            f"{match.group(4)}-{match.group(5)}-{match.group(6)}", "%Y-%m-%d"
+        )
+    return start_date, end_date
+
+
+def next_month(desired_year: int, desired_month: int) -> str:
+    """Get the next month of a given year and month.
+
+    Args:
+        desired_year: year
+        desired_month: month
+
+    Returns:
+        next_month_str: next month in the format 'YYYY-MM'
+    """
+    # Create a datetime object for the desired year and month
+    current_date = datetime(desired_year, desired_month, 1)
+
+    # Add one month to the current date
+    next_date = current_date + timedelta(days=32)
+
+    # Get the year and month of the next date
+    next_year = next_date.year
+    next_month = next_date.month
+
+    # Format the year and month as 'YYYY-MM'
+    next_month_str = f"{next_year}-{next_month:02d}"
+
+    return next_month_str
+
+
 def months_in_term(term: int) -> tuple[int, int]:
     """Gives out months as ints from term as int.
 
-    Parameters
-    ----------
-        term (int): term
+    Args:
+        term: term
 
     Returns:
-    -------
-        month_term_dict[term] (tuple[int]): months
+        month_term_dict[term]: months
     """
     month_term_dict = {
         1: (1, 2),
@@ -195,15 +182,13 @@ def find_file_for_month_daily(
 ) -> str:
     """Function to retrieve spesific file str for period form list of file strings.
 
-    Parameters
-    ----------
-        files (list[str]): List of file strings.
-        desired_year (int): Int to represent year(yyyy).
-        desired_month (int): Int to represent a month(m).
+    Args:
+        files: List of file strings.
+        desired_year: Int to represent year(yyyy).
+        desired_month: Int to represent a month(m).
 
     Returns:
-    -------
-        file (str): Filename on linux, Filepath on dapla
+        file: Filename on linux, Filepath on dapla
     """
     for file in files:
         if (
