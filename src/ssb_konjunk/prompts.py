@@ -155,6 +155,7 @@ def next_month(desired_year: int, desired_month: int) -> str:
     return next_month_str
 
 
+
 def months_in_term(term: int) -> tuple[int, int]:
     """Gives out months as ints from term as int.
 
