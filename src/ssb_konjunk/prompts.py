@@ -13,7 +13,7 @@ def _input_valid_int() -> int:
     """Input function for valid int.
 
     Returns:
-        valid_int: valid_int
+        int: Return only valid int.
     """
     # Get the desired year from the user
     while True:
@@ -32,7 +32,7 @@ def input_year() -> int:
     """Input function for year.
 
     Returns:
-        year: Year as int
+        int: Year as int
     """
     # Get the desired year from the user
     print("Skriv inn år i format YYYY som", 2024)
@@ -50,7 +50,7 @@ def input_month() -> int:
     """Input function for month.
 
     Returns:
-        month: month
+        int: month
     """
     # Get the desired month from the user
     print("Skriv inn måned i format m, som:", 8)
@@ -66,7 +66,7 @@ def input_term() -> int:
     """Input function for term.
 
     Returns:
-        term: term
+        int: term
     """
     print("Skriv inn termin i format t, som:", 3)
     while True:
@@ -81,7 +81,7 @@ def input_quarter() -> int:
     """Input function for quarter.
 
     Returns:
-        quarter: quarter
+        int: quarter
     """
     print("Skriv inn kvartal i format q, som:", 2)
     while True:
@@ -100,7 +100,7 @@ def days_in_month(year: int, month: int) -> list[str]:
         month: Month.
 
     Returns:
-        days_list: List with days in month.
+        list: List with days in month.
     """
     num_days = monthrange(year, month)[
         1
@@ -116,8 +116,7 @@ def extract_start_end_dates(file_name: str) -> tuple[datetime, datetime]:
         file_name: String value with name of file.
 
     Returns:
-        start_date: Start date of file.
-        end_date: End date of file.
+        tuple: Tuple with two datetime objects
     """
     match = re.search(r"_p(\d{4})-(\d{2})-(\d{2})_p(\d{4})-(\d{2})-(\d{2})_", file_name)
     if match:
@@ -138,7 +137,7 @@ def next_month(desired_year: int, desired_month: int) -> str:
         desired_month: month
 
     Returns:
-        next_month_str: next month in the format 'YYYY-MM'
+        str: next month in the format 'YYYY-MM'
     """
     # Create a datetime object for the desired year and month
     current_date = datetime(desired_year, desired_month, 1)
@@ -163,7 +162,7 @@ def months_in_term(term: int) -> tuple[int, int]:
         term: term
 
     Returns:
-        month_term_dict[term]: months
+        tuple: months
     """
     month_term_dict = {
         1: (1, 2),
@@ -188,7 +187,7 @@ def find_file_for_month_daily(
         desired_month: Int to represent a month(m).
 
     Returns:
-        file: Filename on linux, Filepath on dapla
+        str: Filename on linux, Filepath on dapla
     """
     for file in files:
         if (
