@@ -174,14 +174,18 @@ def find_file_for_month_daily(
 
 
 def delta_month(month: int, periods: int) -> int:
-    """Function to shift month backwards or forward
+    """Function to shift month backwards or forward.
 
     Args:
         month: Current month you are using.
         periods: Periods you want to move, can be positive or negative int.
 
     Returns:
-        new_month: Month we have shifted to.
+        int: Month we have shifted to.
+
+    Raises:
+        ValueError: If periods are are more or less than a year.
+        ValueError: If period is 0.
     """
     if periods < -11 or periods > 11:
         raise ValueError(
