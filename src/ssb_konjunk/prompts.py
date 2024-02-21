@@ -6,7 +6,6 @@ The functions should be used to prompt which period to read files from og which 
 import re
 from calendar import monthrange
 from datetime import datetime
-from datetime import timedelta
 
 
 def _input_valid_int() -> int:
@@ -129,32 +128,6 @@ def extract_start_end_dates(file_name: str) -> tuple[datetime, datetime]:
     return start_date, end_date
 
 
-def next_month(desired_year: int, desired_month: int) -> str:
-    """Get the next month of a given year and month.
-
-    Args:
-        desired_year: year
-        desired_month: month
-
-    Returns:
-        str: next month in the format 'YYYY-MM'
-    """
-    # Create a datetime object for the desired year and month
-    current_date = datetime(desired_year, desired_month, 1)
-
-    # Add one month to the current date
-    next_date = current_date + timedelta(days=32)
-
-    # Get the year and month of the next date
-    next_year = next_date.year
-    next_month = next_date.month
-
-    # Format the year and month as 'YYYY-MM'
-    next_month_str = f"{next_year}-{next_month:02d}"
-
-    return next_month_str
-
-
 def months_in_term(term: int) -> tuple[int, int]:
     """Gives out months as ints from term as int.
 
@@ -198,3 +171,31 @@ def find_file_for_month_daily(
         ):
             break
     return file
+
+
+def delta_month(month: int, periods: int) -> int:
+    """Function to shift month backwards or forward
+
+    Args:
+        month: Current month you are using.
+        periods: Periods you want to move, can be positive or negative int.
+
+    Returns:
+        new_month: Month we have shifted to.
+    """
+    if periods < -11 or periods > 11:
+        raise ValueError(
+            "Input periods must be between -11 and 11. If youre doing a going a year back in time, please change year."
+        )
+    elif periods == 0:
+        raise ValueError("Input periods is 0, you should remove the function!")
+    else:
+        # Taking period adding periods.
+        new_month = month + (periods)
+        # If new_month is above twelve, i take negative twelve to get month from new year.
+        if new_month > 12:
+            new_month = new_month - 12
+        # If new_month is below 1, I take 12 negative new_month. This should give the right month from last year.
+        elif new_month < 1:
+            new_month = new_month + 12
+        return new_month
