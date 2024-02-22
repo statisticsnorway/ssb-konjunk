@@ -3,8 +3,8 @@ from datetime import datetime
 import pytest
 
 from ssb_konjunk.prompts import days_in_month
+from ssb_konjunk.prompts import delta_month
 from ssb_konjunk.prompts import extract_start_end_dates
-from ssb_konjunk.prompts import next_month
 
 """Test of function days in month"""
 
@@ -73,28 +73,20 @@ def test_extract_start_end_dates_valid() -> None:
     assert end_date == expected_end_date
 
 
-"""Tests of function next_month"""
+"""Test of function delta_month"""
 
 
-def test_next_month_valid() -> None:
-    # Test with a valid year and month
-    desired_year = 2023
-    desired_month = 11
-    expected_next_month = "2023-12"
+def test_delta_month() -> None:
+    # Test for valid change forward in time
+    assert delta_month(6, 3) == 9
+    # Test for valid change backwards in time.
+    assert delta_month(6, -3) == 3
+    # Test for valid change past 12.
+    assert delta_month(11, 3) == 2
+    # Test for valid change past 1.
+    assert delta_month(1, -2) == 11
 
-    assert next_month(desired_year, desired_month) == expected_next_month
-
-
-def test_next_month_edge_case() -> None:
-    # Test with December, expecting January of the next year
-    desired_year = 2022
-    desired_month = 12
-    expected_next_month = "2023-01"
-
-    assert next_month(desired_year, desired_month) == expected_next_month
-
-
-def test_next_month_invalid() -> None:
-    # Test with an invalid month (13), expecting an error
-    with pytest.raises(ValueError, match="month must be in 1..12"):
-        next_month(2022, 13)
+    with pytest.raises(ValueError):
+        delta_month(12, -12)
+    with pytest.raises(ValueError):
+        delta_month(12, 0)
