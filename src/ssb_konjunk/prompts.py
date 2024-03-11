@@ -203,3 +203,37 @@ def delta_month(month: int, periods: int) -> int:
         elif new_month < 1:
             new_month = new_month + 12
         return new_month
+
+
+def iterate_years_months(
+    start_year: int, end_year: int, start_month: int, end_month: int
+) -> tuple:
+    """Function to iterate over years and month.
+
+    Allows you to select start year, start month, end year and end month
+
+    Args:
+        start_year: Int for start year.
+        start_month: Int for start month.
+        end_year: Int for end year.
+        end_month: Int for end month.
+
+    Yields:
+        tuple: A tuple containing the year and month for each combination.
+    """
+    if start_year > end_year:
+        raise ValueError("Start year must be less than or equal to end year")
+    if start_month < 1 or start_month > 12 or end_month < 1 or end_month > 12:
+        raise ValueError("Month must be between 1 and 12")
+    if start_year == end_year and start_month > end_month:
+        raise ValueError(
+            "If iterating in same year start month must be less than end month."
+        )
+
+    for year in range(start_year, end_year + 1):
+        for month in range(1, 13):
+            if (year == start_year and month < start_month) or (
+                year == end_year and month > end_month
+            ):
+                continue
+            yield year, month

@@ -5,6 +5,7 @@ import pytest
 from ssb_konjunk.prompts import days_in_month
 from ssb_konjunk.prompts import delta_month
 from ssb_konjunk.prompts import extract_start_end_dates
+from ssb_konjunk.prompts import iterate_years_months
 
 """Test of function days in month"""
 
@@ -90,3 +91,58 @@ def test_delta_month() -> None:
         delta_month(12, -12)
     with pytest.raises(ValueError):
         delta_month(12, 0)
+
+
+"""Test of function iterate_years_months"""
+
+
+def test_iterate_years_months_full_range():
+    # Test when providing a full range of years and months
+    expected_output = [
+        (2024, 1),
+        (2024, 2),
+        (2024, 3),
+        (2024, 4),
+        (2024, 5),
+        (2024, 6),
+        (2024, 7),
+        (2024, 8),
+        (2024, 9),
+        (2024, 10),
+        (2024, 11),
+        (2024, 12),
+        (2025, 1),
+    ]
+    assert list(iterate_years_months(2024, 2025, 1, 1)) == expected_output
+
+
+def test_iterate_years_months_partial_range():
+    # Test when providing a partial range of years and months
+    expected_output = [(2023, 11), (2023, 12), (2024, 1), (2024, 2)]
+    assert list(iterate_years_months(2023, 2024, 11, 2)) == expected_output
+
+
+def test_iterate_years_months_one_period():
+    # Test when providing a partial range of years and months
+    expected_output = [(2024, 2)]
+    assert list(iterate_years_months(2024, 2024, 2, 2)) == expected_output
+
+
+def test_iterate_years_months_invalid_range():
+    # Test when providing an invalid range where start year > end year
+    with pytest.raises(ValueError):
+        list(iterate_years_months(2024, 2022, 1, 12))
+
+    # Test when providing an invalid range where start month > end month
+    with pytest.raises(ValueError):
+        list(iterate_years_months(2024, 2024, 6, 1))
+
+
+def test_iterate_years_months_invalid_month():
+    # Test when providing an invalid month (greater than 12)
+    with pytest.raises(ValueError):
+        list(iterate_years_months(2022, 2024, 1, 13))
+
+    # Test when providing an invalid month (less than 1)
+    with pytest.raises(ValueError):
+        list(iterate_years_months(2022, 2024, 0, 12))
