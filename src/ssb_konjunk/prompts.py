@@ -220,6 +220,11 @@ def iterate_years_months(
 
     Yields:
         any: A tuple containing the year and month for each combination.
+
+    Raises:
+        ValueError: If start year is bigger than end year.
+        ValueError: If month is invalid number.
+        ValueError: If end month is bigger than start and only iterating on one year.
     """
     if start_year > end_year:
         raise ValueError("Start year must be less than or equal to end year")
