@@ -6,6 +6,7 @@ The functions should be used to prompt which period to read files from og which 
 import re
 from calendar import monthrange
 from datetime import datetime
+from typing import Generator, Tuple
 
 
 def _input_valid_int() -> int:
@@ -207,7 +208,7 @@ def delta_month(month: int, periods: int) -> int:
 
 def iterate_years_months(
     start_year: int, end_year: int, start_month: int, end_month: int
-) -> tuple:
+) -> Generator[Tuple[int, int], None, None]:
     """Function to iterate over years and month.
 
     Allows you to select start year, start month, end year and end month

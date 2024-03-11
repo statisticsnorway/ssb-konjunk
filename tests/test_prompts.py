@@ -96,7 +96,7 @@ def test_delta_month() -> None:
 """Test of function iterate_years_months"""
 
 
-def test_iterate_years_months_full_range():
+def test_iterate_years_months_full_range() -> None:
     # Test when providing a full range of years and months
     expected_output = [
         (2024, 1),
@@ -116,19 +116,19 @@ def test_iterate_years_months_full_range():
     assert list(iterate_years_months(2024, 2025, 1, 1)) == expected_output
 
 
-def test_iterate_years_months_partial_range():
+def test_iterate_years_months_partial_range() -> None:
     # Test when providing a partial range of years and months
     expected_output = [(2023, 11), (2023, 12), (2024, 1), (2024, 2)]
     assert list(iterate_years_months(2023, 2024, 11, 2)) == expected_output
 
 
-def test_iterate_years_months_one_period():
+def test_iterate_years_months_one_period() -> None:
     # Test when providing a partial range of years and months
     expected_output = [(2024, 2)]
     assert list(iterate_years_months(2024, 2024, 2, 2)) == expected_output
 
 
-def test_iterate_years_months_invalid_range():
+def test_iterate_years_months_invalid_range() -> None:
     # Test when providing an invalid range where start year > end year
     with pytest.raises(ValueError):
         list(iterate_years_months(2024, 2022, 1, 12))
@@ -138,7 +138,7 @@ def test_iterate_years_months_invalid_range():
         list(iterate_years_months(2024, 2024, 6, 1))
 
 
-def test_iterate_years_months_invalid_month():
+def test_iterate_years_months_invalid_month() -> None:
     # Test when providing an invalid month (greater than 12)
     with pytest.raises(ValueError):
         list(iterate_years_months(2022, 2024, 1, 13))
