@@ -14,18 +14,16 @@ def get_xml_root(xml_file):
     return ET.fromstring(single_xml)
 
 
-def return_txt_xml(root, child):
+def return_txt_xml(root: ET.Element, child: str):
     """
-    Function to return value from certain child element in root of xml object.
+    Function to return text value from child element in xml file.
 
-    Parameters
-    ----------
-    root (xml object of type ET package): Root with all data stored in a branch like structure.
-    child (str): String value to find child element which contains a value.
+    Args:
+        root: Root with all data stored in a branch like structure.
+        child: String value to find child element which contains a value.
 
-    returns
-    -------
-        returns(str): Returns string value from child element.
+    Returns:
+        str: Returns string value from child element.
     """
     for element in root.iter(child):
         return element.text
@@ -72,56 +70,52 @@ def _transform_dict_checkbox_var(
 
 @dataclass
 class MetaData:
-    """
-    Class object to handle metadata from a reportee
-
-    Variables
-    ---------
-    xml_file (str): String with path to xml file with metadata about reportee and the data collection process.
-    delregNr (str): String containing a number to id the data collection.
-    periodeFomDato (str): String for date of start of period for the data collection.
-    periodeTomDato (str): String for data of end of period for the data collection.
-    enhetsNavn (str): String for the name of the reportee.
-    enhetsType (str): String to describe if the reportee is a "foretak" or "virksomhet".
-    enhetsOrgNr (str): String for org number for the reportee
-    reporteeOrgNr (str): String for orb number who reported the data, can be different, since sometimes this is outsourced.
-    kontaktPersonNavn (str): String with name of person who reported the data.
-    kontaktPersonEpost (str): String with email of person who reported the data.
-    kontaktPersonTelefon (str): String with phone number of person who reported the data.
-    kontaktInfoKommentar (str): String containing optional comment from reportee.
-
-    """
+    """Class object to handle metadata from a reportee."""
 
     # folder_path: str = None
     # xml_file: str = None
     raNummer: str = None
-    delregNr: str = None
-    periodeFomDato: str = None
-    periodeTomDato: str = None
-    enhetsNavn: str = None
-    enhetsType: str = None
-    enhetsOrgNr: str = None
-    reporteeOrgNr: str = None
-    kontaktPersonNavn: str = None
-    kontaktPersonEpost: str = None
-    kontaktPersonTelefon: str = None
-    kontaktInfoKommentar: str = None
+    """str: String containing a number to id the collection schema."""
 
-    def _get_metadata(self, root):
+    delregNr: str = None
+    """str: String containing a number to id the data collection."""
+
+    periodeFomDato: str = None
+    """str: String for date of start of period for the data collection."""
+
+    periodeTomDato: str = None
+    """str: String for data of end of period for the data collection."""
+
+    enhetsNavn: str = None
+    """str: String for the name of the reportee."""
+
+    enhetsType: str = None
+    """str: String to describe if the reportee is a "foretak" or "virksomhet"."""
+
+    enhetsOrgNr: str = None
+    """str: String for org number for the reportee"""
+
+    reporteeOrgNr: str = None
+    """str: String for orb number who reported the data, can be different, since sometimes this is outsourced."""
+
+    kontaktPersonNavn: str = None
+    """str: String with name of person who reported the data."""
+
+    kontaktPersonEpost: str = None
+    """str: String with email of person who reported the data."""
+
+    kontaktPersonTelefon: str = None
+    """str: String with phone number of person who reported the data."""
+
+    kontaktInfoKommentar: str = None
+    """str: String containing optional comment from reportee."""
+
+    def _get_metadata(self, root: ET.Element):
         """
         Function to set metadata from xml file into the variebels in the object folder.
 
-        Parameters
-        ----------
-        self (class object): Folder class object.
-
-            variable from self
-            ------------------
-            xml_file (str): String with path to xml_file containing metadata about reportee.
-
-        returns
-        -------
-            returns(class object): Returns self with filled in variabels.
+        Args:
+            root: Root of a xml file.
         """
         if root is None:
             print(f"Mangler xml fil")
@@ -142,33 +136,56 @@ class MetaData:
 
 @dataclass
 class Skjema:
+    """Dataclass to represent a schema from Altinn."""
+
     folder_path: str = None
+    """str: String to folder path for schema."""
+
     checkboxList: list = None
+    """list: List with strings representing vars that are checkboxes in Altinn3."""
+
     unique_code: bool = False
-    data_vars: list = None
+    """bool: Bool flag to mark wether the shcema uses unique codes for dummies."""
+
+    data_vars: dict = None
+    """dict: Dict with keys for vars that contain data, and value representing datatype."""
+
     value_vars: dict = None
+    """dict: Dict with string representing vars that are used for statistics."""
+
     xml_file: str = None
+    """str: String for xml filepath."""
+
     xml_root: ET.Element = None
+    """ET.Element: XML root."""
+
     metadata: MetaData = None
+    """MetaData: Object of type MetaData containing metadata."""
+
     data: dict = None
+    """dict: Dict with keys for data vars and value containing data values."""
+
     historical_data: dict = None
+    """dict: Dict with keys for pd.series name and values containing pd.series."""
+
     checks: List[Callable[[int], bool]] = None
+    """List[Callable[[int], bool]]: Callable list containing function to check data with."""
+
     editert_status: bool = False
+    """bool: Bool flag for wether data is validated."""
+
     editert_av: str = None
+    """str: String for name of person editing data."""
+
     editert_nar: str = None
+    """str: Timestamp for when data was edited."""
+    
     ueditert_verdi: dict = None
+    """dict: Dict with keys for data vars and values containing unedited data."""
 
     def get_filename_and_root(self):
         """
-        Function to get filename
-
-        Parameters
-        ----------
-        self (class object): Folder class object.
-
-            variable from self
-            ------------------
-            folder_path (str): String with path to folder containg files about and from one reportee
+        Function to get filename.
         """
         # This function fills inn attachment, xml_file and pdf
         for file in FileClient.ls(self.folder_path):
@@ -179,21 +196,20 @@ class Skjema:
     def get_metadata(self):
         """
         Function to set metadata from xml file into the variebels in the object skjema.
-
-        Parameters
-        ----------
-        self (class object): Skjema class object.
         """
         self.metadata = MetaData()
 
         self.metadata._get_metadata(self.xml_root)
         
     def get_data(self):
+        """
+        Function to get data from xml file.
+        """
         self.data = {}
-        for var in self.data_vars:
-            value = return_txt_xml(self.xml_root,var)
+        for key, val in self.data_vars.items():
+            value = return_txt_xml(self.xml_root,key)
             if value is not None:
-                self.data[var] = value
+                self.data[key] = val(value)
             
         if self.checkboxList is not None:
             for checkbox_var in self.checkboxList:
@@ -201,10 +217,16 @@ class Skjema:
         
         
     def get_historical_data(self):
+        """
+        Function to query historical data from parquet folder based on metadata.
+        """
         print("Ingen funksjon enda, ønsker å lese in listen med filmapper og query nødvendig data.")
                 
     
     def editer(self):
+        """
+        Function to check data. Controls data with functions from checks up against historical data.
+        """
         if return_txt_xml(self.xml_root,"editertData") is not None:
             self.editert_status = return_txt_xml(self.root,"editert_status")
             self.editert_av = return_txt_xml(self.root,"editert_av")
