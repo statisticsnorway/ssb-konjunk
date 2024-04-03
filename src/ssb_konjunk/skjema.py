@@ -8,7 +8,14 @@ from dapla import FileClient
 fs = FileClient.get_gcs_file_system()
 
 
-def get_xml_root(xml_file):
+def get_xml_root(xml_file: str) -> ET.Element:
+    """Funtion to get xml root on Dapla.
+    
+    Args:
+        xml_file: Strin value for xml filepath.
+    
+    Returns:
+        ET.Element: Root of xml file."""
     with fs.open(xml_file, mode="r") as f:
         single_xml = f.read()
     return ET.fromstring(single_xml)
@@ -133,26 +140,11 @@ class MetaData:
             self.kontaktPersonTelefon = return_txt_xml(root, "kontaktPersonTelefon")
             self.kontaktInfoKommentar = return_txt_xml(root, "kontaktInfoKommentar")
 
-
+            
 @dataclass
-class Skjema:
-    """Dataclass to represent a schema from Altinn."""
-
-    folder_path: str = None
-    """str: String to folder path for schema."""
-
-    checkboxList: list = None
-    """list: List with strings representing vars that are checkboxes in Altinn3."""
-
-    unique_code: bool = False
-    """bool: Bool flag to mark wether the shcema uses unique codes for dummies."""
-
-    data_vars: dict = None
-    """dict: Dict with keys for vars that contain data, and value representing datatype."""
-
-    value_vars: dict = None
-    """dict: Dict with string representing vars that are used for statistics."""
-
+class Reportee:
+    """Dataclass for a reportee singular schema from Altinn."""
+    
     xml_file: str = None
     """str: String for xml filepath."""
 
@@ -168,9 +160,6 @@ class Skjema:
     historical_data: dict = None
     """dict: Dict with keys for pd.series name and values containing pd.series."""
 
-    checks: List[Callable[[int], bool]] = None
-    """List[Callable[[int], bool]]: Callable list containing function to check data with."""
-
     editert_status: bool = False
     """bool: Bool flag for wether data is validated."""
 
@@ -183,15 +172,25 @@ class Skjema:
     ueditert_verdi: dict = None
     """dict: Dict with keys for data vars and values containing unedited data."""
 
-    def get_filename_and_root(self):
+
+    # def get_filename_and_root(self):
+    #     """
+    #     Function to get xml root.
+    #     """
+    #     # This function fills inn attachment, xml_file and pdf
+    #     for file in FileClient.ls(self.folder_path):
+    #         if file.endswith(".xml"):
+    #             self.xml_file = file
+    #             self.xml_root = get_xml_root(file)
+                
+
+    def get_root(self):
         """
-        Function to get filename.
+        Function to get xml root into class.
         """
         # This function fills inn attachment, xml_file and pdf
-        for file in FileClient.ls(self.folder_path):
-            if file.endswith(".xml"):
-                self.xml_file = file
-                self.xml_root = get_xml_root(file)
+        self.xml_root = get_xml_root(self.xml_file)
+
 
     def get_metadata(self):
         """
@@ -200,20 +199,24 @@ class Skjema:
         self.metadata = MetaData()
 
         self.metadata._get_metadata(self.xml_root)
-        
-    def get_data(self):
+
+
+    def get_data(self, data_vars: dict, checkboxList: list = None, unique_code: bool = False):
         """
         Function to get data from xml file.
         """
         self.data = {}
-        for key, val in self.data_vars.items():
+        # Dict contains variable names in key.
+        # And dtype in value.
+        for key, val in data_vars.items():
             value = return_txt_xml(self.xml_root,key)
             if value is not None:
+                # Setting dtype using val, value from dict.
                 self.data[key] = val(value)
-            
-        if self.checkboxList is not None:
-            for checkbox_var in self.checkboxList:
-                self.data = _transform_dict_checkbox_var(self.data,checkbox_var,self.unique_code)
+        # Flatten out checkbox vars from Altinn3
+        if checkboxList is not None:
+            for checkbox_var in checkboxList:
+                self.data = _transform_dict_checkbox_var(self.data,checkbox_var,unique_code)
         
         
     def get_historical_data(self):
@@ -223,21 +226,86 @@ class Skjema:
         print("Ingen funksjon enda, ønsker å lese in listen med filmapper og query nødvendig data.")
                 
     
-    def editer(self):
+    def editer(self, value_vars: dict = None, checks:List[Callable[[int], bool]] = None, manualEditVars: List[str] = None):
         """
         Function to check data. Controls data with functions from checks up against historical data.
         """
+        # If we can find edit element in xml file, then we dont edit the file again.
         if return_txt_xml(self.xml_root,"editertData") is not None:
             self.editert_status = return_txt_xml(self.root,"editert_status")
             self.editert_av = return_txt_xml(self.root,"editert_av")
             self.editert_nar = return_txt_xml(self.root,"editert_nar")
             self.ueditert_verdi = return_txt_xml(self.root,"ueditert_verdi")
-        else:
+            return
+        # Runs math checks on reportee value variables.
+        if checks is not None:
             results = []
-            for key, value in self.value_vars.items():
-                for check in self.checks:
-                    results.append(check(float(self.data[key]),self.historical_data[value]))
+            for key, value in value_vars.items():
+                for check in checks:
+                    results.append(check(self.data[key],self.historical_data[value]))
             self.editert_av = "MASKINELT"
             self.editert_nar = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             if not any(results):
                 self.editert_status = True
+        # Sets edit status False if any of these variables are present.
+        if manualEditVars is not None:
+            found = any(element in self.data for element in manualEditVars)
+            if found:
+                self.editert_status = False
+
+
+@dataclass
+class Skjema:
+    """Dataclass to represent a schema from Altinn."""
+
+    folder_path: str = None
+    """str: String to folder path for schema."""
+
+    data_vars: dict = None
+    """dict: Dict with keys for vars that contain data, and value representing datatype."""
+
+    checkboxList: list = None
+    """list: List with strings representing vars that are checkboxes in Altinn3."""
+
+    unique_code: bool = False
+    """bool: Bool flag to mark wether the shcema uses unique codes for dummies."""
+    
+    value_vars: dict = None
+    """dict: Dict with string representing vars that are used for statistics."""
+
+    checks: List[Callable[[int], bool]] = None
+    """List[Callable[[int], bool]]: Callable list containing function to check data with."""
+    
+    manualEditVars: List[str] = None
+    """List[str]: List with strings for variables that if present always makes machine data validation fail."""
+    
+    reportees: List[Reportee] = None
+    """List[Reportee]: List with objects of type reportee. One for each unique reported schema from Altinn."""
+    
+    
+    def get_reportees(self, year:int, month:int) -> List[Reportee]:
+        """Function to get reportees for a period.
+        
+        Args:
+            year: Int representing year.
+            month: Int representing month.
+        """
+        print("Placeholder func")
+        
+    
+    def set_reportee_data(self):
+        """Function to run all functions for Reportee in reportees."""
+        # Iterating over each unique xml file.
+        for reportee in self.reportees:
+            reportee.get_root()
+            reportee.get_metadata()
+            reportee.get_data(    
+                checkboxList = self.checkboxList,
+                unique_code = self.unique_code,
+                data_vars = self.data_vars,
+            )
+            reportee.editer(
+                value_vars = self.value_vars,
+                checks = self.checks,
+                manualEditVars = self.manualEditVars,
+            )
