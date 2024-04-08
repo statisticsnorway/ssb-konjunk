@@ -13,7 +13,7 @@ from dapla import FileClient
 fs = FileClient.get_gcs_file_system()
 
 
-def change_date_format_fame(series: pd.Series) -> pd.Series:
+def change_date_format_fame(series: pd.Series[str]) -> pd.Series[str]:
     """Function for turning ISO-8601 to fame time format.
 
     Args:
@@ -22,7 +22,7 @@ def change_date_format_fame(series: pd.Series) -> pd.Series:
     Returns:
         pd.Series: A pandas series with dates in fame format(YYYY:M:D)
     """
-    series = pd.to_datetime(series)
+    series = pd.to_datetime(series)  # type: ignore
 
     # Format the datetime column as "YYYY:M:D"
     series = series.dt.strftime("%Y:%-m:%-d")
@@ -31,7 +31,10 @@ def change_date_format_fame(series: pd.Series) -> pd.Series:
 
 
 def write_out_fame_format_txt(
-    names: pd.Series, dates: pd.Series, values: pd.Series, gcp_path: str
+    names: pd.Series[str],
+    dates: pd.Series[str],
+    values: pd.Series[float],
+    gcp_path: str,
 ) -> None:
     """Function to write out txt file in fame format.
 

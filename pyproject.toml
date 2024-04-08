@@ -18,6 +18,7 @@ python = ">=3.10,<4.0"
 click = ">=8.0.1"
 pandas = "^2.2.0"
 dapla-toolbelt = "^2.0.12"
+pandas-stubs = "^2.2.1.240316"
 
 [tool.poetry.group.dev.dependencies]
 pygments = ">=2.10.0"
