@@ -281,18 +281,8 @@ class Skjema:
     
     reportees: List[Reportee] = None
     """List[Reportee]: List with objects of type reportee. One for each unique reported schema from Altinn."""
-    
-    
-    def get_reportees(self, year:int, month:int) -> List[Reportee]:
-        """Function to get reportees for a period.
-        
-        Args:
-            year: Int representing year.
-            month: Int representing month.
-        """
-        print("Placeholder func")
-        
-    
+
+
     def set_reportee_data(self):
         """Function to run all functions for Reportee in reportees."""
         # Iterating over each unique xml file.
@@ -304,8 +294,34 @@ class Skjema:
                 unique_code = self.unique_code,
                 data_vars = self.data_vars,
             )
-            reportee.editer(
-                value_vars = self.value_vars,
-                checks = self.checks,
-                manualEditVars = self.manualEditVars,
-            )
+            # reportee.editer(
+            #     value_vars = self.value_vars,
+            #     checks = self.checks,
+            #     manualEditVars = self.manualEditVars,
+            # )
+            
+            
+    
+    
+def get_reportees(path: str, years: List[int], months: List[int]) -> List[Reportee]:
+    """Function to get reportees for a period.
+
+    Args:
+        path: Path in GCP.
+        year: Int representing year.
+        month: Int representing month.
+        
+    Returns:
+        List[Reportee]: List with object of class Reportee.
+    """
+
+    list_reportees = []
+    
+    for year in years:
+        print("Itererer gjennom år:",year)
+        for month in months:
+            print("Itererer gjennom måned:",month)
+            for file in fs.glob(f"{path}/{year}/{month}/**/*.xml"):
+                list_reportees.append(Reportee(xml_file = file))
+            
+    return list_reportees
