@@ -14,9 +14,10 @@ classifiers = ["Development Status :: 1 - Planning"]
 Changelog = "https://github.com/statisticsnorway/ssb-konjunk/releases"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.10,<4.0"
 click = ">=8.0.1"
 pandas = "^2.2.0"
+dapla-toolbelt = "^2.0.12"
 
 [tool.poetry.group.dev.dependencies]
 pygments = ">=2.10.0"
