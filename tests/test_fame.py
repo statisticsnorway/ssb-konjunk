@@ -1,11 +1,9 @@
-from datetime import datetime
 import pandas as pd
-
-import pytest
 
 from ssb_konjunk.fame import change_date_format_fame
 
 """Test of function change_date_format_fame"""
+
 
 def test_change_date_format_fame() -> None:
     # Test with a valid year and month
@@ -24,5 +22,5 @@ def test_change_date_format_fame() -> None:
             "2024:1:3",
         ]
     )
-    
+
     assert change_date_format_fame(series).equals(fame_series)
