@@ -4,6 +4,8 @@ from typing import List, Callable
 from datetime import datetime
 import pandas as pd
 from dapla import FileClient
+import dapla as dp
+import pendulum
 
 fs = FileClient.get_gcs_file_system()
 
@@ -219,11 +221,18 @@ class Reportee:
                 self.data = _transform_dict_checkbox_var(self.data,checkbox_var,unique_code)
         
         
-    def get_historical_data(self):
+    def get_historical_data(self, path_dict:dict)->dict[str,pd.Series]:
         """
         Function to query historical data from parquet folder based on metadata.
         """
-        print("Ingen funksjon enda, ønsker å lese in listen med filmapper og query nødvendig data.")
+        for key,value in path_dict.items():
+            
+            series = dp.read_pandas(value,filters=[("orgnrbed","=",self.metadata.enhetsOrgNr)])[key].reset_index(drop=True)
+            # Tilater flere kontroll variable. Må kunne derfor fylt hist data om den er tom og kunne legge til.
+            if self.historical_data is None:
+                self.historical_data = {key:series}
+            else:
+                self.historical_data[key] = series
                 
     
     def editer(self, value_vars: dict = None, checks:List[Callable[[int], bool]] = None, manualEditVars: List[str] = None):
@@ -245,6 +254,7 @@ class Reportee:
                     results.append(check(self.data[key],self.historical_data[value]))
             self.editert_av = "MASKINELT"
             self.editert_nar = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
             if not any(results):
                 self.editert_status = True
         # Sets edit status False if any of these variables are present.
@@ -252,14 +262,45 @@ class Reportee:
             found = any(element in self.data for element in manualEditVars)
             if found:
                 self.editert_status = False
-
+                
+                
+    def flatten_reportee_data(self,value_vars:dict):
+        """Function to flatten objects to a pandas df."""
+        reportee_dict = {
+            "skjema":self.metadata.raNummer,
+            "delreg_nr":self.metadata.delregNr,
+            "org_nr":self.metadata.reporteeOrgNr,
+            "orgnrbed":self.metadata.enhetsOrgNr,
+            "enhetsNavn":self.metadata.enhetsNavn,
+            "kontaktPersonNavn":self.metadata.kontaktPersonNavn,
+            "kontaktPersonEpost":self.metadata.kontaktPersonEpost,
+            "kontaktPersonTelefon":self.metadata.kontaktPersonTelefon,
+            "periodeFomDato":self.metadata.periodeFomDato,
+            "periodeTomDato":self.metadata.periodeTomDato,
+            "editert_status":self.editert_status,
+            "editert_av":self.editert_av,
+            "editert_nar":self.editert_nar,
+        }
+        
+        for key,value in value_vars.items():
+            reportee_dict[value] = self.data[key]
+            
+        return reportee_dict
+        
+        
 
 @dataclass
 class Skjema:
     """Dataclass to represent a schema from Altinn."""
 
-    folder_path: str = None
-    """str: String to folder path for schema."""
+    folder_xml_in: str = None
+    """str: String to folder path for xml thats new."""
+    
+    folder_xml_out: str = None
+    """str: String to folder path for xml files that are loaded."""
+    
+    folder_data: str = None
+    """str: String to folder path where to store loaded data."""
 
     data_vars: dict = None
     """dict: Dict with keys for vars that contain data, and value representing datatype."""
@@ -272,6 +313,9 @@ class Skjema:
     
     value_vars: dict = None
     """dict: Dict with string representing vars that are used for statistics."""
+    
+    historical_data_paths: dict = None
+    """dict: Dict with keys for variables in the historical data and values for gcp paths."""
 
     checks: List[Callable[[int], bool]] = None
     """List[Callable[[int], bool]]: Callable list containing function to check data with."""
@@ -281,6 +325,29 @@ class Skjema:
     
     reportees: List[Reportee] = None
     """List[Reportee]: List with objects of type reportee. One for each unique reported schema from Altinn."""
+    
+    inndata: pd.DataFrame = None
+    """Pandas dataframe with data ready to send to inndata."""
+    
+    
+    def get_reportees(self):
+        """Function to get reportees for a period.
+
+        Args:
+            path: Path in GCP.
+
+        Returns:
+            List[Reportee]: List with object of class Reportee.
+        """
+
+        list_reportees = []
+
+        # MERK!!! HUSK AA FJERNE [:4] DET ER BARE MIDLERTIDIG FOR TEST!
+        for file in fs.glob(f"{self.folder_xml_in}/*.xml")[:4]:
+            print(file)
+            list_reportees.append(Reportee(xml_file = file))
+
+        self.reportees = list_reportees
 
 
     def set_reportee_data(self):
@@ -294,34 +361,66 @@ class Skjema:
                 unique_code = self.unique_code,
                 data_vars = self.data_vars,
             )
-            # reportee.editer(
-            #     value_vars = self.value_vars,
-            #     checks = self.checks,
-            #     manualEditVars = self.manualEditVars,
-            # )
+            reportee.get_historical_data(path_dict=self.historical_data_paths)
+            reportee.editer(
+                value_vars = self.value_vars,
+                checks = self.checks,
+                manualEditVars = self.manualEditVars,
+            )
             
-            
-    
-    
-def get_reportees(path: str, years: List[int], months: List[int]) -> List[Reportee]:
-    """Function to get reportees for a period.
-
-    Args:
-        path: Path in GCP.
-        year: Int representing year.
-        month: Int representing month.
         
-    Returns:
-        List[Reportee]: List with object of class Reportee.
-    """
-
-    list_reportees = []
-    
-    for year in years:
-        print("Itererer gjennom år:",year)
-        for month in months:
-            print("Itererer gjennom måned:",month)
-            for file in fs.glob(f"{path}/{year}/{month}/**/*.xml"):
-                list_reportees.append(Reportee(xml_file = file))
+    def create_inndata_file(self):
+        """Function to take reportees and create a df for period."""
             
-    return list_reportees
+        # Convert objects to dictionaries
+        dicts = [reporte.flatten_reportee_data(self.value_vars) for reporte in self.reportees]
+
+        # Create DataFrame from dictionaries
+        df = pd.DataFrame(dicts)
+
+        self.inndata = df
+
+
+    def send_inndata(self):
+        """Function to send data to inndata."""
+        if not self.reportees:
+            print("Ingen nye skjemaer!")
+            return
+        
+        df = self.inndata.copy()
+        # Temporary filter Might change to assert error
+        df = df.dropna(subset="org_nr")
+        unique_date = df["periodeFomDato"].unique()
+        
+        for date in unique_date:
+            
+            df_date = df.loc[df["periodeFomDato"]==date].reset_index(drop=True)
+            if len(df_date["periodeFomDato"].unique())==1 and len(df_date["periodeTomDato"].unique())==1:
+                #Setting info for filename
+                skjema = df_date.at[0,"skjema"].lower()
+                periodFrom = df_date.at[0,"periodeFomDato"]
+                periodTo = df_date.at[0,"periodeTomDato"]
+                
+                file_name = f"{skjema}_p{periodFrom}-p{periodTo}"
+                
+                if not fs.glob(f"{self.folder_data}/{file_name}*"):
+                    print("Ingen fil lager fil")
+                    dp.write_pandas(df_date,f"{self.folder_data}/{file_name}_vX.parquet")
+                else:
+                    print("fil finnes fra før, appenderer ny data!")
+                    
+                    df_old = dp.read_pandas(fs.glob(f"{self.folder_data}/{file_name}*")[0])
+                    
+                    df_new = pd.concat([df_old,df_date]).reset_index(drop=True)
+
+                    dp.write_pandas(df_new,fs.glob(f"{self.folder_data}/{file_name}*")[0])
+            else:
+                assert print("Ulike periodelengder i datamateriallet!")
+                #Sender lastede xml til lastet mappe.
+        for reportee in self.reportees:
+            path_out = f"{self.folder_xml_out}/{reportee.metadata.delregNr}"
+            file_mv = reportee.xml_file.replace(self.folder_xml_in,path_out)
+            fs.mv(reportee.xml_file,file_mv)
+
+                
+    
