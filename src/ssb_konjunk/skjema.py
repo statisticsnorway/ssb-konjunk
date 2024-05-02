@@ -275,6 +275,7 @@ class Reportee:
             "kontaktPersonNavn":self.metadata.kontaktPersonNavn,
             "kontaktPersonEpost":self.metadata.kontaktPersonEpost,
             "kontaktPersonTelefon":self.metadata.kontaktPersonTelefon,
+            "kontaktInfoKommentar":self.metadata.kontaktInfoKommentar,
             "periodeFomDato":self.metadata.periodeFomDato,
             "periodeTomDato":self.metadata.periodeTomDato,
             "editert_status":self.editert_status,
