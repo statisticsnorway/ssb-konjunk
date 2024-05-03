@@ -1,4 +1,4 @@
-"""Funsjoner for å gjøre data formartering"""
+"""Funsjoner for å gjøre data formartering."""
 
 import pandas as pd
 
