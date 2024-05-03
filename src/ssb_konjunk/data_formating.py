@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def bytte_koder(
-    df: pd.DataFrame, kodeliste: dict[str, str], kolonnenavn: str
+    df: pd.DataFrame, kode_dict: dict[str, str], kolonnenavn: str
 ) -> pd.DataFrame:
     """Bytter koder.
 
@@ -13,15 +13,17 @@ def bytte_koder(
 
     Args:
         df: Pandas dataramme som vi skal sende inn.
-        kodeliste: Ordbok med gammel og ny kode.
+        kode_dict: Ordbok med gammel og ny kode.
         kolonnenavn: Navn på kolonnen som skal byttes ut.
 
     Returns:
         Dataramme med ny kode.
 
     """
-    for old, new in kodeliste.items():
+    df_func = df.copy()
+    
+    for old, new in kode_dict.items():
 
-        df.loc[df[kolonnenavn] == old, kolonnenavn] = str(new)
+        df_func.loc[df_func[kolonnenavn] == old, kolonnenavn] = str(new)
 
-    return df
+    return df_func
