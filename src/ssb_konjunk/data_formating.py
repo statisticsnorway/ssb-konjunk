@@ -21,7 +21,7 @@ def bytte_koder(
 
     """
     df_func = df.copy()
-    
+
     for old, new in kode_dict.items():
 
         df_func.loc[df_func[kolonnenavn] == old, kolonnenavn] = str(new)
