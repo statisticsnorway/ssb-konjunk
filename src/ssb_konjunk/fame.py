@@ -46,7 +46,7 @@ def write_out_fame_format_txt(
     """
     with fs.open(gcp_path, "w") as f:
         # Write data rows
-        for name, date, value in zip(names, dates, values):
+        for name, date, value in zip(names, dates, values, strict=False):
             # Apply format specification
             formatted_value = f"{value:20.2f}"
             # Write data row
