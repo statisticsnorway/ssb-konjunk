@@ -22,7 +22,7 @@ def change_date_format_fame(series: pd.Series) -> pd.Series:
     Returns:
         pd.Series: A pandas series with dates in fame format(YYYY:M:D)
     """
-    series = pd.to_datetime(series)  # type: ignore
+    series = pd.to_datetime(series)
 
     # Format the datetime column as "YYYY:M:D"
     series = series.dt.strftime("%Y:%-m:%-d")
