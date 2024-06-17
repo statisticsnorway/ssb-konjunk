@@ -1,8 +1,9 @@
 """A collection of functions to make xml files handling easier both in dapla and prodsone."""
 
 import xml.etree.ElementTree as ET
+
 import dapla
-from typing import Optional
+
 
 def read_xml(xml_file: str, fs: dapla.gcs.GCSFileSystem = None) -> ET.Element:
     """Funtion to get xml root from disk.
@@ -26,7 +27,7 @@ def read_xml(xml_file: str, fs: dapla.gcs.GCSFileSystem = None) -> ET.Element:
     return ET.fromstring(single_xml)
 
 
-def return_txt_xml(root: ET.Element, child: str) -> Optional[str]:
+def return_txt_xml(root: ET.Element, child: str) -> str | None:
     """Function to return text value from child element in xml file.
 
     Args:
@@ -41,7 +42,7 @@ def return_txt_xml(root: ET.Element, child: str) -> Optional[str]:
     return string
 
 
-def dump_element(element:ET.Element, indent:int=0):
+def dump_element(element: ET.Element, indent: int = 0):
     """Function to print xml in pretty format.
 
     Args:
