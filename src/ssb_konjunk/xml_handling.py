@@ -1,9 +1,10 @@
 """A collection of functions to make xml files handling easier both in dapla and prodsone."""
 
 import xml.etree.ElementTree as ET
+import dapla
+from typing import Optional
 
-
-def read_xml(xml_file: str, fs=None) -> ET.Element:  # Type ignore
+def read_xml(xml_file: str, fs: dapla.gcs.GCSFileSystem = None) -> ET.Element:
     """Funtion to get xml root from disk.
 
     Args:
@@ -11,7 +12,7 @@ def read_xml(xml_file: str, fs=None) -> ET.Element:  # Type ignore
         fs: filesystem
 
     Returns:
-    ET.Element: Root of xml file.
+        ET.Element: Root of xml file.
     """
     if fs:
         with fs.open(xml_file, mode="r") as file:
@@ -25,7 +26,7 @@ def read_xml(xml_file: str, fs=None) -> ET.Element:  # Type ignore
     return ET.fromstring(single_xml)
 
 
-def return_txt_xml(root: ET.Element, child: str) -> str | None:
+def return_txt_xml(root: ET.Element, child: str) -> Optional[str]:
     """Function to return text value from child element in xml file.
 
     Args:
@@ -36,4 +37,21 @@ def return_txt_xml(root: ET.Element, child: str) -> str | None:
         str: Returns string value from child element.
     """
     for element in root.iter(child):
-        return element.text
+        string = element.text
+    return string
+
+
+def dump_element(element:ET.Element, indent:int=0):
+    """Function to print xml in pretty format.
+
+    Args:
+        element: ET.Element you want to print.
+        indent: Level of ident you want.
+    """
+    print("  " * indent + f"Tag: {element.tag}")
+    if element.text and element.text.strip():
+        print("  " * (indent + 1) + f"Text: {element.text.strip()}")
+    for attribute, value in element.attrib.items():
+        print("  " * (indent + 1) + f"Attribute: {attribute}={value}")
+    for child in element:
+        dump_element(child, indent + 1)
