@@ -1,7 +1,6 @@
 """A collection of functions to make xml files handling easier both in dapla and prodsone."""
 
 import xml.etree.ElementTree as ET
-
 import dapla
 
 
@@ -42,7 +41,7 @@ def return_txt_xml(root: ET.Element, child: str) -> str | None:
     return string
 
 
-def dump_element(element: ET.Element, indent: int = 0):
+def dump_element(element: ET.Element, indent: int = 0) -> None:
     """Function to print xml in pretty format.
 
     Args:
