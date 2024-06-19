@@ -7,35 +7,10 @@ from dapla import FileClient
 import dapla as dp
 import pendulum
 
+#Local imports
+from . import xml_handling
+from .xml_handling import return_txt_xml
 fs = FileClient.get_gcs_file_system()
-
-
-def get_xml_root(xml_file: str) -> ET.Element:
-    """Funtion to get xml root on Dapla.
-    
-    Args:
-        xml_file: Strin value for xml filepath.
-    
-    Returns:
-        ET.Element: Root of xml file."""
-    with fs.open(xml_file, mode="r") as f:
-        single_xml = f.read()
-    return ET.fromstring(single_xml)
-
-
-def return_txt_xml(root: ET.Element, child: str):
-    """
-    Function to return text value from child element in xml file.
-
-    Args:
-        root: Root with all data stored in a branch like structure.
-        child: String value to find child element which contains a value.
-
-    Returns:
-        str: Returns string value from child element.
-    """
-    for element in root.iter(child):
-        return element.text
 
 
 def _split_string(input_string: str) -> list[str]:
@@ -171,6 +146,9 @@ class Reportee:
     editert_nar: str = None
     """str: Timestamp for when data was edited."""
     
+    check_nr: list = None
+    """list: Id for checks that failed when editing data."""
+    
     ueditert_verdi: dict = None
     """dict: Dict with keys for data vars and values containing unedited data."""
 
@@ -191,7 +169,7 @@ class Reportee:
         Function to get xml root into class.
         """
         # This function fills inn attachment, xml_file and pdf
-        self.xml_root = get_xml_root(self.xml_file)
+        self.xml_root = xml_handling.read_xml(self.xml_file,fs)
 
 
     def get_metadata(self):
@@ -249,14 +227,22 @@ class Reportee:
         # Runs math checks on reportee value variables.
         if checks is not None:
             results = []
+            check_number = []
             for key, value in value_vars.items():
                 for check in checks:
-                    results.append(check(self.data[key],self.historical_data[value]))
+                    result, nr = check(self.data[key],self.historical_data[value])
+                    results.append(result)
+                    check_number.append(nr)
             self.editert_av = "MASKINELT"
             self.editert_nar = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             if not any(results):
                 self.editert_status = True
+            else:
+                self.editert_status = False
+                index_checks = [index for index, value in enumerate(results) if value]
+                self.check_nr = [check_number[i] for i in index_checks]
+                
         # Sets edit status False if any of these variables are present.
         if manualEditVars is not None:
             found = any(element in self.data for element in manualEditVars)
@@ -281,6 +267,7 @@ class Reportee:
             "editert_status":self.editert_status,
             "editert_av":self.editert_av,
             "editert_nar":self.editert_nar,
+            "check_nr":self.check_nr,
         }
         
         for key,value in value_vars.items():
@@ -406,7 +393,7 @@ class Skjema:
                 
                 if not fs.glob(f"{self.folder_data}/{file_name}*"):
                     print("Ingen fil lager fil")
-                    dp.write_pandas(df_date,f"{self.folder_data}/{file_name}_vX.parquet")
+                    dp.write_pandas(df_date,f"{self.folder_data}/{file_name}_v0.parquet")
                 else:
                     print("fil finnes fra før, appenderer ny data!")
                     
@@ -422,6 +409,3 @@ class Skjema:
             path_out = f"{self.folder_xml_out}/{reportee.metadata.delregNr}"
             file_mv = reportee.xml_file.replace(self.folder_xml_in,path_out)
             fs.mv(reportee.xml_file,file_mv)
-
-                
-    
