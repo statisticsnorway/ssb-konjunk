@@ -146,7 +146,7 @@ class Reportee:
     editert_nar: str = None
     """str: Timestamp for when data was edited."""
     
-    check_nr: list
+    check_nr: list = None
     """list: Id for checks that failed when editing data."""
     
     ueditert_verdi: dict = None
@@ -238,6 +238,7 @@ class Reportee:
 
             if not any(results):
                 self.editert_status = True
+                self.check_nr = []
             else:
                 self.editert_status = False
                 index_checks = [index for index, value in enumerate(results) if value]
