@@ -146,7 +146,7 @@ class Reportee:
     editert_nar: str = None
     """str: Timestamp for when data was edited."""
     
-    check_nr: list = None
+    check_nr: list
     """list: Id for checks that failed when editing data."""
     
     ueditert_verdi: dict = None
