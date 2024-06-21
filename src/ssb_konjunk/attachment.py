@@ -15,6 +15,13 @@ import pandas as pd
 from .xml_handling import return_txt_xml
 
 
+def get_fil_ext(filename:str,allowed_extensions: list[str]) -> str|None:
+    for ext in allowed_extensions:
+        if filename.endswith(ext):
+            return ext
+    else:
+        return None
+
 
 def make_xlsx(file:str,ext:str) -> str:
     if ext == '.csv':
@@ -65,7 +72,7 @@ class folder:
 
 
 
-    def get_metadata(self):
+    def get_metadata(self,nickname_dict:dict[int,str] = None):
         if self.xml_file is None:
             print(f"Mangler xml fil, sjekke manuelt i mappe {self.folder_path}")
         else:
@@ -86,49 +93,52 @@ class folder:
             self.kontaktInfoKommentar = return_txt_xml(root,'kontaktInfoKommentar')
             
             #doikjedenavn hentes fra en annen plass siden det er lagret lokalt
-            # self.doikjedenavn = kjedeDictAlle.get(int(self.enhetsOrgNr))
+            if nickname_dict:
+                self.nickname = nickname_dict.get(int(self.enhetsOrgNr))
 
 
 ### BRUKER MYE SHUTIL HER, MAA BYTTES UT PAA DAPLA!!!
-    def send_attachment(self,path_out:str,manual_files:list[str]) -> int:
+    def send_attachment(self,path_loaded:str,path_out:str,manual_files:list[str]) -> int:
         allowed_extensions = ['.xls', '.xlsx', '.csv']
         if self.attachment is None:
             print(f"Finner ikke filen, har du husket å kjøre 'get_filenames()' først?")
-            print("Def 1")
             response = 100
         else:
-            if self.enhetsOrgNr in manual_files:
+            if not os.path.exists(f"{path_out}/{self.delregNr}"):
+                os.mkdir(f"{path_out}/{self.delregNr}")
+                os.mkdir(f"{path_out}/{self.delregNr}/manual")
+                os.mkdir(f"{path_out}/{self.delregNr}/machine")
+            
+            if (self.enhetsOrgNr in manual_files) or (self.nickname in manual_files):
                 shutil.copy(self.attachment,f"{path_out}/{self.delregNr}/manual/")
-                print("Def 2")
                 response = 200
-            for ext in allowed_extensions:
-                if self.attachment.endswith(ext):
-                    if ext != '.xlsx':
-                        self.attachment = make_xlsx(self.attachment,ext)
-                        
-                    if (os.path.exists(f"{path_out}/{self.delregNr}/machine/{self.nickname}.xlsx")) or (os.path.exists(f"{path_out}/{self.delregNr}/machine/{self.enhetsOrgNr}.xlsx")):
-                        shutil.copy(self.attachment,f"{path_out}/{self.delregNr}/manual/")
-                        print(f'''
-                        Oppdraggiver har levert på nytt.
+            
+            ext = get_fil_ext(self.attachment,allowed_extensions)
+            
+            if ext:
+                if ext != '.xlsx':
+                    self.attachment = make_xlsx(self.attachment,ext)
 
-                        Fil er lagt inn i manuel mappe!!!
+                if (os.path.exists(f"{path_out}/{self.delregNr}/machine/{self.nickname}.xlsx")) or (os.path.exists(f"{path_out}/{self.delregNr}/machine/{self.enhetsOrgNr}.xlsx")):
+                    shutil.copy(self.attachment,f"{path_out}/{self.delregNr}/manual/")
+                    print(f'''
+                    Oppdraggiver har levert på nytt.
 
-                        Gjelder fil: {self.attachment}. 
-                        Kontakt person er {self.kontaktPersonNavn}. 
-                        Epost:{self.kontaktPersonEpost} Telefon:{self.kontaktPersonTelefon}.
-                        Kommentar fra enhet: {self.kontaktInfoKommentar}''')
-                        print("Def 3")
-                        response = 100                        
-                    
+                    Fil er lagt inn i manuel mappe!!!
+
+                    Gjelder fil: {self.attachment}. 
+                    Kontakt person er {self.kontaktPersonNavn}. 
+                    Epost:{self.kontaktPersonEpost} Telefon:{self.kontaktPersonTelefon}.
+                    Kommentar fra enhet: {self.kontaktInfoKommentar}''')
+                    response = 100                        
+
+                else:
+                    if self.nickname:
+                        shutil.copy(self.attachment,f"{path_out}/{self.delregNr}/machine/{self.nickname}.xlsx")
+
                     else:
-                        if self.nickname:
-                            shutil.copy(self.attachment,f"{path_out}/{self.delregNr}/machine/{self.nickname}.xlsx")
-                            
-                        else:
-                            shutil.copy(self.attachment,f"{path_out}/{self.delregNr}/machine/{self.enhetsOrgNr}.xlsx")
-                        print("Def 4")
-                        response = 200
-                    return response
+                        shutil.copy(self.attachment,f"{path_out}/{self.delregNr}/machine/{self.enhetsOrgNr}.xlsx")
+                    response = 200
 
             else:
                 shutil.copy(self.attachment,f"{path_out}/{self.delregNr}/manual/")
@@ -141,10 +151,11 @@ class folder:
                 Kontakt person er {self.kontaktPersonNavn}. 
                 Epost:{self.kontaktPersonEpost} Telefon:{self.kontaktPersonTelefon}.
                 Kommentar fra enhet: {self.kontaktInfoKommentar}''')
-                print("Def 5")
                 response = 100
+        
+        shutil.move(self.folder_path, f"{path_loaded}/{self.delregNr}")
 
-        return reponse
+        return response
 
 
 
@@ -157,6 +168,7 @@ class attachment():
     year: int
     month: int
     list_of_attachments: list[folder] = None
+    nickname_dict: dict[int,str] = None
     
     
     def make_objects_list(self) -> list:
@@ -177,14 +189,14 @@ class attachment():
     def set_all_data(self):
         for folder in self.list_of_attachments:
             folder.get_filenames()
-            folder.get_metadata()
+            folder.get_metadata(self.nickname_dict)
 
             
-    def send_attachments(self,path_out:str,manual_files:list[str]):
+    def send_attachments(self,path_loaded:str,path_out:str,manual_files:list[str]):
 
         i = 0
         for folder in self.list_of_attachments:
-            response = folder.send_attachment(path_out,manual_files)
+            response = folder.send_attachment(path_loaded,path_out,manual_files)
 
             if response == 200:
                 i = i + 1
