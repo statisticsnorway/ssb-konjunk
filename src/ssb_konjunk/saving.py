@@ -33,20 +33,20 @@ def get_saved_file(
     If it is a year table, the filename is automatically adjusted.
 
     Args:
-        name         : name of the file. E.g. overnatting16landet1, alleover, alleover-utvida
-        datatilstand : the datatilstand for the file to get
-        bucket_path  : the whole path, without file name and datatilstand. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/'
-        year         : the year for the data
-        month        : the relevant month. Default: ''
-        day          : the relvant date. Default: ''
-        filetype     : the filetype to save as. Default: 'parquet'
-        fs           : the filesystem, pass with gsc Filesystem if Dapla. Default: None
-        seperator    : the seperator to use it filetype is csv. Default: ';'
-        end_year     : if the data covers a period, time series, the end year here. Default: ''
-        end_month    : if the data covers a period, time series, the end month here. Default: ''
-        end_day      : if the data covers a period, time series, the end day here. Default: ''
+        name: name of the file. E.g. overnatting16landet1, alleover, alleover-utvida
+        datatilstand: the datatilstand for the file to get
+        bucket_path: the whole path, without file name and datatilstand. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/'
+        year: the year for the data
+        month: the relevant month. Default: ''
+        day: the relvant date. Default: ''
+        filetype: the filetype to save as. Default: 'parquet'
+        fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None
+        seperator: the seperator to use it filetype is csv. Default: ';'
+        end_year: if the data covers a period, time series, the end year here. Default: ''
+        end_month: if the data covers a period, time series, the end month here. Default: ''
+        end_day: if the data covers a period, time series, the end day here. Default: ''
     Returns:
-        pd.DataFrame           : file as a data frame
+        pd.DataFrame: file as a data frame
     """
     # Find filename with correct time period
     filename = get_time_period_standard(
@@ -93,15 +93,15 @@ def get_time_period_standard(
     """Return a filename with correct timeperiod accroding to the navnestandard.
 
     Args:
-        base_name   : the name of the file. E.g. alleover-utvida
-        start_year  : the first year if time period, else the only year. YYYY
-        start_month : the first month if time period, else a specific month, or ''. Default: ''
-        start_day   : the first day if time period, else a specific date. Default: ''
-        end_year    : the last year if timeperiod. YYYY. Defualt: ''
-        end_month   : the last month if time period. Default: ''
-        end_day     : the last day if time period. Default: ''
+        base_name: the name of the file. E.g. alleover-utvida
+        start_year: the first year if time period, else the only year. YYYY
+        start_month: the first month if time period, else a specific month, or ''. Default: ''
+        start_day: the first day if time period, else a specific date. Default: ''
+        end_year: the last year if timeperiod. YYYY. Defualt: ''
+        end_month: the last month if time period. Default: ''
+        end_day: the last day if time period. Default: ''
     Returns:
-        str    : the filename with correct date.
+        str: the filename with correct date.
     """
     # Specific month, no time period
     if start_month != "" and end_year == "":
