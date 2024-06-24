@@ -103,7 +103,6 @@ def get_time_period_standard(
     Return
         filename    : the filename with correct date.
     """
-    try:
     # Specific month, no time period
     if start_month != "" and end_year == "":
         filename = (
