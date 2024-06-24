@@ -131,6 +131,7 @@ def get_time_period_standard(
         )
         return ""
 
+
 def get_versions(
     folder_path: str, filename: str, filename_pattern: Pattern[str]
 ) -> list[str]:
