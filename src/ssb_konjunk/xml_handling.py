@@ -37,6 +37,7 @@ def return_txt_xml(root: ET.Element, child: str) -> str | None:
     Returns:
         str: Returns string value from child element.
     """
+    string = None
     for element in root.iter(child):
         string = element.text
     return string
