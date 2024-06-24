@@ -119,7 +119,7 @@ def get_time_period_standard(
     elif start_month != "" and end_year != "" and end_month != "":
         filename = f"{base_name}_p{start_year}-{prompts.validate_month(start_month)}-p{end_year}-{prompts.validate_month(end_month)}_v"
     else:
-        filename = basename
+        filename = base_name
 
     return filename
 
