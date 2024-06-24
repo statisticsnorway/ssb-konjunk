@@ -243,3 +243,17 @@ def iterate_years_months(
             ):
                 continue
             yield year, month
+
+
+def validate_month(month: int | str) -> str:
+    """Ensure month to have leading zero if before october.
+
+    Args:
+        month: the number of the month
+
+    Return:
+        month: the number of the month with leading zero if relevant
+    """
+    if int(month) < 10:
+        month = "0" + str(int(month))
+    return str(month)

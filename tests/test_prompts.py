@@ -6,6 +6,7 @@ from ssb_konjunk.prompts import days_in_month
 from ssb_konjunk.prompts import delta_month
 from ssb_konjunk.prompts import extract_start_end_dates
 from ssb_konjunk.prompts import iterate_years_months
+from ssb_konjunk.prompts import validate_month
 
 """Test of function days in month"""
 
@@ -146,3 +147,16 @@ def test_iterate_years_months_invalid_month() -> None:
     # Test when providing an invalid month (less than 1)
     with pytest.raises(ValueError):
         list(iterate_years_months(2022, 2024, 0, 12))
+
+
+"""Test of the function validate_month"""
+
+
+def test_validate_month() -> None:
+    # Test for variations of january
+    assert validate_month(1) == "01"
+    assert validate_month("1") == "01"
+    assert validate_month("01") == "01"
+
+    assert validate_month(10) == "10"
+    assert validate_month("10") == "10"
