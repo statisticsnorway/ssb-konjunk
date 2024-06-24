@@ -100,7 +100,7 @@ def get_time_period_standard(
         end_year    : the last year if timeperiod. YYYY. Defualt: ''
         end_month   : the last month if time period. Default: ''
         end_day     : the last day if time period. Default: ''
-    Returns
+    Returns:
         str    : the filename with correct date.
     """
     # Specific month, no time period
