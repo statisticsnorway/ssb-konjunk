@@ -26,7 +26,8 @@ def get_saved_file(
     end_month: int | str = "",
     end_day: int | str = "",
 ) -> pd.DataFrame:
-    """Function to get a saved file. 
+    """Function to get a saved file.
+    
     Get the last version saved in the datatilstand specified (klargjorte-data, statistikk, utdata)
     at the correct bucket path and with the speficed name.
     If it is a year table, the filename is automatically adjusted.
@@ -144,7 +145,7 @@ def get_versions(
     Args:
         folder_path      : the whole path, without file name. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/klargjorte-data/'
         filename         : the name of the file, without version and file type. Ex.: 'alleover-utvida_p2023-02_v'
-        filename_pattern : the whole filename, including pattern of version and filetype. Ex.: re.compile(rf'{filename}(\d+)\.parquet')
+        filename_pattern : the whole filename, including pattern of version and filetype. Ex.: re.compile(rf'{filename}(d+).parquet')
 
     Return:
         versions         : list with the version numbers existing for the filename.
