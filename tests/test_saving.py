@@ -14,4 +14,4 @@ def test_get_time_period_standard() -> None:
     end_month = 2
     end_day = 14
     
-    assert get_time_period_standard('filnavn', 2023, 1,22) == 'filnavn_p2023-01-22_v'
+    assert get_time_period_standard('filnavn', 2023, 1,22) == 'filnavn_p2023-01-22_v', f"get_time_period_standard('filnavn', 2023, 1,22)"
