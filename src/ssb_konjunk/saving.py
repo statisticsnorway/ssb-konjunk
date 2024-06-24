@@ -131,12 +131,6 @@ def get_time_period_standard(
         )
         return ""
 
-    # else:
-    #   print(f"Something is not valid.\nStart year:{start_year}\nStart month: {start_month}\nEnd month: {end_month}\nEnd year: {end_year}")
-
-    # return filename
-
-
 def get_versions(
     folder_path: str, filename: str, filename_pattern: Pattern[str]
 ) -> list[str]:
