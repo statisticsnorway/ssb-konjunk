@@ -251,7 +251,7 @@ def validate_month(month: int | str) -> str:
     Args:
         month: the number of the month
 
-    Return:
+    Returns:
         month: the number of the month with leading zero if relevant
     """
     if int(month) < 10:

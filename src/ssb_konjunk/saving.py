@@ -45,7 +45,7 @@ def get_saved_file(
         end_year     : if the data covers a period, time series, the end year here. Default: ''
         end_month    : if the data covers a period, time series, the end month here. Default: ''
         end_day      : if the data covers a period, time series, the end day here. Default: ''
-    Return:
+    Returns:
         pd.DataFrame           : file as a data frame
     """
     # Find filename with correct time period
@@ -134,7 +134,7 @@ def get_versions(
         filename         : the name of the file, without version and file type. Ex.: 'alleover-utvida_p2023-02_v'
         filename_pattern : the whole filename, including pattern of version and filetype. Ex.: re.compile(rf'{filename}(d+).parquet')
 
-    Return:
+    Returns:
         list[str]         : versions, list with the version numbers existing for the filename.
     """
     versions = []
