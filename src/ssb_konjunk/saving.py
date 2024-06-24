@@ -130,12 +130,12 @@ def get_versions(
     """Get all the versions that exists of a file.
 
     Args:
-        folder_path      : the whole path, without file name. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/klargjorte-data/'
-        filename         : the name of the file, without version and file type. Ex.: 'alleover-utvida_p2023-02_v'
-        filename_pattern : the whole filename, including pattern of version and filetype. Ex.: re.compile(rf'{filename}(d+).parquet')
+        folder_path: the whole path, without file name. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/klargjorte-data/'
+        filename: the name of the file, without version and file type. Ex.: 'alleover-utvida_p2023-02_v'
+        filename_pattern: the whole filename, including pattern of version and filetype. Ex.: re.compile(rf'{filename}(d+).parquet')
 
     Returns:
-        list[str]         : versions, list with the version numbers existing for the filename.
+        list[str]: versions, list with the version numbers existing for the filename.
     """
     versions = []
 
