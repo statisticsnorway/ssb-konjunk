@@ -105,9 +105,7 @@ def get_time_period_standard(
     """
     # Specific month, no time period
     if start_month != "" and end_year == "":
-        filename = (
-            f"{base_name}_p{start_year}-{prompts.validate_month(start_month)}_v"
-        )
+        filename = f"{base_name}_p{start_year}-{prompts.validate_month(start_month)}_v"
 
     # Only whole year, no time period
     elif start_month == "" and end_year == "":
@@ -124,7 +122,6 @@ def get_time_period_standard(
         filename = basename
 
     return filename
-
 
 
 def get_versions(
