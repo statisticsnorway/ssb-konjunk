@@ -1,4 +1,4 @@
-"""Functions used for get in touch with you files and save them
+"""Functions used for get in touch with you files and save them.
 
 Follows the :crossed_fingers: the standardization for versioning and names.
 """
@@ -26,7 +26,8 @@ def get_saved_file(
     end_month: int | str = "",
     end_day: int | str = "",
 ) -> pd.DataFrame:
-    """Get the last version saved in the datatilstand specified (klargjorte-data, statistikk, utdata)
+    """Function to get a saved file. 
+    Get the last version saved in the datatilstand specified (klargjorte-data, statistikk, utdata)
     at the correct bucket path and with the speficed name.
     If it is a year table, the filename is automatically adjusted.
 
@@ -138,7 +139,7 @@ def get_time_period_standard(
 def get_versions(
     folder_path: str, filename: str, filename_pattern: Pattern[str]
 ) -> list[str]:
-    """Get all the versions that exists of a file
+    """Get all the versions that exists of a file.
 
     Args:
         folder_path      : the whole path, without file name. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/klargjorte-data/'
