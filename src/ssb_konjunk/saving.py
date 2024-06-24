@@ -104,32 +104,28 @@ def get_time_period_standard(
         filename    : the filename with correct date.
     """
     try:
-        # Specific month, no time period
-        if start_month != "" and end_year == "":
-            filename = (
-                f"{base_name}_p{start_year}-{prompts.validate_month(start_month)}_v"
-            )
-
-        # Only whole year, no time period
-        elif start_month == "" and end_year == "":
-            filename = f"{base_name}_p{start_year}_v"
-
-        # Whole year, time period
-        elif start_month == "" and end_year != "":
-            filename = f"{base_name}_p{start_year}-p{end_year}_v"
-
-        # Specific month, time period
-        elif start_month != "" and end_year != "" and end_month != "":
-            filename = f"{base_name}_p{start_year}-{prompts.validate_month(start_month)}-p{end_year}-{prompts.validate_month(end_month)}_v"
-
-        return filename
-
-    except Exception as e:
-        print(e)
-        print(
-            f"Something is not valid.\nStart year:{start_year}\nStart month: {start_month}\nEnd month: {end_month}\nEnd year: {end_year}"
+    # Specific month, no time period
+    if start_month != "" and end_year == "":
+        filename = (
+            f"{base_name}_p{start_year}-{prompts.validate_month(start_month)}_v"
         )
-        return ""
+
+    # Only whole year, no time period
+    elif start_month == "" and end_year == "":
+        filename = f"{base_name}_p{start_year}_v"
+
+    # Whole year, time period
+    elif start_month == "" and end_year != "":
+        filename = f"{base_name}_p{start_year}-p{end_year}_v"
+
+    # Specific month, time period
+    elif start_month != "" and end_year != "" and end_month != "":
+        filename = f"{base_name}_p{start_year}-{prompts.validate_month(start_month)}-p{end_year}-{prompts.validate_month(end_month)}_v"
+    else:
+        filename = basename
+
+    return filename
+
 
 
 def get_versions(
