@@ -27,7 +27,7 @@ def get_saved_file(
     end_day: int | str = "",
 ) -> pd.DataFrame:
     """Function to get a saved file.
-    
+
     Get the last version saved in the datatilstand specified (klargjorte-data, statistikk, utdata)
     at the correct bucket path and with the speficed name.
     If it is a year table, the filename is automatically adjusted.
