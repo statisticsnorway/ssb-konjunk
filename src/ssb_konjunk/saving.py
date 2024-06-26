@@ -9,8 +9,7 @@ from re import Pattern
 
 import dapla
 import pandas as pd
-import prompts
-
+from ssb_konjunk.prompts import validate_month
 
 def get_saved_file(
     name: str,
@@ -107,7 +106,7 @@ def get_time_period_standard(
     """
     # Specific month, no time period
     if start_month != "" and end_year == "":
-        filename = f"{base_name}_p{start_year}-{prompts.validate_month(start_month)}_v"
+        filename = f"{base_name}_p{start_year}-{validate_month(start_month)}_v"
 
     # Only whole year, no time period
     elif start_month == "" and end_year == "":
@@ -119,7 +118,7 @@ def get_time_period_standard(
 
     # Specific month, time period
     elif start_month != "" and end_year != "" and end_month != "":
-        filename = f"{base_name}_p{start_year}-{prompts.validate_month(start_month)}-p{end_year}-{prompts.validate_month(end_month)}_v"
+        filename = f"{base_name}_p{start_year}-{validate_month(start_month)}-p{end_year}-{validate_month(end_month)}_v"
     else:
         filename = base_name
 
