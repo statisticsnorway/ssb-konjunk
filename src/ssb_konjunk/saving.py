@@ -2,151 +2,152 @@
 
 Follows the :crossed_fingers: the standardization for versioning and names.
 """
-
-import os
 import re
-from re import Pattern
-
-import dapla
+import glob
 import pandas as pd
-from ssb_konjunk.prompts import validate_month
+from ssb_konjunk import timestamp
 
-def get_saved_file(
-    name: str,
-    datatilstand: str,
-    bucket_path: str,
-    year: int | str = "",
-    month: int | str = "",
-    day: int | str = "",
-    filetype: str = "parquet",
-    fs: dapla.gcs.GCSFileSystem = None,
-    seperator: str = ";",
-    end_year: int | str = "",
-    end_month: int | str = "",
-    end_day: int | str = "",
-) -> pd.DataFrame:
-    """Function to get a saved file.
 
-    Get the last version saved in the datatilstand specified (klargjorte-data, statistikk, utdata)
-    at the correct bucket path and with the speficed name.
-    If it is a year table, the filename is automatically adjusted.
-
+def get_files(folder_path: str, base_name: str, time_stamp:str, fs: dapla.gcs.GCSFileSystem = None) -> list[str]:
+    """Function to list files in a folder based on base name and timestamp.
+    
     Args:
-        name: name of the file. E.g. overnatting16landet1, alleover, alleover-utvida.
-        datatilstand: the datatilstand for the file to get.
-        bucket_path: the whole path, without file name and datatilstand. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/'.
-        year: the year for the data.
-        month: the relevant month. Default: ''.
-        day: the relvant date. Default: ''.
-        filetype: the filetype to save as. Default: 'parquet'.
-        fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
-        seperator: the seperator to use it filetype is csv. Default: ';'.
-        end_year: if the data covers a period, time series, the end year here. Default: ''.
-        end_month: if the data covers a period, time series, the end month here. Default: ''.
-        end_day: if the data covers a period, time series, the end day here. Default: ''.
-
+        folder_path: String to folder.
+        base_name: String for base name of file.
+        time_stamp: String of time stamp.
+        fs: FileSystem, if not using linux storage.
+        
     Returns:
-        pd.DataFrame: file as a data frame.
+        list[str]: List with filenames.
     """
-    # Find filename with correct time period
-    filename = get_time_period_standard(
-        base_name=name,
-        start_year=year,
-        start_month=month,
-        end_year=end_year,
-        end_month=end_month,
-    )
-
-    # Get newest version number
-    versions = get_versions(
-        bucket_path + datatilstand + "/",
-        filename,
-        re.compile(rf"{filename}(\d+)\.{filetype}"),
-    )
-
-    if len(versions) == 0:
-        print(f"There are no such files. {filename}")
-        return pd.DataFrame()
+    filenames = []
+    match_string = f"{folder_path}/{base_name}_{time_stamp}*"
+    if fs:
+        filenames = fs.glob(match_string)
     else:
-        path = (
-            bucket_path + datatilstand + "/" + filename + f"{versions[-1]}.{filetype}"
-        )
+        filenames = glob.glob(match_string)
+    return filenames
+    
 
-        # Different functions used for reading depending on the filetype
-        if filetype == "csv":
-            df = pd.read_csv(path, sep=seperator)
-        elif filetype == "parquet":
-            df = pd.read_parquet(path, filesystem=fs)
+def get_version(filename:str) -> int|None:
+    """Function to do regex to find version number.
+    
+    Args:
+        filename: String to find version number in.
+        
+    Returns:
+        int|None: Return int if found version number else returns None.
+    """
+    pattern = r'_v(\d{1,3})\.(parquet|csv)$'
+    
+    match = re.search(pattern, filename)
+    if match:
+        return = match.group(1)
+    else:
+        return None
+    
+    
+def get_versions_for_filenames(filenames:list[str]) -> dict[int,str]|dict[]:
+    """Function to find version number in files and return filenames versioned.
+    
+    Args:
+        filenames: List with filenames.
+        
+    Returns:
+        dict[int,str]: Dictionairy with int for keys representing versions and str for value representing filename.
+    """
+    version_dict = {}
+    
+    for filename in filenames:
+        version = get_version(filename)
+        if version:
+            version_dict[version] = filename
+        else:
+            continue
 
+    return version_dict
+
+
+def get_highest_version(version_dict:dict[int,str]) -> int:
+    """Function to get highest version number from version_dict.
+    
+    Args:
+        version_dict: Dictionairy with keys being version, values being filenames.
+        
+    Returns:
+        int: Int of highest version.
+    """
+    return max(version_dict.keys())
+
+
+def read_file_logic(filename:str,filetype:str="parquet",fs: dapla.gcs.GCSFileSystem = None,) -> pd.DataFrame|None:
+    """Placeholder function should extend with multiple filetypes and check extension of filename."""
+    
+    if "parquet" not in filename:
+        print("Fungerer bare med parquet for nå!")
+        return None
+    else:
+        
+        df = pd.read_parquet(filename, filesystem = fs)
+        
         return df
 
 
-def get_time_period_standard(
-    base_name: str,
-    start_year: int | str = "",
-    start_month: int | str = "",
-    start_day: int | str = "",
-    end_year: int | str = "",
-    end_month: int | str = "",
-    end_day: int | str = "",
-) -> str:
-    """Return a filename with correct timeperiod accroding to the navnestandard.
-
+def read_ssb_file(
+    folder_path: str,
+    name: str,
+    year: int = None,
+    mid_date: int = None,
+    day: int = None,
+    end_year: int = None,
+    end_mid_date: int = None,
+    end_day: int = None,
+    frequency: str = "m",
+    version: int = None,
+    filetype: str = "parquet", #Strengt tatt ikke nødvendig.
+    seperator: str = ";",
+    encoding: str = "latin1", 
+    fs: dapla.gcs.GCSFileSystem = None,
+) -> pd.DataFrame|None:
+    """Function to read ssb files.
+    
     Args:
-        base_name: the name of the file. E.g. alleover-utvida.
-        start_year: the first year if time period, else the only year. YYYY.
-        start_month: the first month if time period, else a specific month, or ''. Default: ''.
-        start_day: the first day if time period, else a specific date. Default: ''.
-        end_year: the last year if timeperiod. YYYY. Defualt: ''.
-        end_month: the last month if time period. Default: ''.
-        end_day: the last day if time period. Default: ''.
-
+        folder_path: String to folder on linux or GCP.
+        name: File name.
+        year: Year file starts in.
+        mid_date: Int for date after year.
+        day: Day file stars in, if empty assumes file contains a whole month or year.
+        end_year: End year for file, if empty assumes file contains only one year.
+        end_mid_date: Int for date after year.
+        end_day: End day for file, if empty assumes file contains only one day or whole years or months.
+        version: Version of file, if specified the function will read this version, else it will read newest version.
+        filetype: File type.
+        seperator: Seperator for text based storage formats.
+        encoding: Encoding for file, base is latin1.
+        fs: Filesystem if not working on linux.
+    
     Returns:
-        str: the filename with correct date.
+        pd.DataFram|None: Returns a pandas dataframe if file found.
     """
-    # Specific month, no time period
-    if start_month != "" and end_year == "":
-        filename = f"{base_name}_p{start_year}-{validate_month(start_month)}_v"
-
-    # Only whole year, no time period
-    elif start_month == "" and end_year == "":
-        filename = f"{base_name}_p{start_year}_v"
-
-    # Whole year, time period
-    elif start_month == "" and end_year != "":
-        filename = f"{base_name}_p{start_year}-p{end_year}_v"
-
-    # Specific month, time period
-    elif start_month != "" and end_year != "" and end_month != "":
-        filename = f"{base_name}_p{start_year}-{validate_month(start_month)}-p{end_year}-{validate_month(end_month)}_v"
-    else:
-        filename = base_name
-
-    return filename
-
-
-def get_versions(
-    folder_path: str, filename: str, filename_pattern: Pattern[str]
-) -> list[str]:
-    """Get all the versions that exists of a file.
-
-    Args:
-        folder_path: the whole path, without file name. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/klargjorte-data/'.
-        filename: the name of the file, without version and file type. Ex.: 'alleover-utvida_p2023-02_v'.
-        filename_pattern: the whole filename, including pattern of version and filetype. Ex.: re.compile(rf'{filename}(d+).parquet').
-
-    Returns:
-        list[str]: versions, list with the version numbers existing for the filename.
-    """
-    versions = []
-
-    # Search for existing files in folder
-    for filename in os.listdir(folder_path):
-        match = filename_pattern.match(filename)
-
-        if match:
-            # File matches the pattern
-            version = match.group(1)
-            versions.append(version)
-
-    return versions
+    # Create timestamp if given dates.
+    time_stamp = timestamp.get_ssb_timestamp(year,end_mid_date,day,end_year,end_mid_date,end_day,frequency=frequency)
+    # Find files that match name and date.
+    files = get_files(
+        folder_path=folder_path,
+        base_name=name,
+        timestamp=time_stamp
+        fs=fs,
+    )
+    # Get file version
+    if len(files) != 1: #if more than one version get versions.
+        files_versioned = get_versions_for_filenames(files)
+        
+        if version: #If you know which version you want, get that one.
+            filename = files_versioned[version]
+        else: #Else get newest version.
+            filename = get_highest_version(files_versioned)
+    else: #If only one version, just get that one.
+        filename = files[0]
+    # Returning read file.    
+    return read_file_logic(filename=filename,filetype=filetype,fs=fs)
+        
