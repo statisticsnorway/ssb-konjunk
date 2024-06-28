@@ -4,8 +4,9 @@ Follows the :crossed_fingers: the standardization for versioning and names.
 """
 import re
 import glob
+import dapla
 import pandas as pd
-from ssb_konjunk import timestamp
+from src.ssb_konjunk import timestamp
 
 
 def get_files(folder_path: str, base_name: str, time_stamp:str, fs: dapla.gcs.GCSFileSystem = None) -> list[str]:
@@ -42,12 +43,12 @@ def get_version(filename:str) -> int|None:
     
     match = re.search(pattern, filename)
     if match:
-        return = match.group(1)
+        return match.group(1)
     else:
         return None
     
     
-def get_versions_for_filenames(filenames:list[str]) -> dict[int,str]|dict[]:
+def get_versions_for_filenames(filenames:list[str]) -> dict[int,str]:
     """Function to find version number in files and return filenames versioned.
     
     Args:
@@ -96,13 +97,8 @@ def read_file_logic(filename:str,filetype:str="parquet",fs: dapla.gcs.GCSFileSys
 def read_ssb_file(
     folder_path: str,
     name: str,
-    year: int = None,
-    mid_date: int = None,
-    day: int = None,
-    end_year: int = None,
-    end_mid_date: int = None,
-    end_day: int = None,
-    frequency: str = "m",
+    dates: tuple[int|None],
+    frequency: str = "M",
     version: int = None,
     filetype: str = "parquet", #Strengt tatt ikke nødvendig.
     seperator: str = ";",
@@ -114,12 +110,7 @@ def read_ssb_file(
     Args:
         folder_path: String to folder on linux or GCP.
         name: File name.
-        year: Year file starts in.
-        mid_date: Int for date after year.
-        day: Day file stars in, if empty assumes file contains a whole month or year.
-        end_year: End year for file, if empty assumes file contains only one year.
-        end_mid_date: Int for date after year.
-        end_day: End day for file, if empty assumes file contains only one day or whole years or months.
+        dates: Tuple with dates, writen as (start_year,start_month,start_day,end_year,end_month,end_day). If you are using Quarter or another timeformat, then just remember to start with year, then smaller time frequency.
         version: Version of file, if specified the function will read this version, else it will read newest version.
         filetype: File type.
         seperator: Seperator for text based storage formats.
@@ -130,12 +121,12 @@ def read_ssb_file(
         pd.DataFram|None: Returns a pandas dataframe if file found.
     """
     # Create timestamp if given dates.
-    time_stamp = timestamp.get_ssb_timestamp(year,end_mid_date,day,end_year,end_mid_date,end_day,frequency=frequency)
+    time_stamp = timestamp.get_ssb_timestamp(*dates,frequency=frequency)
     # Find files that match name and date.
     files = get_files(
         folder_path=folder_path,
         base_name=name,
-        timestamp=time_stamp
+        time_stamp=time_stamp,
         fs=fs,
     )
     # Get file version
