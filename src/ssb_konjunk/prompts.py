@@ -4,6 +4,7 @@ The functions should be used to prompt which period to read files from og which 
 """
 
 import re
+import pendulum
 from calendar import monthrange
 from datetime import datetime
 from typing import Any
@@ -35,10 +36,11 @@ def input_year() -> int:
         int: Year as int
     """
     # Get the desired year from the user
-    print("Skriv inn år i format YYYY som", 2024)
+    now = pendulum.now('Europe/Oslo').year
+    print("Skriv inn år i format YYYY som", now)
     while True:
         year = _input_valid_int()
-        if 2000 <= year <= 2030:
+        if year == now:
             return year
         else:
             print("Er du sikker på at du skal kjøre statistikk for dette året,", year)
@@ -68,7 +70,7 @@ def input_term() -> int:
     Returns:
         int: term
     """
-    print("Skriv inn termin i format t, som:", 3)
+    print("Skriv inn termin i format b, som:", 3)
     while True:
         term = _input_valid_int()
         if 1 <= term <= 6:
@@ -90,6 +92,36 @@ def input_quarter() -> int:
             return quarter
         else:
             print("Ikke en gyldig kvartal, vennligst skriv inn et tall fra 1 til 4.")
+            
+            
+def input_trimester() -> int:
+    """Input function for trimester.
+
+    Returns:
+        int: trimester
+    """
+    print("Skriv inn trimester i format t, som:", 2)
+    while True:
+        trimester = _input_valid_int()
+        if 1 <= trimester <= 3:
+            return trimester
+        else:
+            print("Ikke en gyldig trimester, vennligst skriv inn et tall fra 1 til 3.")
+            
+            
+def input_week() -> int:
+    """Input function for week.
+
+    Returns:
+        int: week
+    """
+    print("Skriv inn week i format w, som:", 52)
+    while True:
+        week = _input_valid_int()
+        if 1 <= week <= 52:
+            return week
+        else:
+            print("Ikke en gyldig uke, vennligst skriv inn et tall fra 1 til 52.")
 
 
 def days_in_month(year: int, month: int) -> list[str]:
@@ -148,62 +180,6 @@ def months_in_term(term: int) -> tuple[int, int]:
     }
 
     return month_term_dict[term]
-
-
-def find_file_for_month_daily(
-    files: list[str], desired_year: int, desired_month: int
-) -> str:
-    """Function to retrieve spesific file str for period form list of file strings.
-
-    Args:
-        files: List of file strings.
-        desired_year: Int to represent year(yyyy).
-        desired_month: Int to represent a month(m).
-
-    Returns:
-        str: Filename on linux, Filepath on dapla
-    """
-    for file in files:
-        if (
-            extract_start_end_dates(file)[0].year == desired_year
-            and extract_start_end_dates(file)[1].year == desired_year
-            and extract_start_end_dates(file)[0].month == desired_month
-            and extract_start_end_dates(file)[1].month == desired_month
-        ):
-            break
-    return file
-
-
-def delta_month(month: int, periods: int) -> int:
-    """Function to shift month backwards or forward.
-
-    Args:
-        month: Current month you are using.
-        periods: Periods you want to move, can be positive or negative int.
-
-    Returns:
-        int: Month we have shifted to.
-
-    Raises:
-        ValueError: If periods are are more or less than a year.
-        ValueError: If period is 0.
-    """
-    if periods < -11 or periods > 11:
-        raise ValueError(
-            "Input periods must be between -11 and 11. If youre doing a going a year back in time, please change year."
-        )
-    elif periods == 0:
-        raise ValueError("Input periods is 0, you should remove the function!")
-    else:
-        # Taking period adding periods.
-        new_month = month + (periods)
-        # If new_month is above twelve, i take negative twelve to get month from new year.
-        if new_month > 12:
-            new_month = new_month - 12
-        # If new_month is below 1, I take 12 negative new_month. This should give the right month from last year.
-        elif new_month < 1:
-            new_month = new_month + 12
-        return new_month
 
 
 def iterate_years_months(
