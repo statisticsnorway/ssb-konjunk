@@ -4,10 +4,11 @@ The functions should be used to prompt which period to read files from og which 
 """
 
 import re
-import pendulum
 from calendar import monthrange
 from datetime import datetime
 from typing import Any
+
+import pendulum
 
 
 def _input_valid_int() -> int:
@@ -36,7 +37,7 @@ def input_year() -> int:
         int: Year as int
     """
     # Get the desired year from the user
-    now = pendulum.now('Europe/Oslo').year
+    now = pendulum.now("Europe/Oslo").year
     print("Skriv inn år i format YYYY som", now)
     while True:
         year = _input_valid_int()
@@ -92,8 +93,8 @@ def input_quarter() -> int:
             return quarter
         else:
             print("Ikke en gyldig kvartal, vennligst skriv inn et tall fra 1 til 4.")
-            
-            
+
+
 def input_trimester() -> int:
     """Input function for trimester.
 
@@ -107,8 +108,8 @@ def input_trimester() -> int:
             return trimester
         else:
             print("Ikke en gyldig trimester, vennligst skriv inn et tall fra 1 til 3.")
-            
-            
+
+
 def input_week() -> int:
     """Input function for week.
 
