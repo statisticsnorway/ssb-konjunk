@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ssb-konjunk"
-version = "0.0.8"
+version = "0.1.0"
 description = "SSB Konjunk"
 authors = ["Edvard Garmannslund <ged@ssb.no>"]
 license = "MIT"
@@ -17,6 +17,7 @@ Changelog = "https://github.com/statisticsnorway/ssb-konjunk/releases"
 python = "^3.10"
 click = ">=8.0.1"
 pandas = "^2.2.0"
+pendulum = "^3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pygments = ">=2.10.0"

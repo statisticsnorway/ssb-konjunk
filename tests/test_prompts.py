@@ -3,7 +3,6 @@ from datetime import datetime
 import pytest
 
 from ssb_konjunk.prompts import days_in_month
-from ssb_konjunk.prompts import delta_month
 from ssb_konjunk.prompts import extract_start_end_dates
 from ssb_konjunk.prompts import iterate_years_months
 
@@ -72,25 +71,6 @@ def test_extract_start_end_dates_valid() -> None:
 
     assert start_date == expected_start_date
     assert end_date == expected_end_date
-
-
-"""Test of function delta_month"""
-
-
-def test_delta_month() -> None:
-    # Test for valid change forward in time
-    assert delta_month(6, 3) == 9
-    # Test for valid change backwards in time.
-    assert delta_month(6, -3) == 3
-    # Test for valid change past 12.
-    assert delta_month(11, 3) == 2
-    # Test for valid change past 1.
-    assert delta_month(1, -2) == 11
-
-    with pytest.raises(ValueError):
-        delta_month(12, -12)
-    with pytest.raises(ValueError):
-        delta_month(12, 0)
 
 
 """Test of function iterate_years_months"""
