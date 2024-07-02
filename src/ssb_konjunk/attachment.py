@@ -98,7 +98,7 @@ class folder:
 
 
 ### BRUKER MYE SHUTIL HER, MAA BYTTES UT PAA DAPLA!!!
-    def send_attachment(self,path_loaded:str,path_out:str,manual_files:list[str]) -> int:
+    def send_attachment(self,path_out:str,manual_files:list[str]) -> int:
         allowed_extensions = ['.xls', '.xlsx', '.csv']
         if self.attachment is None:
             print(f"Finner ikke filen, har du husket å kjøre 'get_filenames()' først?")
@@ -152,8 +152,6 @@ class folder:
                 Epost:{self.kontaktPersonEpost} Telefon:{self.kontaktPersonTelefon}.
                 Kommentar fra enhet: {self.kontaktInfoKommentar}''')
                 response = 100
-        
-        shutil.move(self.folder_path, f"{path_loaded}/{self.delregNr}")
 
         return response
 
@@ -196,9 +194,13 @@ class attachment():
 
         i = 0
         for folder in self.list_of_attachments:
-            response = folder.send_attachment(path_loaded,path_out,manual_files)
-
-            if response == 200:
-                i = i + 1
+            
+            if folder not in os.listdir(f"{path_loaded}/{folder.delregnr}/"):
+                response = folder.send_attachment(path_out,manual_files)
+                shutil.copytree(folder.folder_path,f"{path_loaded}/{folder.delregnr}")
+                if response == 200:
+                    i = i + 1
+            else:
+                continue
 
         print(f"Sendte {i}, vedlegg til mappe {path_out}")
