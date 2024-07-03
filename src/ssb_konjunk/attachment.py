@@ -197,7 +197,7 @@ class attachment():
             
             if folder not in os.listdir(f"{path_loaded}/{folder.delregNr}/"):
                 response = folder.send_attachment(path_out,manual_files)
-                shutil.copytree(folder.folder_path,f"{path_loaded}/{folder.delregNr}")
+                shutil.copytree(folder.folder_path,f"{path_loaded}/{folder.delregNr}",dirs_exist_ok = True)
                 if response == 200:
                     i = i + 1
             else:
