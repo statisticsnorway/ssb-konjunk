@@ -5,8 +5,6 @@ This script includes rounding functions with the half-up method.
 
 import pandas as pd
 import numpy as np
-import math
-from decimal import *
 
 
 def round_df(df: pd.DataFrame, n_digits: int) -> pd.DataFrame:
