@@ -19,12 +19,22 @@ def get_saved_file(
     year: int | str = "",
     month: int | str = "",
     day: int | str = "",
+    quarter: int | str = "",
+    week: int | str = "",
+    bimester: int | str = "",
+    tertial: int | str = "",
+    halfyear: int | str = "",    
     filetype: str = "parquet",
     fs: dapla.gcs.GCSFileSystem = None,
     seperator: str = ";",
     end_year: int | str = "",
     end_month: int | str = "",
     end_day: int | str = "",
+    end_quarter: int | str = "",
+    end_week: int | str = "",
+    end_bimester: int | str = "",
+    end_tertial: int | str = "",
+    end_halfyear: int | str = "",
 ) -> pd.DataFrame:
     """Function to get a saved file.
 
@@ -39,12 +49,22 @@ def get_saved_file(
         year: the year for the data.
         month: the relevant month. Default: ''.
         day: the relvant date. Default: ''.
+        quarter: the relevant quarter. Default: ''.
+        week: the relevant week. Default: ''.
+        bimester: the first bimester in the time period. Default: ''.
+        tertial: the first tertial in the time period. Default: ''.
+        halfyear: the first halfyear in the time period. Default: ''.
         filetype: the filetype to save as. Default: 'parquet'.
         fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
         seperator: the seperator to use it filetype is csv. Default: ';'.
         end_year: if the data covers a period, time series, the end year here. Default: ''.
         end_month: if the data covers a period, time series, the end month here. Default: ''.
         end_day: if the data covers a period, time series, the end day here. Default: ''.
+        end_quarter: the last quarter if time period. Default: ''.
+        end_week: the last week if time period. Default: ''.
+        end_bimester: the last bimester if time period. Default: ''.
+        end_tertial: the last tertial if time period. Default: ''.
+        end_halfyear: the last halfyear if time period. Default: ''.
 
     Returns:
         pd.DataFrame: file as a data frame.
@@ -54,8 +74,16 @@ def get_saved_file(
         base_name=name,
         start_year=year,
         start_month=month,
+        start_day=day,
+        start_quarter=quarter,
         end_year=end_year,
         end_month=end_month,
+        end_day=end_day,
+        end_quarter=end_quarter,
+        end_week=end_week,
+        end_bimester=end_bimester,
+        end_tertial=end_tertial,
+        end_halfyear=end_halfyear,
     )
 
     # Get newest version number
@@ -207,7 +235,7 @@ def get_versions(
     Args:
         folder_path: the whole path, without file name. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/klargjorte-data/'.
         filename: the name of the file, without version and file type. Ex.: 'alleover-utvida_p2023-02_v'.
-        filename_pattern: the whole filename, including pattern of version and filetype. Ex.: re.compile(rf'{filename}(d+).parquet').
+        filename_pattern: the whole filename, including pattern of version and filetype. Ex.: re.compile(rf'{filename}(\d+).parquet').
 
     Returns:
         list[str]: versions, list with the version numbers existing for the filename.
@@ -222,5 +250,8 @@ def get_versions(
             # File matches the pattern
             version = match.group(1)
             versions.append(version)
-
+    
+    # Sort it in stigende order
+    versions = sorted(versions, key=int)
+    
     return versions
