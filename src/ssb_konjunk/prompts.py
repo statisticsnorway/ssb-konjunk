@@ -257,3 +257,16 @@ def validate_month(month: int | str) -> str:
     if int(month) < 10:
         month = "0" + str(int(month))
     return str(month)
+
+def validate_day(day: int | str) -> str:
+    """Ensure day to have leading zero if it less than 10.
+
+    Args:
+        day: the number of the month
+
+    Returns:
+        str: the number of the day with leading zero if relevant
+    """
+    if int(day) < 10:
+        day = "0" + str(int(day))
+    return str(day)
