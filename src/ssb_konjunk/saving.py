@@ -10,6 +10,7 @@ from re import Pattern
 import dapla
 import pandas as pd
 from ssb_konjunk.prompts import validate_month
+from ssb_konjunk.prompts import validate_day
 
 def get_saved_file(
     name: str,
@@ -86,9 +87,19 @@ def get_time_period_standard(
     start_year: int | str = "",
     start_month: int | str = "",
     start_day: int | str = "",
+    start_quarter: int | str = "",
+    start_week: int | str = "",
+    start_bimester: int | str = "",
+    start_tertial: int | str = "",
+    start_halfyear: int | str = "",
     end_year: int | str = "",
     end_month: int | str = "",
     end_day: int | str = "",
+    end_quarter: int | str = "",
+    end_week: int | str = "",
+    end_bimester: int | str = "",
+    end_tertial: int | str = "",
+    end_halfyear: int | str = "",
 ) -> str:
     """Return a filename with correct timeperiod accroding to the navnestandard.
 
@@ -97,32 +108,95 @@ def get_time_period_standard(
         start_year: the first year if time period, else the only year. YYYY.
         start_month: the first month if time period, else a specific month, or ''. Default: ''.
         start_day: the first day if time period, else a specific date. Default: ''.
+        start_quarter: the first quarter in time period, else specific quarter. Defualt: ''.
+        start_week: the first week in the time period. Default: ''.
+        start_bimester: the first bimester in the time period. Default: ''.
+        start_tertial: the first tertial in the time period. Default: ''.
+        start_halfyear: the first halfyear in the time period. Default: ''.
         end_year: the last year if timeperiod. YYYY. Defualt: ''.
         end_month: the last month if time period. Default: ''.
         end_day: the last day if time period. Default: ''.
+        end_quarter: the last quarter if time period. Default: ''.
+        end_week: the last week if time period. Default: ''.
+        end_bimester: the last bimester if time period. Default: ''.
+        end_tertial: the last tertial if time period. Default: ''.
+        end_halfyear: the last halfyear if time period. Default: ''.
 
     Returns:
         str: the filename with correct date.
-    """
-    # Specific month, no time period
-    if start_month != "" and end_year == "":
-        filename = f"{base_name}_p{start_year}-{validate_month(start_month)}_v"
-
-    # Only whole year, no time period
-    elif start_month == "" and end_year == "":
-        filename = f"{base_name}_p{start_year}_v"
-
-    # Whole year, time period
-    elif start_month == "" and end_year != "":
-        filename = f"{base_name}_p{start_year}-p{end_year}_v"
-
-    # Specific month, time period
-    elif start_month != "" and end_year != "" and end_month != "":
-        filename = f"{base_name}_p{start_year}-{validate_month(start_month)}-p{end_year}-{validate_month(end_month)}_v"
+    """  
+    # Not possible to use both quarter and month in same filename
+    if (start_quarter != "" and start_month != "") | (start_quarter != "" and start_day != "") | (end_quarter != "" and end_month != "") |(end_quarter != "" and end_day != ""):
+        print("Not valid time period passed, return filename without any time period specification.")
+        return base_name
+    
+    # Handle quarter periods
+    if start_year != "" and start_quarter != "" and end_year != "" and end_quarter != "":
+        return f"{base_name}_p{start_year}Q{start_quarter}_p{end_year}Q{end_quarter}_v"
+    
+    elif start_year != "" and start_quarter != "" and end_year == "" and end_quarter == "":
+        return f"{base_name}_p{start_year}Q{start_quarter}_v"
+    
+    # Handle weekly periods
+    if start_year != "" and start_week != "" and end_year != "" and end_week != "":
+        return f"{base_name}_p{start_year}W{start_week}_p{end_year}W{end_week}_v"
+    
+    elif start_year != "" and start_week != "" and end_year == "" and end_week == "":
+        return f"{base_name}_p{start_year}W{start_week}_v"
+    
+    # Handle bimester periods
+    if start_year != "" and start_bimester != "" and end_year != "" and end_bimester != "":
+        return f"{base_name}_p{start_year}B{start_bimester}_p{end_year}B{end_bimester}_v"
+    
+    elif start_year != "" and start_bimester != "" and end_year == "" and end_bimester == "":
+        return f"{base_name}_p{start_year}B{start_bimester}_v"
+    
+    # Handle tertial periods
+    if start_year != "" and start_tertial != "" and end_year != "" and end_tertial != "":
+        return f"{base_name}_p{start_year}T{start_tertial}_p{end_year}T{end_tertial}_v"
+    
+    elif start_year != "" and start_tertial != "" and end_year == "" and end_tertial == "":
+        return f"{base_name}_p{start_year}T{start_tertial}_v"
+    
+    # Handle halfyear periods
+    if start_year != "" and start_halfyear != "" and end_year != "" and end_halfyear != "":
+        return f"{base_name}_p{start_year}H{start_halfyear}_p{end_year}H{end_halfyear}_v"
+    
+    elif start_year != "" and start_halfyear != "" and end_year == "" and end_halfyear == "":
+        return f"{base_name}_p{start_year}H{start_halfyear}_v"
+    
+    # Handle monthly and daily periods
+    if start_year != "" and start_month != "" and start_day != "" and end_year != "" and end_month != "" and end_day != "":
+        start_month = validate_month(start_month)
+        end_month = validate_month(end_month)
+        start_day = validate_day(start_day)
+        end_day = validate_day(end_day)
+        return f"{base_name}_p{start_year}-{start_month}-{start_day}_p{end_year}-{end_month}-{end_day}_v"
+        
+    elif start_year != "" and start_month != "" and end_year != "" and end_month != "":
+        start_month = validate_month(start_month)
+        end_month = validate_month(end_month)
+        return f"{base_name}_p{start_year}-{start_month}_p{end_year}-{end_month}_v"
+        
+    elif start_year != "" and end_year != "" and start_month == "" and end_month == "" and start_day == "" and end_day == "":
+        return f"{base_name}_p{start_year}_p{end_year}_v"
+        
+    elif start_year != "" and start_month != "" and start_day != "":
+        start_month = validate_month(start_month)
+        start_day = validate_day(start_day)
+        return f"{base_name}_p{start_year}-{start_month}-{start_day}_v"
+        
+    elif start_year != "" and start_month != "" and end_year == "" and end_month == "":
+        start_month = validate_month(start_month)
+        return f"{base_name}_p{start_year}-{start_month}_v"
+        
+    elif start_year != "" and end_year == "":
+        return f"{base_name}_p{start_year}_v"
+    
     else:
-        filename = base_name
+        print("Not valid time period passed, return filename without any time period specification")
+        return base_name
 
-    return filename
 
 
 def get_versions(
