@@ -9,32 +9,21 @@ from re import Pattern
 
 import dapla
 import pandas as pd
-from ssb_konjunk.prompts import validate_month
-from ssb_konjunk.prompts import validate_day
+from prompts import validate_month, validate_day
+from timestamp import get_ssb_timestamp
 
 def get_saved_file(
+    dates: tuple[int|None],
+    frequency: str, 
     name: str,
     datatilstand: str,
-    bucket_path: str,
-    year: int | str = "",
-    month: int | str = "",
-    day: int | str = "",
-    quarter: int | str = "",
-    week: int | str = "",
-    bimester: int | str = "",
-    tertial: int | str = "",
-    halfyear: int | str = "",    
+    bucket_statistikk: str,  
+    folder_in_datatilstand: str = '',
+    version_number: int = None,
     filetype: str = "parquet",
     fs: dapla.gcs.GCSFileSystem = None,
     seperator: str = ";",
-    end_year: int | str = "",
-    end_month: int | str = "",
-    end_day: int | str = "",
-    end_quarter: int | str = "",
-    end_week: int | str = "",
-    end_bimester: int | str = "",
-    end_tertial: int | str = "",
-    end_halfyear: int | str = "",
+    encoding: str = "latin1",
 ) -> pd.DataFrame:
     """Function to get a saved file.
 
@@ -43,215 +32,93 @@ def get_saved_file(
     If it is a year table, the filename is automatically adjusted.
 
     Args:
+        dates: Up to six arguments with int, to create timestamp for. E.g. (2022,2,2023,4) is p_2022-02_p2023-04 when frequency = 'M'.
+        frequency: monthly (M), daily(D), quarter (Q), terital (T), weekly (W).
         name: name of the file. E.g. overnatting16landet1, alleover, alleover-utvida.
         datatilstand: the datatilstand for the file to get.
-        bucket_path: the whole path, without file name and datatilstand. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/'.
-        year: the year for the data.
-        month: the relevant month. Default: ''.
-        day: the relvant date. Default: ''.
-        quarter: the relevant quarter. Default: ''.
-        week: the relevant week. Default: ''.
-        bimester: the first bimester in the time period. Default: ''.
-        tertial: the first tertial in the time period. Default: ''.
-        halfyear: the first halfyear in the time period. Default: ''.
+        bucket_statistikk: the bucket. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/' or 'gs://ssb-<teamnavn>-data-produkt-prod/overnatting/'.
+        folder_in_datatilstand: if there are folders under the datatilstand-level. Default: ''.
+        version_number: possibility to get another version, than the newest (i.e. highest version number). Default: None.
         filetype: the filetype to save as. Default: 'parquet'.
         fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
         seperator: the seperator to use it filetype is csv. Default: ';'.
-        end_year: if the data covers a period, time series, the end year here. Default: ''.
-        end_month: if the data covers a period, time series, the end month here. Default: ''.
-        end_day: if the data covers a period, time series, the end day here. Default: ''.
-        end_quarter: the last quarter if time period. Default: ''.
-        end_week: the last week if time period. Default: ''.
-        end_bimester: the last bimester if time period. Default: ''.
-        end_tertial: the last tertial if time period. Default: ''.
-        end_halfyear: the last halfyear if time period. Default: ''.
-
+        encoding: Encoding for file, base is latin1.
     Returns:
         pd.DataFrame: file as a data frame.
     """
-    # Find filename with correct time period
-    filename = get_time_period_standard(
-        base_name=name,
-        start_year=year,
-        start_month=month,
-        start_day=day,
-        start_quarter=quarter,
-        end_year=end_year,
-        end_month=end_month,
-        end_day=end_day,
-        end_quarter=end_quarter,
-        end_week=end_week,
-        end_bimester=end_bimester,
-        end_tertial=end_tertial,
-        end_halfyear=end_halfyear,
-    )
+    
+    # Get the timestamp at corrext format
+    timestamp = get_ssb_timestamp(*dates, frequency=frequency)
 
-    # Get newest version number
-    versions = get_versions(
-        bucket_path + datatilstand + "/",
-        filename,
-        re.compile(rf"{filename}(\d+)\.{filetype}"),
-    )
+    # Combine timestamp and base name to filename
+    filename = f"{name}_{timestamp}_v"
+    
+    # Validate all paths according to slashes and so
+    bucket_statistikk = remove_edge_slashes(bucket_statistikk)
+    datatilstand = remove_edge_slashes(datatilstand)
+    
+    # Make full file_path
+    if folder_in_datatilstand != "":
+        folder_in_datatilstand = remove_edge_slashes(folder_in_datatilstand)
+        file_path = f"{bucket_statistikk}/{datatilstand}/{folder_in_datatilstand}/{filename}"
+    else:
+        file_path = f"{bucket_statistikk}/{datatilstand}/{filename}"
+    
+    # Get list with the filenames, if several, ordered by the highest version number at last. 
+    files = get_files(file_path, fs=fs)
 
-    if len(versions) == 0:
+    # Case with no files. 
+    if len(files) == 0:
         print(f"There are no such files. {filename}")
-        return pd.DataFrame()
+        return None
+    
+    # Get the newest version if not version_number is specified
+    if version_number is None:
+        path_file = files[-1]
     else:
-        path = (
-            bucket_path + datatilstand + "/" + filename + f"{versions[-1]}.{filetype}"
-        )
+        path_file = next((s for s in files if f'_v{version_number}' in s), None)
 
-        # Different functions used for reading depending on the filetype
-        if filetype == "csv":
-            df = pd.read_csv(path, sep=seperator)
-        elif filetype == "parquet":
-            df = pd.read_parquet(path, filesystem=fs)
+    # Different functions used for reading depending on the filetype
+    if filetype == "csv":
+        df = pd.read_csv(path_file, sep=seperator, encoding=encoding)
+    elif filetype == "parquet":
+        df = pd.read_parquet(path_file, filesystem=fs)
 
-        return df
+    return df
 
 
-def get_time_period_standard(
-    base_name: str,
-    start_year: int | str = "",
-    start_month: int | str = "",
-    start_day: int | str = "",
-    start_quarter: int | str = "",
-    start_week: int | str = "",
-    start_bimester: int | str = "",
-    start_tertial: int | str = "",
-    start_halfyear: int | str = "",
-    end_year: int | str = "",
-    end_month: int | str = "",
-    end_day: int | str = "",
-    end_quarter: int | str = "",
-    end_week: int | str = "",
-    end_bimester: int | str = "",
-    end_tertial: int | str = "",
-    end_halfyear: int | str = "",
-) -> str:
-    """Return a filename with correct timeperiod accroding to the navnestandard.
-
+def get_files(folder_path: str, datatilstand: str=None, folder_in_datatilstand:str=None, filename: str=None, fs: dapla.gcs.GCSFileSystem = None) -> list[str]:
+    """Function to list files in a folder based on base name and timestamp.
+    
     Args:
-        base_name: the name of the file. E.g. alleover-utvida.
-        start_year: the first year if time period, else the only year. YYYY.
-        start_month: the first month if time period, else a specific month, or ''. Default: ''.
-        start_day: the first day if time period, else a specific date. Default: ''.
-        start_quarter: the first quarter in time period, else specific quarter. Defualt: ''.
-        start_week: the first week in the time period. Default: ''.
-        start_bimester: the first bimester in the time period. Default: ''.
-        start_tertial: the first tertial in the time period. Default: ''.
-        start_halfyear: the first halfyear in the time period. Default: ''.
-        end_year: the last year if timeperiod. YYYY. Defualt: ''.
-        end_month: the last month if time period. Default: ''.
-        end_day: the last day if time period. Default: ''.
-        end_quarter: the last quarter if time period. Default: ''.
-        end_week: the last week if time period. Default: ''.
-        end_bimester: the last bimester if time period. Default: ''.
-        end_tertial: the last tertial if time period. Default: ''.
-        end_halfyear: the last halfyear if time period. Default: ''.
-
+        folder_path: String to folder.
+        datatilstand: Name of the datatilstand.
+        folder_in_datatilstand: if there are folders under the datatilstand-level. If none, ''.
+        filename: String for name of file including timestamp.
+        fs: FileSystem, if not using linux storage.
+        
     Returns:
-        str: the filename with correct date.
-    """  
-    # Not possible to use both quarter and month in same filename
-    if (start_quarter != "" and start_month != "") | (start_quarter != "" and start_day != "") | (end_quarter != "" and end_month != "") |(end_quarter != "" and end_day != ""):
-        print("Not valid time period passed, return filename without any time period specification.")
-        return base_name
-    
-    # Handle quarter periods
-    if start_year != "" and start_quarter != "" and end_year != "" and end_quarter != "":
-        return f"{base_name}_p{start_year}Q{start_quarter}_p{end_year}Q{end_quarter}_v"
-    
-    elif start_year != "" and start_quarter != "" and end_year == "" and end_quarter == "":
-        return f"{base_name}_p{start_year}Q{start_quarter}_v"
-    
-    # Handle weekly periods
-    if start_year != "" and start_week != "" and end_year != "" and end_week != "":
-        return f"{base_name}_p{start_year}W{start_week}_p{end_year}W{end_week}_v"
-    
-    elif start_year != "" and start_week != "" and end_year == "" and end_week == "":
-        return f"{base_name}_p{start_year}W{start_week}_v"
-    
-    # Handle bimester periods
-    if start_year != "" and start_bimester != "" and end_year != "" and end_bimester != "":
-        return f"{base_name}_p{start_year}B{start_bimester}_p{end_year}B{end_bimester}_v"
-    
-    elif start_year != "" and start_bimester != "" and end_year == "" and end_bimester == "":
-        return f"{base_name}_p{start_year}B{start_bimester}_v"
-    
-    # Handle tertial periods
-    if start_year != "" and start_tertial != "" and end_year != "" and end_tertial != "":
-        return f"{base_name}_p{start_year}T{start_tertial}_p{end_year}T{end_tertial}_v"
-    
-    elif start_year != "" and start_tertial != "" and end_year == "" and end_tertial == "":
-        return f"{base_name}_p{start_year}T{start_tertial}_v"
-    
-    # Handle halfyear periods
-    if start_year != "" and start_halfyear != "" and end_year != "" and end_halfyear != "":
-        return f"{base_name}_p{start_year}H{start_halfyear}_p{end_year}H{end_halfyear}_v"
-    
-    elif start_year != "" and start_halfyear != "" and end_year == "" and end_halfyear == "":
-        return f"{base_name}_p{start_year}H{start_halfyear}_v"
-    
-    # Handle monthly and daily periods
-    if start_year != "" and start_month != "" and start_day != "" and end_year != "" and end_month != "" and end_day != "":
-        start_month = validate_month(start_month)
-        end_month = validate_month(end_month)
-        start_day = validate_day(start_day)
-        end_day = validate_day(end_day)
-        return f"{base_name}_p{start_year}-{start_month}-{start_day}_p{end_year}-{end_month}-{end_day}_v"
-        
-    elif start_year != "" and start_month != "" and end_year != "" and end_month != "":
-        start_month = validate_month(start_month)
-        end_month = validate_month(end_month)
-        return f"{base_name}_p{start_year}-{start_month}_p{end_year}-{end_month}_v"
-        
-    elif start_year != "" and end_year != "" and start_month == "" and end_month == "" and start_day == "" and end_day == "":
-        return f"{base_name}_p{start_year}_p{end_year}_v"
-        
-    elif start_year != "" and start_month != "" and start_day != "":
-        start_month = validate_month(start_month)
-        start_day = validate_day(start_day)
-        return f"{base_name}_p{start_year}-{start_month}-{start_day}_v"
-        
-    elif start_year != "" and start_month != "" and end_year == "" and end_month == "":
-        start_month = validate_month(start_month)
-        return f"{base_name}_p{start_year}-{start_month}_v"
-        
-    elif start_year != "" and end_year == "":
-        return f"{base_name}_p{start_year}_v"
-    
-    else:
-        print("Not valid time period passed, return filename without any time period specification")
-        return base_name
-
-
-
-def get_versions(
-    folder_path: str, filename: str, filename_pattern: Pattern[str]
-) -> list[str]:
-    """Get all the versions that exists of a file.
-
-    Args:
-        folder_path: the whole path, without file name. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/klargjorte-data/'.
-        filename: the name of the file, without version and file type. Ex.: 'alleover-utvida_p2023-02_v'.
-        filename_pattern: the whole filename, including pattern of version and filetype. Ex.: re.compile(rf'{filename}(\d+).parquet').
-
-    Returns:
-        list[str]: versions, list with the version numbers existing for the filename.
+        list[str]: List with filenames.
     """
-    versions = []
-
-    # Search for existing files in folder
-    for filename in os.listdir(folder_path):
-        match = filename_pattern.match(filename)
-
-        if match:
-            # File matches the pattern
-            version = match.group(1)
-            versions.append(version)
+    filenames = []
+    #match_string = f"{folder_path}/{datatilstand}/{folder_in_datatilstand}/{filename}*"
+    match_string = f"{folder_path}*"
+    if fs:
+        filenames = fs.glob(match_string)
+    else:
+        filenames = glob.glob(match_string)
+        
+    # Sort it in stigende order with highest version number at the end
+    filenames = sorted(filenames, key=lambda x: int(x.split('_v')[1].split('.')[0]))
     
-    # Sort it in stigende order
-    versions = sorted(versions, key=int)
-    
-    return versions
+    return filenames
+
+def remove_edge_slashes(input_string:str) -> str:
+    """
+    """
+    if input_string.startswith('/'):
+        input_string = input_string[1:]
+    if input_string.endswith('/'):
+        input_string = input_string[:-1]
+    return input_string
+
