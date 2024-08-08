@@ -2,6 +2,11 @@
 
 import pytest
 
+from ssb_konjunk.timestamp import _check_valid_day
+from ssb_konjunk.timestamp import _check_valid_month
+from ssb_konjunk.timestamp import _check_valid_quarter
+from ssb_konjunk.timestamp import _check_valid_term
+from ssb_konjunk.timestamp import _check_valid_year
 from ssb_konjunk.timestamp import check_even
 from ssb_konjunk.timestamp import get_ssb_timestamp
 from ssb_konjunk.timestamp import get_timestamp_daily
@@ -73,3 +78,54 @@ def test_get_ssb_timestamp() -> None:
         match="Any valid year should be length 4, you have: 1, maybe you should check if year: 1 is correct.",
     ):
         get_ssb_timestamp(1, frequency="Y")
+
+
+def test_check_valid_day() -> None:
+    """Test of function _check_valid_day."""
+    day = 32
+    with pytest.raises(
+        ValueError,
+        match=f"The arg for day is bigger than possible max is 31 you have: {day}.",
+    ):
+        _check_valid_day(day)
+
+
+def test_check_valid_month() -> None:
+    """Test of function _check_valid_month."""
+    month = 13
+    with pytest.raises(
+        ValueError,
+        match=f"The arg for month is bigger than possible max is 12 you have: {month}.",
+    ):
+        _check_valid_month(month)
+
+
+def test_check_valid_term() -> None:
+    """Test of function _check_valid_term."""
+    term = 7
+    with pytest.raises(
+        ValueError,
+        match=f"The arg for term is bigger than possible max is 6 you have: {term}.",
+    ):
+        _check_valid_term(term)
+
+
+def test_check_valid_quarter() -> None:
+    """Test of function _check_valid_quarter."""
+    quarter = 5
+    with pytest.raises(
+        ValueError,
+        match=f"The arg for quarter is bigger than possible max is 4 you have: {quarter}.",
+    ):
+        _check_valid_quarter(quarter)
+
+
+def test_check_valid_year() -> None:
+    """Test of function _check_valid_year."""
+    year1 = 2030
+    year2 = 2020
+    with pytest.raises(
+        ValueError,
+        match=f"The order of args is start date and then end date. Therefore first year arg can not be bigger than the last. Your args are start year:{year1}  end year:{year2}.",
+    ):
+        _check_valid_year(year1, year2)
