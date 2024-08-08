@@ -141,7 +141,7 @@ def get_timestamp_yearly(*args: int) -> str | None:
 
 def get_timestamp_special(*args: int, frequency: str) -> str | None:
     """Function to create timestamp if frequency is now Y or D.
-    
+
     Args:
         args: Up to six arguments with int, to create timestamp for.
         frequency: Letter for which frequency the data is, Y for year etc.
