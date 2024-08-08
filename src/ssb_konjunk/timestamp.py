@@ -1,12 +1,12 @@
 """Functions to create timestamp according to SSB standard."""
 
 
-def check_even(number: int) -> bool:
+def check_even(elements: list[int]) -> bool:
     """Function to check if number is even."""
-    return len(number) % 2 == 0
+    return len(elements) % 2 == 0
 
 
-def _check_valid_day(day: int):
+def _check_valid_day(day: int) -> None:
     """Function to check that day arg is valid."""
     if day > 31:
         raise ValueError(
@@ -18,7 +18,7 @@ def _check_valid_day(day: int):
         )
 
 
-def _check_valid_month(month: int):
+def _check_valid_month(month: int) -> None:
     """Function to check that month arg is valid."""
     if month > 12:
         raise ValueError(
@@ -30,7 +30,7 @@ def _check_valid_month(month: int):
         )
 
 
-def _check_valid_term(term: int):
+def _check_valid_term(term: int) -> None:
     """Function to check that day arg is valid."""
     if term > 6:
         raise ValueError(
@@ -42,7 +42,7 @@ def _check_valid_term(term: int):
         )
 
 
-def _check_valid_quarter(quarter: int):
+def _check_valid_quarter(quarter: int) -> None:
     """Function to check that day arg is valid."""
     if quarter > 4:
         raise ValueError(
@@ -54,7 +54,7 @@ def _check_valid_quarter(quarter: int):
         )
 
 
-def _check_valid_year(year1: int, year2: int | None = None):
+def _check_valid_year(year1: int, year2: int | None = None) -> None:
     """Function to check that year is valid."""
     if len(str(year1)) != 4:
         raise ValueError(
@@ -72,7 +72,7 @@ def _check_valid_year(year1: int, year2: int | None = None):
             )
 
 
-def _check_valid_args(*args: tuple[int, ...], frequency: str):
+def _check_valid_args(*args: int, frequency: str) -> None:
     """Function to check if valid args."""
     if len(args) == 2:
         _check_valid_year(args[0])
@@ -100,7 +100,7 @@ def _check_valid_args(*args: tuple[int, ...], frequency: str):
         )
 
 
-def _check_frequency_suport(frequency: str):
+def _check_frequency_suport(frequency: str) -> None:
     """Function to check if frequency requested is supported."""
     if frequency not in ["Y", "Q", "B", "M", "D"]:
         raise ValueError(
@@ -108,7 +108,7 @@ def _check_frequency_suport(frequency: str):
         )
 
 
-def get_timestamp_daily(*args: tuple[int, ...]) -> str | None:
+def get_timestamp_daily(*args: int) -> str | None:
     """Function to create timestamp if frequency is daily."""
     if len(args) == 3:
         _check_valid_year(args[0])
@@ -128,31 +128,50 @@ def get_timestamp_daily(*args: tuple[int, ...]) -> str | None:
         raise ValueError(f"Ikke gyldig mende args, du har antall:{len(args)}")
 
 
-def get_timestamp_yearly(*args: tuple[int, ...]) -> str | None:
+def get_timestamp_yearly(*args: int) -> str | None:
     """Function to create timstamp if frequency is yearly."""
     if len(args) == 2:
         _check_valid_year(args[0], args[1])
-        return f"p{args[0]}-p{args[1]}"
+        return f"p{args[0]}_p{args[1]}"
     else:
         raise ValueError(
             f"You have the wrong amount of args, you can have two you have args: {args}"
         )
 
 
-def get_timestamp_special(*args: tuple[int, ...], frequency: str) -> str | None:
-    """Function to create timestamp if frequency is now Y or D."""
+def get_timestamp_special(*args: int, frequency: str) -> str | None:
+    """Function to create timestamp if frequency is now Y or D.
+    
+    Args:
+        args: Up to six arguments with int, to create timestamp for.
+        frequency: Letter for which frequency the data is, Y for year etc.
+
+    Returns:
+        string|None: Returns time stamp in ssb format.
+    """
     _check_valid_args(*args, frequency=frequency)
 
     if frequency == "M":
         frequency = "-"
 
-    if len(args) == 2:
-        return f"p{args[0]}{frequency}{args[1]:02}"
-    elif len(args) == 4:
-        return f"p{args[0]}{frequency}{args[1]:02}_p{args[2]}{frequency}{args[3]:02}"
+        if len(args) == 2:
+            return f"p{args[0]}{frequency}{args[1]:02}"
+        elif len(args) == 4:
+            return (
+                f"p{args[0]}{frequency}{args[1]:02}_p{args[2]}{frequency}{args[3]:02}"
+            )
+        else:
+            return None
+    else:
+        if len(args) == 2:
+            return f"p{args[0]}{frequency}{args[1]}"
+        elif len(args) == 4:
+            return f"p{args[0]}{frequency}{args[1]}_p{args[2]}{frequency}{args[3]}"
+        else:
+            return None
 
 
-def get_ssb_timestamp(*args: tuple[int, ...], frequency: str = "M") -> str | None:
+def get_ssb_timestamp(*args: int, frequency: str = "M") -> str | None:
     """Function to create a string in ssb timestamp format.
 
     Args:
@@ -161,6 +180,9 @@ def get_ssb_timestamp(*args: tuple[int, ...], frequency: str = "M") -> str | Non
 
     Returns:
         string|None: Returns time stamp in ssb format.
+
+    Raises:
+        ValueError: Raises error for wrong values in args.
     """
     _check_frequency_suport(frequency)
 
@@ -175,6 +197,7 @@ def get_ssb_timestamp(*args: tuple[int, ...], frequency: str = "M") -> str | Non
             "Mangler start år, timestamp blir da None. Vurder å fylle inn start år."
         )
     elif len(args) == 1 and frequency == "Y":
+        _check_valid_year(args[0])
         return f"p{args[0]}"
     else:
 
