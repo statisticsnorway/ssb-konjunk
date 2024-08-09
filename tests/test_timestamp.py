@@ -3,9 +3,12 @@
 import pytest
 
 from ssb_konjunk.timestamp import _check_valid_day
+from ssb_konjunk.timestamp import _check_valid_half_year
 from ssb_konjunk.timestamp import _check_valid_month
 from ssb_konjunk.timestamp import _check_valid_quarter
 from ssb_konjunk.timestamp import _check_valid_term
+from ssb_konjunk.timestamp import _check_valid_trimester
+from ssb_konjunk.timestamp import _check_valid_week
 from ssb_konjunk.timestamp import _check_valid_year
 from ssb_konjunk.timestamp import check_even
 from ssb_konjunk.timestamp import get_ssb_timestamp
@@ -46,6 +49,9 @@ def test_test_get_timestamp_special() -> None:
 
 def test_get_ssb_timestamp() -> None:
     """Test of function get_ssb_timestamp."""
+    # Testing week
+    assert get_ssb_timestamp(2020, 1, 2021, 2, frequency="W") == "p2020W01_p2021W02"
+    assert get_ssb_timestamp(2020, 1, frequency="W") == "p2020W01"
     # Testing month
     assert get_ssb_timestamp(2020, 1, 2021, 2, frequency="M") == "p2020-01_p2021-02"
     assert get_ssb_timestamp(2020, 1) == "p2020-01"
@@ -55,6 +61,12 @@ def test_get_ssb_timestamp() -> None:
     # Testing term
     assert get_ssb_timestamp(2020, 1, 2021, 2, frequency="B") == "p2020B1_p2021B2"
     assert get_ssb_timestamp(2020, 1, frequency="B") == "p2020B1"
+    # Testing trimester
+    assert get_ssb_timestamp(2020, 1, 2021, 2, frequency="T") == "p2020T1_p2021T2"
+    assert get_ssb_timestamp(2020, 1, frequency="T") == "p2020T1"
+    # Testing half year
+    assert get_ssb_timestamp(2020, 1, 2021, 2, frequency="H") == "p2020H1_p2021H2"
+    assert get_ssb_timestamp(2020, 1, frequency="H") == "p2020H1"
     # Testing day
     assert (
         get_ssb_timestamp(2020, 1, 1, 2020, 1, 31, frequency="D")
@@ -90,6 +102,16 @@ def test_check_valid_day() -> None:
         _check_valid_day(day)
 
 
+def test_check_valid_week() -> None:
+    """Test of function _check_valid_week."""
+    week = 53
+    with pytest.raises(
+        ValueError,
+        match=f"The arg for week is bigger than possible max is 52 you have: {week}.",
+    ):
+        _check_valid_week(week)
+
+
 def test_check_valid_month() -> None:
     """Test of function _check_valid_month."""
     month = 13
@@ -118,6 +140,26 @@ def test_check_valid_quarter() -> None:
         match=f"The arg for quarter is bigger than possible max is 4 you have: {quarter}.",
     ):
         _check_valid_quarter(quarter)
+
+
+def test_check_valid_trimester() -> None:
+    """Test of function _check_valid_trimester."""
+    trimester = 5
+    with pytest.raises(
+        ValueError,
+        match=f"The arg for trimester is bigger than possible max is 3 you have: {trimester}.",
+    ):
+        _check_valid_trimester(trimester)
+
+
+def test_check_valid_half_year() -> None:
+    """Test of function _check_valid_half_year."""
+    half_year = 5
+    with pytest.raises(
+        ValueError,
+        match=f"The arg for half_year is bigger than possible max is 2 you have: {half_year}.",
+    ):
+        _check_valid_half_year(half_year)
 
 
 def test_check_valid_year() -> None:

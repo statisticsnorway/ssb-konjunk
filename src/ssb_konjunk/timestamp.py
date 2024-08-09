@@ -18,6 +18,18 @@ def _check_valid_day(day: int) -> None:
         )
 
 
+def _check_valid_week(week: int) -> None:
+    """Function to check that day arg is valid."""
+    if week > 52:
+        raise ValueError(
+            f"The arg for week is bigger than possible max is 52 you have: {week}."
+        )
+    if week < 1:
+        raise ValueError(
+            f"The arg for week is smaller than possible min is 1 you have: {week}."
+        )
+
+
 def _check_valid_month(month: int) -> None:
     """Function to check that month arg is valid."""
     if month > 12:
@@ -54,6 +66,30 @@ def _check_valid_quarter(quarter: int) -> None:
         )
 
 
+def _check_valid_trimester(trimester: int) -> None:
+    """Function to check that day arg is valid."""
+    if trimester > 3:
+        raise ValueError(
+            f"The arg for trimester is bigger than possible max is 3 you have: {trimester}."
+        )
+    if trimester < 1:
+        raise ValueError(
+            f"The arg for trimester is smaller than possible min is 1 you have: {trimester}."
+        )
+
+
+def _check_valid_half_year(half_year: int) -> None:
+    """Function to check that day arg is valid."""
+    if half_year > 2:
+        raise ValueError(
+            f"The arg for half_year is bigger than possible max is 2 you have: {half_year}."
+        )
+    if half_year < 1:
+        raise ValueError(
+            f"The arg for half_year is smaller than possible min is 1 you have: {half_year}."
+        )
+
+
 def _check_valid_year(year1: int, year2: int | None = None) -> None:
     """Function to check that year is valid."""
     if len(str(year1)) != 4:
@@ -76,14 +112,23 @@ def _check_valid_args(*args: int, frequency: str) -> None:
     """Function to check if valid args."""
     if len(args) == 2:
         _check_valid_year(args[0])
+        if frequency == "W":
+            _check_valid_week(args[1])
         if frequency == "M":
             _check_valid_month(args[1])
         if frequency == "B":
             _check_valid_term(args[1])
         if frequency == "Q":
             _check_valid_quarter(args[1])
+        if frequency == "T":
+            _check_valid_trimester(args[1])
+        if frequency == "H":
+            _check_valid_half_year(args[1])
     elif len(args) == 4:
         _check_valid_year(args[0], args[2])
+        if frequency == "W":
+            _check_valid_week(args[1])
+            _check_valid_week(args[3])
         if frequency == "M":
             _check_valid_month(args[1])
             _check_valid_month(args[3])
@@ -93,7 +138,12 @@ def _check_valid_args(*args: int, frequency: str) -> None:
         if frequency == "Q":
             _check_valid_quarter(args[1])
             _check_valid_quarter(args[3])
-
+        if frequency == "T":
+            _check_valid_trimester(args[1])
+            _check_valid_trimester(args[3])
+        if frequency == "H":
+            _check_valid_half_year(args[1])
+            _check_valid_half_year(args[3])
     else:
         raise ValueError(
             f"You have the wrong number of args, youre args are {args}. You can have 2 or 4 for frequency: {frequency}"
@@ -102,9 +152,9 @@ def _check_valid_args(*args: int, frequency: str) -> None:
 
 def _check_frequency_suport(frequency: str) -> None:
     """Function to check if frequency requested is supported."""
-    if frequency not in ["Y", "Q", "B", "M", "D"]:
+    if frequency not in ["Y", "Q", "B", "M", "D", "W", "T", "H"]:
         raise ValueError(
-            f"The function does not support frequency: {frequency} yet. Please use one the supported ones: Y,Q,B,M,D"
+            f"The function does not support frequency: {frequency} yet. Please use one the supported ones: Y,Q,B,M,D,W,T,H"
         )
 
 
@@ -151,9 +201,9 @@ def get_timestamp_special(*args: int, frequency: str) -> str | None:
     """
     _check_valid_args(*args, frequency=frequency)
 
-    if frequency == "M":
-        frequency = "-"
-
+    if frequency in ["M", "W"]:
+        if frequency == "M":
+            frequency = "-"
         if len(args) == 2:
             return f"p{args[0]}{frequency}{args[1]:02}"
         elif len(args) == 4:
