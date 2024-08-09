@@ -6,10 +6,11 @@ Follows the :crossed_fingers: the standardization for versioning and names.
 import glob
 import re
 
-import dapla as dp
+import dapla
 import pandas as pd
 import numpy as np
-from timestamp import get_ssb_timestamp
+from dapla import FileClient
+from src.ssb_konjunk import timestamp
 
 
 def get_ssb_file(
@@ -21,7 +22,7 @@ def get_ssb_file(
     folder_in_datatilstand: str = "",
     version_number: int = np.nan,
     filetype: str = "parquet",
-    fs: dp.gcs.GCSFileSystem = None,
+    fs: dapla.gcs.GCSFileSystem = None,
     seperator: str = ";",
     encoding: str = "latin1",
 ) -> pd.DataFrame:
@@ -63,11 +64,12 @@ def get_ssb_file(
     if len(files) == 0:
         print(f"There are no such files. {file_path}")
         return None
+    
     # Get the newest version if not version_number is specified
-    if version_number is None:
+    if version_number.isna():
         path_file = files[-1]
     else:
-        path_file = next((s for s in files if f"_v{version_number}" in s), None)
+        path_file = next((s for s in files if f"_v{int(version_number)}" in s), None)
 
     # Different functions used for reading depending on the filetype
     if filetype == "csv":
@@ -88,10 +90,10 @@ def save_ssb_file(
     bucket_statistikk: str,
     folder_in_datatilstand: str = "",
     filetype: str = "parquet",
-    fs: dp.gcs.GCSFileSystem = None,
+    fs: dapla.gcs.GCSFileSystem = None,
     seperator: str = ";",
     encoding: str = "latin1",
-):
+)-> None:
     """Function to save a file at SSB-format.
 
     Args:
@@ -139,7 +141,7 @@ def save_ssb_file(
     save_df(df, file_path, version_number, fs, filetype, seperator, encoding)
 
 
-def find_version_number(files: list[str], stable_version: bool) -> str:
+def find_version_number(files: list[str], stable_version: bool) -> str|None:
     """Find the correct version number to use for saving.
 
     Options about overwriting or making new version as well.
@@ -149,7 +151,7 @@ def find_version_number(files: list[str], stable_version: bool) -> str:
         stable_version: If False version 0 is used.
 
     Returns:
-        str: The number to use for the version.
+        str: The number to use for the version or None if not to save.
     """
     existing_versions = [re.search(r"_v([^_]+)$", f).group(1) for f in files]
     print(existing_versions)
@@ -185,18 +187,18 @@ def find_version_number(files: list[str], stable_version: bool) -> str:
             else:
                 return None
     else:
-        raise ValueError("Somethin went wrong when finding the version number.")
+        raise ValueError("Something went wrong when finding the version number.")
 
 
 def save_df(
     df: pd.DataFrame,
     file_path: str,
-    version_number: str,
-    fs: dp.gcs.GCSFileSystem | None,
+    version_number: str|None,
+    fs: dapla.gcs.GCSFileSystem | None,
     filetype: str,
     seperator: str,
     encoding: str,
-):
+)-> None:
     """Do the actual saving, either as csv or parquet.
 
     Args:
@@ -217,7 +219,7 @@ def save_df(
             try:
                 df.to_parquet(file_path, index=False)
             except PermissionError:
-                dp.write_pandas(
+                dapla.write_pandas(
                     df=df,
                     gcs_path=file_path,
                     file_format="parquet",
@@ -227,9 +229,9 @@ def save_df(
         elif filetype == "csv":
             file_path = file_path + version_number + ".csv"
             try:
-                df.to_csv(whole_path, sep=seperator, index=False, encoding=encoding)
+                df.to_csv(file_path, sep=seperator, index=False, encoding=encoding)
             except PermissionError:
-                dp.write_pandas(
+                dapla.write_pandas(
                     df=df,
                     gcs_path=file_path,
                     file_format="csv",
@@ -266,7 +268,7 @@ def structure_ssb_filepath(
         str: the full path to the file.
     """
     # Get the timestamp at corrext format
-    timestamp = get_ssb_timestamp(*dates, frequency=frequency)
+    timestamp = timestamp.get_ssb_timestamp(*dates, frequency=frequency)
 
     # Combine timestamp and base name to filename
     filename = f"{name}_{timestamp}_v"
@@ -284,7 +286,7 @@ def structure_ssb_filepath(
     return file_path
 
 
-def get_files(folder_path: str, fs: dp.gcs.GCSFileSystem = None) -> list[str]:
+def get_files(folder_path: str) -> list[str], 
     """Function to list files in a folder based on base name and timestamp.
 
     Args:
@@ -301,11 +303,15 @@ def get_files(folder_path: str, fs: dp.gcs.GCSFileSystem = None) -> list[str]:
         filenames = fs.glob(match_string)
     else:
         filenames = glob.glob(match_string)
+              
     # Sort it in stigende order with highest version number at the end
-    filenames = sorted(
-        filenames,
-        key=lambda x: int(re.search(r"_v(\d+)(?=\.(parquet|csv)$)", x).group(1)),
-    )
+    try:
+        filenames = sorted(
+            filenames,
+            key=lambda x: int(re.search(r"_v(\d+)(?=\.(parquet|csv)$)", x).group(1)),
+        )
+    except Exception as e:
+        print("No such files.")
     return filenames
 
 
@@ -409,5 +415,6 @@ def verify_datatilstand(datatilstand: str) -> str:
             "Datatilstand må være enten inndata, klargjorte-data, statistikk eller utdata:"
         )
         datatilstand = verify_datatilstand(datatilstand)
+        return datatilstand
     else:
         return datatilstand
