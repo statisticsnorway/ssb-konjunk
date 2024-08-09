@@ -227,13 +227,8 @@ def get_ssb_timestamp(*args: int, frequency: str = "M") -> str | None:
         ValueError: Raises error for wrong values in args.
 
     Example:
-        Examples for using get_ssb_timestamp:
-        ```python
         >>> get_ssb_timestamp(2024,8,1, frequency='D')
-        'p2024-08-01'\n
-        >>> get_ssb_timestamp(2024,8)
-        'p2024-08'\n
-        ```
+        'p2024-08-01'
     """
     _check_frequency_suport(frequency)
 
