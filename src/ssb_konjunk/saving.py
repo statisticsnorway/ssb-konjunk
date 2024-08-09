@@ -7,9 +7,8 @@ import glob
 import re
 
 import dapla
-import pandas as pd
 import numpy as np
-from dapla import FileClient
+import pandas as pd
 from src.ssb_konjunk import timestamp
 
 
@@ -93,7 +92,7 @@ def save_ssb_file(
     fs: dapla.gcs.GCSFileSystem = None,
     seperator: str = ";",
     encoding: str = "latin1",
-)-> None:
+) -> None:
     """Function to save a file at SSB-format.
 
     Args:
@@ -141,7 +140,7 @@ def save_ssb_file(
     save_df(df, file_path, version_number, fs, filetype, seperator, encoding)
 
 
-def find_version_number(files: list[str], stable_version: bool) -> str|None:
+def find_version_number(files: list[str], stable_version: bool) -> str | None:
     """Find the correct version number to use for saving.
 
     Options about overwriting or making new version as well.
@@ -193,12 +192,12 @@ def find_version_number(files: list[str], stable_version: bool) -> str|None:
 def save_df(
     df: pd.DataFrame,
     file_path: str,
-    version_number: str|None,
+    version_number: str | None,
     fs: dapla.gcs.GCSFileSystem | None,
     filetype: str,
     seperator: str,
     encoding: str,
-)-> None:
+) -> None:
     """Do the actual saving, either as csv or parquet.
 
     Args:
@@ -286,7 +285,7 @@ def structure_ssb_filepath(
     return file_path
 
 
-def get_files(folder_path: str) -> list[str],
+def get_files(folder_path: str) -> list[str]:
     """Function to list files in a folder based on base name and timestamp.
 
     Args:
@@ -310,7 +309,7 @@ def get_files(folder_path: str) -> list[str],
             filenames,
             key=lambda x: int(re.search(r"_v(\d+)(?=\.(parquet|csv)$)", x).group(1)),
         )
-    except Exception as e:
+    except Exception:
         print("No such files.")
     return filenames
 
