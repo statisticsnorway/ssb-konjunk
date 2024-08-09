@@ -332,7 +332,7 @@ def remove_edge_slashes(input_string: str) -> str:
 
 def verify_base_filename(name: str) -> str:
     """Verifies the base of the file name.
-    
+
     Corrects small errors
     as upper case letters in the base of the file name.
 
@@ -395,7 +395,7 @@ def verify_base_filename(name: str) -> str:
 
 def verify_datatilstand(datatilstand: str) -> str:
     """Veirfy the name of the datatilstand.
-    
+
     The level 'temp' is here included as a valid datatilstand.
 
     Args:
