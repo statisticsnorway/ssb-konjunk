@@ -16,7 +16,7 @@ def _check_valid_day(day: int) -> None:
         raise ValueError(
             f"The arg for day is smaller than possible min is 1 you have: {day}."
         )
-        
+
 
 def _check_valid_week(week: int) -> None:
     """Function to check that day arg is valid."""
@@ -76,8 +76,8 @@ def _check_valid_trimester(trimester: int) -> None:
         raise ValueError(
             f"The arg for trimester is smaller than possible min is 1 you have: {trimester}."
         )
-        
-        
+
+
 def _check_valid_half_year(half_year: int) -> None:
     """Function to check that day arg is valid."""
     if half_year > 2:
@@ -152,7 +152,7 @@ def _check_valid_args(*args: int, frequency: str) -> None:
 
 def _check_frequency_suport(frequency: str) -> None:
     """Function to check if frequency requested is supported."""
-    if frequency not in ["Y", "Q", "B", "M", "D","W","T","H"]:
+    if frequency not in ["Y", "Q", "B", "M", "D", "W", "T", "H"]:
         raise ValueError(
             f"The function does not support frequency: {frequency} yet. Please use one the supported ones: Y,Q,B,M,D,W,T,H"
         )
@@ -201,7 +201,7 @@ def get_timestamp_special(*args: int, frequency: str) -> str | None:
     """
     _check_valid_args(*args, frequency=frequency)
 
-    if frequency in ["M","W"]:
+    if frequency in ["M", "W"]:
         if frequency == "M":
             frequency = "-"
         if len(args) == 2:

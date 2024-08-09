@@ -3,12 +3,12 @@
 import pytest
 
 from ssb_konjunk.timestamp import _check_valid_day
-from ssb_konjunk.timestamp import _check_valid_week
+from ssb_konjunk.timestamp import _check_valid_half_year
 from ssb_konjunk.timestamp import _check_valid_month
 from ssb_konjunk.timestamp import _check_valid_quarter
 from ssb_konjunk.timestamp import _check_valid_term
 from ssb_konjunk.timestamp import _check_valid_trimester
-from ssb_konjunk.timestamp import _check_valid_half_year
+from ssb_konjunk.timestamp import _check_valid_week
 from ssb_konjunk.timestamp import _check_valid_year
 from ssb_konjunk.timestamp import check_even
 from ssb_konjunk.timestamp import get_ssb_timestamp
@@ -101,7 +101,7 @@ def test_check_valid_day() -> None:
     ):
         _check_valid_day(day)
 
-        
+
 def test_check_valid_week() -> None:
     """Test of function _check_valid_week."""
     week = 53
@@ -109,7 +109,7 @@ def test_check_valid_week() -> None:
         ValueError,
         match=f"The arg for week is bigger than possible max is 52 you have: {week}.",
     ):
-        _check_valid_week(week)        
+        _check_valid_week(week)
 
 
 def test_check_valid_month() -> None:
@@ -140,7 +140,7 @@ def test_check_valid_quarter() -> None:
         match=f"The arg for quarter is bigger than possible max is 4 you have: {quarter}.",
     ):
         _check_valid_quarter(quarter)
-        
+
 
 def test_check_valid_trimester() -> None:
     """Test of function _check_valid_trimester."""
@@ -152,7 +152,7 @@ def test_check_valid_trimester() -> None:
         _check_valid_trimester(trimester)
 
 
-def test_check_valid_quarter() -> None:
+def test_check_valid_half_year() -> None:
     """Test of function _check_valid_half_year."""
     half_year = 5
     with pytest.raises(
