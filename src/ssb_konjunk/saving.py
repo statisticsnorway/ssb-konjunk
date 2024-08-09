@@ -207,7 +207,7 @@ def save_df(
         fs: the file system, None if prodsone.
         filetype: The type of the file. Either csv or parquet.
         seperator: To use if csv.
-        encondig: To use if csv.
+        encoding: To use if csv.
     """
     if version_number is None:
         print("No saving performed.")
@@ -267,10 +267,10 @@ def structure_ssb_filepath(
         str: the full path to the file.
     """
     # Get the timestamp at corrext format
-    timestamp = timestamp.get_ssb_timestamp(*dates, frequency=frequency)
+    time = timestamp.get_ssb_timestamp(*dates, frequency=frequency)
 
     # Combine timestamp and base name to filename
-    filename = f"{name}_{timestamp}_v"
+    filename = f"{name}_{time}_v"
     # Validate all paths according to slashes and so
     bucket_statistikk = remove_edge_slashes(bucket_statistikk)
     datatilstand = remove_edge_slashes(datatilstand)
@@ -285,7 +285,7 @@ def structure_ssb_filepath(
     return file_path
 
 
-def get_files(folder_path: str) -> list[str]:
+def get_files(folder_path: str, fs: dapla.gcs.GCSFileSystem | None) -> list[str]:
     """Function to list files in a folder based on base name and timestamp.
 
     Args:
@@ -332,6 +332,7 @@ def remove_edge_slashes(input_string: str) -> str:
 
 def verify_base_filename(name: str) -> str:
     """Verifies the base of the file name.
+    
     Corrects small errors
     as upper case letters in the base of the file name.
 
@@ -394,6 +395,7 @@ def verify_base_filename(name: str) -> str:
 
 def verify_datatilstand(datatilstand: str) -> str:
     """Veirfy the name of the datatilstand.
+    
     The level 'temp' is here included as a valid datatilstand.
 
     Args:
