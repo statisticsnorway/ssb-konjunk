@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 import dapla
 
 
-def read_xml(xml_file: str, fs: dapla.gcs.GCSFileSystem = None) -> ET.Element:
+def read_xml(xml_file: str, fs: dapla.gcs.GCSFileSystem | None = None) -> ET.Element:
     """Funtion to get xml root from disk.
 
     Args:

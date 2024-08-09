@@ -2,6 +2,7 @@
 
 import pytest
 
+from ssb_konjunk.timestamp import _check_even
 from ssb_konjunk.timestamp import _check_valid_day
 from ssb_konjunk.timestamp import _check_valid_half_year
 from ssb_konjunk.timestamp import _check_valid_month
@@ -10,41 +11,42 @@ from ssb_konjunk.timestamp import _check_valid_term
 from ssb_konjunk.timestamp import _check_valid_trimester
 from ssb_konjunk.timestamp import _check_valid_week
 from ssb_konjunk.timestamp import _check_valid_year
-from ssb_konjunk.timestamp import check_even
+from ssb_konjunk.timestamp import _get_timestamp_daily
+from ssb_konjunk.timestamp import _get_timestamp_special
+from ssb_konjunk.timestamp import _get_timestamp_yearly
 from ssb_konjunk.timestamp import get_ssb_timestamp
-from ssb_konjunk.timestamp import get_timestamp_daily
-from ssb_konjunk.timestamp import get_timestamp_special
-from ssb_konjunk.timestamp import get_timestamp_yearly
 
 
 def test_check_even() -> None:
-    """Test of function check_even."""
+    """Test of function _check_even."""
     # Testing True
-    assert check_even([2, 1]) is True
+    assert _check_even([2, 1]) is True
     # Testing False
-    assert check_even([3, 2, 1]) is False
+    assert _check_even([3, 2, 1]) is False
 
 
 def test_get_timestamp_daily() -> None:
-    """Test of function get_timestamp_daily."""
+    """Test of function _get_timestamp_daily."""
     # Testing True
-    assert get_timestamp_daily(2020, 1, 1, 2020, 1, 31) == "p2020-01-01_p2020-01-31"
+    assert _get_timestamp_daily(2020, 1, 1, 2020, 1, 31) == "p2020-01-01_p2020-01-31"
 
 
 def test_get_timestamp_yearly() -> None:
-    """Test of function get_timestamp_yearly."""
+    """Test of function _get_timestamp_yearly."""
     # Testing True
-    assert get_timestamp_yearly(2020, 2021) == "p2020_p2021"
+    assert _get_timestamp_yearly(2020, 2021) == "p2020_p2021"
 
 
 def test_test_get_timestamp_special() -> None:
-    """Test of function get_timestamp_special."""
+    """Test of function _get_timestamp_special."""
     # Testing month
-    assert get_timestamp_special(2020, 1, 2021, 2, frequency="M") == "p2020-01_p2021-02"
+    assert (
+        _get_timestamp_special(2020, 1, 2021, 2, frequency="M") == "p2020-01_p2021-02"
+    )
     # Testing quarter
-    assert get_timestamp_special(2020, 1, 2021, 2, frequency="Q") == "p2020Q1_p2021Q2"
+    assert _get_timestamp_special(2020, 1, 2021, 2, frequency="Q") == "p2020Q1_p2021Q2"
     # Testing term
-    assert get_timestamp_special(2020, 1, 2021, 2, frequency="B") == "p2020B1_p2021B2"
+    assert _get_timestamp_special(2020, 1, 2021, 2, frequency="B") == "p2020B1_p2021B2"
 
 
 def test_get_ssb_timestamp() -> None:
