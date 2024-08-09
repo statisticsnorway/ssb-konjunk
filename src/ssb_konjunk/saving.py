@@ -64,7 +64,7 @@ def get_ssb_file(
     if len(files) == 0:
         print(f"There are no such files. {file_path}")
         return None
-    
+
     # Get the newest version if not version_number is specified
     if version_number.isna():
         path_file = files[-1]
@@ -286,7 +286,7 @@ def structure_ssb_filepath(
     return file_path
 
 
-def get_files(folder_path: str) -> list[str], 
+def get_files(folder_path: str) -> list[str],
     """Function to list files in a folder based on base name and timestamp.
 
     Args:
@@ -303,7 +303,7 @@ def get_files(folder_path: str) -> list[str],
         filenames = fs.glob(match_string)
     else:
         filenames = glob.glob(match_string)
-              
+
     # Sort it in stigende order with highest version number at the end
     try:
         filenames = sorted(
