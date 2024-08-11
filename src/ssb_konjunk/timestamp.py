@@ -1,7 +1,7 @@
 """Functions to create timestamp according to SSB standard."""
 
 
-def check_even(elements: list[int]) -> bool:
+def _check_even(elements: list[int]) -> bool:
     """Function to check if number is even."""
     return len(elements) % 2 == 0
 
@@ -158,7 +158,7 @@ def _check_frequency_suport(frequency: str) -> None:
         )
 
 
-def get_timestamp_daily(*args: int) -> str | None:
+def _get_timestamp_daily(*args: int) -> str | None:
     """Function to create timestamp if frequency is daily."""
     if len(args) == 3:
         _check_valid_year(args[0])
@@ -178,7 +178,7 @@ def get_timestamp_daily(*args: int) -> str | None:
         raise ValueError(f"Ikke gyldig mende args, du har antall:{len(args)}")
 
 
-def get_timestamp_yearly(*args: int) -> str | None:
+def _get_timestamp_yearly(*args: int) -> str | None:
     """Function to create timstamp if frequency is yearly."""
     if len(args) == 2:
         _check_valid_year(args[0], args[1])
@@ -189,16 +189,8 @@ def get_timestamp_yearly(*args: int) -> str | None:
         )
 
 
-def get_timestamp_special(*args: int, frequency: str) -> str | None:
-    """Function to create timestamp if frequency is now Y or D.
-
-    Args:
-        args: Up to six arguments with int, to create timestamp for.
-        frequency: Letter for which frequency the data is, Y for year etc.
-
-    Returns:
-        string|None: Returns time stamp in ssb format.
-    """
+def _get_timestamp_special(*args: int, frequency: str) -> str | None:
+    """Function to create timestamp if frequency is not Y or D."""
     _check_valid_args(*args, frequency=frequency)
 
     if frequency in ["M", "W"]:
@@ -222,7 +214,7 @@ def get_timestamp_special(*args: int, frequency: str) -> str | None:
 
 
 def get_ssb_timestamp(*args: int, frequency: str = "M") -> str | None:
-    """Function to create a string in ssb timestamp format.
+    r"""Function to create a string in ssb timestamp format.
 
     Args:
         args: Up to six arguments with int, to create timestamp for.
@@ -233,6 +225,10 @@ def get_ssb_timestamp(*args: int, frequency: str = "M") -> str | None:
 
     Raises:
         ValueError: Raises error for wrong values in args.
+
+    Example:
+        >>> get_ssb_timestamp(2024,8,1, frequency='D')
+        'p2024-08-01'
     """
     _check_frequency_suport(frequency)
 
@@ -254,9 +250,9 @@ def get_ssb_timestamp(*args: int, frequency: str = "M") -> str | None:
         valid_args = [arg for arg in args if arg]
 
         if frequency == "D":
-            return get_timestamp_daily(*valid_args)
+            return _get_timestamp_daily(*valid_args)
 
-        if not check_even(valid_args) or len(valid_args) > 4:
+        if not _check_even(valid_args) or len(valid_args) > 4:
             print(
                 f"For frekvens '{frequency}', må du ha enten to eller fire argumenter. Du har:",
                 len(valid_args),
@@ -264,6 +260,6 @@ def get_ssb_timestamp(*args: int, frequency: str = "M") -> str | None:
             return None
         else:
             if frequency == "Y":
-                return get_timestamp_yearly(*valid_args)
+                return _get_timestamp_yearly(*valid_args)
             else:
-                return get_timestamp_special(*valid_args, frequency=frequency)
+                return _get_timestamp_special(*valid_args, frequency=frequency)
