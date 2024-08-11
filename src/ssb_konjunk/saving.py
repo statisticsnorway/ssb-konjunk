@@ -7,151 +7,98 @@ import glob
 import re
 
 import dapla
-import numpy as np
 import pandas as pd
-from src.ssb_konjunk import timestamp
+
+from ssb_konjunk import timestamp
 
 
-def get_ssb_file(
-    dates: tuple[int | None],
-    frequency: str,
-    name: str,
-    datatilstand: str,
-    bucket_statistikk: str,
-    folder_in_datatilstand: str = "",
-    version_number: int = np.nan,
-    filetype: str = "parquet",
-    fs: dapla.gcs.GCSFileSystem = None,
-    seperator: str = ";",
-    encoding: str = "latin1",
-) -> pd.DataFrame:
-    """Function to get a saved file, stored at SSB-format.
-
-    Get the last version saved in the datatilstand specified (klargjorte-data, statistikk, utdata)
-    at the correct bucket path and with the speficed name.
-    If it is a year table, the filename is automatically adjusted.
+def _remove_edge_slashes(input_string: str) -> str:
+    """Function to remove edge slashes in strings.
 
     Args:
-        dates: Up to six arguments with int, to create timestamp for. E.g. (2022,2,2023,4) is p_2022-02_p2023-04 when frequency = 'M'.
-        frequency: monthly (M), daily(D), quarter (Q), terital (T), weekly (W).
-        name: name of the file. E.g. overnatting16landet1, alleover, alleover-utvida.
-        datatilstand: the datatilstand for the file to get.
-        bucket_statistikk: the bucket. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/' or 'gs://ssb-<teamnavn>-data-produkt-prod/overnatting/'.
-        folder_in_datatilstand: if there are folders under the datatilstand-level. Default: ''.
-        version_number: possibility to get another version, than the newest (i.e. highest version number). Default: np.nan.
-        filetype: the filetype to save as. Default: 'parquet'.
-        fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
-        seperator: the seperator to use it filetype is csv. Default: ';'.
-        encoding: Encoding for file, base is latin1.
+        input_string: The string to remove / for.
 
     Returns:
-        pd.DataFrame: file as a data frame.
+        str: String without slashes.
     """
-    # Get the filepath, only without version number and filetype
-    file_path = structure_ssb_filepath(
-        dates=dates,
-        frequency=frequency,
-        name=name,
-        datatilstand=datatilstand,
-        bucket_statistikk=bucket_statistikk,
-        folder_in_datatilstand=folder_in_datatilstand,
-    )
-    # Get list with the filenames, if several, ordered by the highest version number at last.
-    files = get_files(file_path, fs=fs)
-
-    # Case with no files.
-    if len(files) == 0:
-        print(f"There are no such files. {file_path}")
-        return None
-
-    # Get the newest version if not version_number is specified
-    if version_number.isna():
-        path_file = files[-1]
-    else:
-        path_file = next((s for s in files if f"_v{int(version_number)}" in s), None)
-
-    # Different functions used for reading depending on the filetype
-    if filetype == "csv":
-        df = pd.read_csv(path_file, sep=seperator, encoding=encoding)
-    elif filetype == "parquet":
-        df = pd.read_parquet(path_file, filesystem=fs)
-
-    return df
+    if input_string.startswith("/"):
+        input_string = input_string[1:]
+    if input_string.endswith("/"):
+        input_string = input_string[:-1]
+    return input_string
 
 
-def save_ssb_file(
-    df: pd.DataFrame,
-    dates: tuple[int | None],
+def _structure_ssb_filepath(
+    dates: tuple[int],
     frequency: str,
-    stable_version: bool,
-    name: str,
+    bucket: str,
+    statistic: str,
     datatilstand: str,
-    bucket_statistikk: str,
-    folder_in_datatilstand: str = "",
+    file_name: str,
+    folder: str | None = None,
+    version_number: int | None = None,
     filetype: str = "parquet",
-    fs: dapla.gcs.GCSFileSystem = None,
-    seperator: str = ";",
-    encoding: str = "latin1",
-) -> None:
-    """Function to save a file at SSB-format.
+) -> str:
+    """Structure the name of the file to SSB-format and the path.
 
     Args:
-        df: The dataframe to save.
-        dates: Up to six arguments with int, to create timestamp for. E.g. (2022,2,2023,4) is p_2022-02_p2023-04 when frequency = 'M'.
-        frequency: monthly (M), daily(D), quarter (Q), terital (T), weekly (W).
-        stable_version: whether the version is stable or not. If True, versionize, if False version = 0.
-        name: name of the file. E.g. overnatting16landet1, alleover, alleover-utvida.
-        datatilstand: the datatilstand for the file to get.
-        bucket_statistikk: the bucket. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/' or 'gs://ssb-<teamnavn>-data-produkt-prod/overnatting/'.
-        folder_in_datatilstand: if there are folders under the datatilstand-level. Default: ''.
-        version_number: possibility to get another version, than the newest (i.e. highest version number). Default: None.
-        filetype: the filetype to save as. Default: 'parquet'.
-        fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
-        seperator: the seperator to use it filetype is csv. Default: ';'.
-        encoding: Encoding for file, base is latin1.
+        dates: Dates like ints in tuple for timestamp.
+        frequency: Frequency like str for timestamp.
+        bucket: String for gcp bucket.
+        statistic: String for statistic or data-product.
+        datatilstand: String for 'datatilstand'.
+        file_name: String for Filename.
+        folder: Optional string for if you want folders betwen 'datatilstand' and file.
+        version_number: Optional int for reading specific file.
+        filetype: String with default 'parquet', specifies file type.
+
+    Returns:
+        str: the full path to the file.
 
     Raises:
-        AssertionError: if df has no rows.
+        ValueError: Raise if version number is not None or int.
     """
-    # Check content in df
-    assert (
-        len(df) > 0
-    ), "There are no rows in the dataset. Fix this and try to save again."
+    bucket = _remove_edge_slashes(bucket)
+    statistic = _remove_edge_slashes(statistic)
+    datatilstand = _remove_edge_slashes(datatilstand)
+    file_name = _remove_edge_slashes(file_name)
 
-    # Veirfy name of datatilstand and base filename
-    name = verify_base_filename(name)
-    datatilstand = verify_datatilstand(datatilstand)
+    # Get the timestamp at corrext format
+    time_stamp = timestamp.get_ssb_timestamp(*dates, frequency=frequency)
 
-    # Get the filepath, only without version number and filetype
-    file_path = structure_ssb_filepath(
-        dates=dates,
-        frequency=frequency,
-        name=name,
-        datatilstand=datatilstand,
-        bucket_statistikk=bucket_statistikk,
-        folder_in_datatilstand=folder_in_datatilstand,
-    )
+    if folder:
+        folder = _remove_edge_slashes(folder)
+        file_path = f"{bucket}/{statistic}/{datatilstand}/{folder}"
+    else:
+        file_path = f"{bucket}/{statistic}/{datatilstand}"
 
-    # Get list with the filenames, if several, ordered by the highest version number at last.
-    files = get_files(file_path, fs=fs)
-
-    # Find version number/decide whether to overwrite or make new version.
-    version_number = find_version_number(files, stable_version)
-    save_df(df, file_path, version_number, fs, filetype, seperator, encoding)
+    # Sykt rart som jeg ikke visste før nå. 0 er None, som teknisk sett er riktig, men er jo en gyldig int.
+    if version_number is None:
+        file_path = f"{file_path}/{file_name}_{time_stamp}"
+    elif isinstance(version_number, int):
+        file_path = f"{file_path}/{file_name}_{time_stamp}_v{version_number}.{filetype}"
+    else:
+        raise ValueError("version_number has to be int or None!")
+    return file_path
 
 
-def find_version_number(files: list[str], stable_version: bool) -> str | None:
-    """Find the correct version number to use for saving.
+def _get_files(folder_path: str, fs: dapla.gcs.GCSFileSystem | None) -> list[str]:
+    """Function to list files in a folder based on base name and timestamp."""
+    filenames = []
 
-    Options about overwriting or making new version as well.
+    match_string = f"{folder_path}*"
+    if fs:
+        filenames = fs.glob(match_string)
+    else:
+        filenames = glob.glob(match_string)
+    # Tror faktisk det er så enkelt.
+    filenames.sort()
 
-    Args:
-        files: list with the files with same filename in the relevant folder.
-        stable_version: If False version 0 is used.
+    return filenames
 
-    Returns:
-        str: The number to use for the version or None if not to save.
-    """
+
+def _find_version_number(files: list[str], stable_version: bool) -> str | None:
+    """Find the correct version number to use for saving."""
     existing_versions = [re.search(r"_v([^_]+)$", f).group(1) for f in files]
     print(existing_versions)
     if not stable_version and len(files) == 0:
@@ -189,162 +136,8 @@ def find_version_number(files: list[str], stable_version: bool) -> str | None:
         raise ValueError("Something went wrong when finding the version number.")
 
 
-def save_df(
-    df: pd.DataFrame,
-    file_path: str,
-    version_number: str | None,
-    fs: dapla.gcs.GCSFileSystem | None,
-    filetype: str,
-    seperator: str,
-    encoding: str,
-) -> None:
-    """Do the actual saving, either as csv or parquet.
-
-    Args:
-        df: The pandas dataframe to save.
-        file_path: The full path with filename, and without filetype and version number. E.g. 'gs://ssb-prod-data/utdata/minfil_p2022_v'.
-        version_number: The version number of the file.
-        fs: the file system, None if prodsone.
-        filetype: The type of the file. Either csv or parquet.
-        seperator: To use if csv.
-        encoding: To use if csv.
-    """
-    if version_number is None:
-        print("No saving performed.")
-    else:
-        # Save as parquet
-        if filetype == "parquet":
-            file_path = file_path + version_number + ".parquet"
-            try:
-                df.to_parquet(file_path, index=False)
-            except PermissionError:
-                dapla.write_pandas(
-                    df=df,
-                    gcs_path=file_path,
-                    file_format="parquet",
-                )
-
-        # Save as csv
-        elif filetype == "csv":
-            file_path = file_path + version_number + ".csv"
-            try:
-                df.to_csv(file_path, sep=seperator, index=False, encoding=encoding)
-            except PermissionError:
-                dapla.write_pandas(
-                    df=df,
-                    gcs_path=file_path,
-                    file_format="csv",
-                    sep=seperator,
-                    index=False,
-                    encoding=encoding,
-                )
-        # Uknown filetype sent as argument
-        else:
-            print(
-                f"The filetype {filetype} is not supported for saving. Nothing saved for {file_path}."
-            )
-
-
-def structure_ssb_filepath(
-    dates: tuple[int | None],
-    frequency: str,
-    name: str,
-    datatilstand: str,
-    bucket_statistikk: str,
-    folder_in_datatilstand: str = "",
-) -> str:
-    """Structure the name of the file to SSB-format and the path.
-
-    Args:
-        dates: Up to six arguments with int, to create timestamp for. E.g. (2022,2,2023,4) is p_2022-02_p2023-04 when frequency = 'M'.
-        frequency: monthly (M), daily(D), quarter (Q), terital (T), weekly (W).
-        name: name of the file. E.g. overnatting16landet1, alleover, alleover-utvida.
-        datatilstand: the datatilstand for the file to get.
-        bucket_statistikk: the bucket. Ex.: '/ssb/stamme04/reiseliv/NV/wk48/' or 'gs://ssb-<teamnavn>-data-produkt-prod/overnatting/'.
-        folder_in_datatilstand: if there are folders under the datatilstand-level. Default: ''.
-
-    Returns:
-        str: the full path to the file.
-    """
-    # Get the timestamp at corrext format
-    time = timestamp.get_ssb_timestamp(*dates, frequency=frequency)
-
-    # Combine timestamp and base name to filename
-    filename = f"{name}_{time}_v"
-    # Validate all paths according to slashes and so
-    bucket_statistikk = remove_edge_slashes(bucket_statistikk)
-    datatilstand = remove_edge_slashes(datatilstand)
-    # Make full file_path
-    if folder_in_datatilstand != "":
-        folder_in_datatilstand = remove_edge_slashes(folder_in_datatilstand)
-        file_path = (
-            f"{bucket_statistikk}/{datatilstand}/{folder_in_datatilstand}/{filename}"
-        )
-    else:
-        file_path = f"{bucket_statistikk}/{datatilstand}/{filename}"
-    return file_path
-
-
-def get_files(folder_path: str, fs: dapla.gcs.GCSFileSystem | None) -> list[str]:
-    """Function to list files in a folder based on base name and timestamp.
-
-    Args:
-        folder_path: String to folder.
-        fs: FileSystem, if not using linux storage.
-
-    Returns:
-        list[str]: List with filenames.
-    """
-    filenames = []
-
-    match_string = f"{folder_path}*"
-    if fs:
-        filenames = fs.glob(match_string)
-    else:
-        filenames = glob.glob(match_string)
-
-    # Sort it in stigende order with highest version number at the end
-    try:
-        filenames = sorted(
-            filenames,
-            key=lambda x: int(re.search(r"_v(\d+)(?=\.(parquet|csv)$)", x).group(1)),
-        )
-    except Exception:
-        print("No such files.")
-    return filenames
-
-
-def remove_edge_slashes(input_string: str) -> str:
-    """Function to remove edge slashes in strings.
-
-    Args:
-        input_string: The string to remove / for.
-
-    Returns:
-        str: String without slashes.
-    """
-    if input_string.startswith("/"):
-        input_string = input_string[1:]
-    if input_string.endswith("/"):
-        input_string = input_string[:-1]
-    return input_string
-
-
-def verify_base_filename(name: str) -> str:
-    """Verifies the base of the file name.
-
-    Corrects small errors
-    as upper case letters in the base of the file name.
-
-    Args:
-        name: the base of the filename.
-
-    Returns:
-        name: a corrected base of the filename if necessary.
-
-    Raises:
-        ValueError
-    """
+def _verify_base_filename(name: str) -> str:
+    """Verifies the base of the file name."""
     # Ensure lower case
     if any(letter.isupper() for letter in name):
         old_name = name
@@ -393,17 +186,8 @@ def verify_base_filename(name: str) -> str:
     return name
 
 
-def verify_datatilstand(datatilstand: str) -> str:
-    """Veirfy the name of the datatilstand.
-
-    The level 'temp' is here included as a valid datatilstand.
-
-    Args:
-        datatilstand: the name of the datatilstand.
-
-    Returns:
-        str: the (corrected) name of the datatilstand.
-    """
+def _verify_datatilstand(datatilstand: str) -> str:
+    """Veirfy the name of the datatilstand."""
     datatilstand = datatilstand.lower()
     if datatilstand not in [
         "inndata",
@@ -415,7 +199,175 @@ def verify_datatilstand(datatilstand: str) -> str:
         datatilstand = input(
             "Datatilstand må være enten inndata, klargjorte-data, statistikk eller utdata:"
         )
-        datatilstand = verify_datatilstand(datatilstand)
+        datatilstand = _verify_datatilstand(datatilstand)
         return datatilstand
     else:
         return datatilstand
+
+
+def _save_df(
+    df: pd.DataFrame,
+    file_path: str,
+    filetype: str,
+    fs: dapla.gcs.GCSFileSystem | None,
+    seperator: str,
+    encoding: str,
+) -> None:
+    """Do the actual saving, either as csv or parquet."""
+    # Save as parquet
+    if filetype == "parquet":
+
+        if fs:
+            # Noe enklere i koden og kan brukes med alle filformater.
+            with fs.open(file_path, "wb") as f:
+                df.to_parquet(f, index=False)
+                f.close()
+        else:
+            df.to_parquet(file_path, index=False)
+    # Save as csv
+    elif filetype == "csv":
+        if fs:
+            with fs.open(file_path, "wb") as f:
+                df.to_csv(f, sep=seperator, index=False, encoding=encoding)
+                f.close()
+        else:
+            df.to_csv(file_path, sep=seperator, index=False, encoding=encoding)
+    # Uknown filetype sent as argument
+    else:
+        raise ValueError(
+            f"The filetype {filetype} is not supported for saving. Nothing saved for {file_path}."
+        )
+
+
+def write_ssb_file(
+    df: pd.DataFrame,
+    dates: tuple[int],
+    frequency: str,
+    bucket: str,
+    statistic: str,
+    datatilstand: str,
+    file_name: str,
+    folder: str | None = None,
+    stable_version: bool = True,
+    filetype: str = "parquet",
+    fs: dapla.gcs.GCSFileSystem | None = None,
+    seperator: str = ";",
+    encoding: str = "latin1",
+) -> None:
+    """Function to save a file at SSB-format.
+
+    Args:
+        df: The dataframe to save.
+        dates: Up to six arguments with int, to create timestamp for. E.g. (2022,2,2023,4) is p_2022-02_p2023-04 when frequency = 'M'.
+        frequency: monthly (M), daily(D), quarter (Q), terital (T), weekly (W).
+        bucket: GCP bucket.
+        statistic: Name of statistic or data product.
+        datatilstand: Data tilstand following ssb standards.
+        file_name: Name for file.
+        folder: Optional folder under 'datatilstand'.
+        stable_version: Bool for whether you should have checks in place in case of overwrite.
+        filetype: the filetype to save as. Default: 'parquet'.
+        fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
+        seperator: the seperator to use it filetype is csv. Default: ';'.
+        encoding: Encoding for file, base is latin1.
+
+    Raises:
+        ValueError: if df has no rows.
+    """
+    # Check content in df
+    if not len(df) > 0:
+        raise ValueError(
+            "There are no rows in the dataset. Fix this and try to save again."
+        )
+    # Veirfy name of datatilstand and base filename
+    file_name = _verify_base_filename(file_name)
+    # Verify 'datatilstand'
+    datatilstand = _verify_datatilstand(datatilstand)
+    # Get the filepath, only without version number and filetype
+    file_path = _structure_ssb_filepath(
+        dates=dates,
+        frequency=frequency,
+        bucket=bucket,
+        statistic=statistic,
+        datatilstand=datatilstand,
+        file_name=file_name,
+        folder=folder,
+    )
+    # Get list with the filenames, if several, ordered by the highest version number at last.
+    files = _get_files(file_path, fs=fs)
+    # Find version number/decide whether to overwrite or make new version.
+    version_number = _find_version_number(files, stable_version)
+
+    file_path = f"{file_path}_v{version_number}.{filetype}"
+
+    _save_df(df, file_path, filetype, fs, seperator, encoding)
+
+
+def read_ssb_file(
+    dates: tuple[int],
+    frequency: str,
+    bucket: str,
+    statistic: str,
+    datatilstand: str,
+    file_name: str,
+    folder: str | None = None,
+    filetype: str = "parquet",
+    version_number: int | None = None,
+    fs: dapla.gcs.GCSFileSystem | None = None,
+    seperator: str = ";",
+    encoding: str = "latin1",
+) -> pd.DataFrame | None:
+    """Function to get a saved file, stored at SSB-format.
+
+    Get the last version saved in the datatilstand specified (klargjorte-data, statistikk, utdata)
+    at the correct bucket path and with the speficed name.
+    If it is a year table, the filename is automatically adjusted.
+
+    Args:
+        dates: Up to six arguments with int, to create timestamp for. E.g. (2022,2,2023,4) is p_2022-02_p2023-04 when frequency = 'M'.
+        frequency: monthly (M), daily(D), quarter (Q), terital (T), weekly (W).
+        bucket: GCP bucket.
+        statistic: Name of statistic or data product.
+        datatilstand: Data tilstand following ssb standards.
+        folder: Optional folder under 'datatilstand'.
+        file_name: Name for file.
+        version_number: possibility to get another version, than the newest (i.e. highest version number). Default: np.nan.
+        filetype: the filetype to save as. Default: 'parquet'.
+        fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
+        seperator: the seperator to use it filetype is csv. Default: ';'.
+        encoding: Encoding for file, base is latin1.
+
+    Returns:
+        pd.DataFrame: file as a data frame.
+    """
+    # Get the filepath, only without version number and filetype.
+    file_path = _structure_ssb_filepath(
+        dates=dates,
+        frequency=frequency,
+        bucket=bucket,
+        statistic=statistic,
+        datatilstand=datatilstand,
+        file_name=file_name,
+        folder=folder,
+        version_number=version_number,
+        filetype=filetype,
+    )
+
+    if not version_number:
+        # If version number not specified then list out versions.
+        files = _get_files(file_path, fs=fs)
+        file_path = files[-1]
+
+    # Different functions used for reading depending on the filetype.
+    if filetype == "csv":
+        if fs:
+            # Samme som tidligere kan brukes til å lese alle filformater.
+            with fs.open(file_path, "r") as f:
+                df = pd.read_csv(f, sep=seperator, encoding=encoding)
+                f.close()
+        else:
+            df = pd.read_csv(file_path, sep=seperator, encoding=encoding)
+    elif filetype == "parquet":
+        df = pd.read_parquet(file_path, filesystem=fs)
+    # Returns pandas df.
+    return df
