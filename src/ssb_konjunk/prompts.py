@@ -25,7 +25,7 @@ def _input_valid_int() -> int:
             valid_int = int(user_input)
             break  # Break the loop if a valid integer is entered
         except ValueError:
-            print("Vennligst skriv inn ett gyldig tall som,", 42)
+            print("Vennligst skriv inn et gyldig tall som f.eks.", 42)
 
     return valid_int
 
@@ -44,7 +44,7 @@ def input_year() -> int:
         if year == now:
             return year
         else:
-            print("Er du sikker på at du skal kjøre statistikk for dette året,", year)
+            print("Er du sikker på at du skal kjøre statistikk for dette året?", year)
             if input("y/n") == "y":
                 return year
 
@@ -92,7 +92,7 @@ def input_quarter() -> int:
         if 1 <= quarter <= 4:
             return quarter
         else:
-            print("Ikke en gyldig kvartal, vennligst skriv inn et tall fra 1 til 4.")
+            print("Ikke et gyldig kvartal, vennligst skriv inn et tall fra 1 til 4.")
 
 
 def input_trimester() -> int:
@@ -107,7 +107,7 @@ def input_trimester() -> int:
         if 1 <= trimester <= 3:
             return trimester
         else:
-            print("Ikke en gyldig trimester, vennligst skriv inn et tall fra 1 til 3.")
+            print("Ikke et gyldig trimester, vennligst skriv inn et tall fra 1 til 3.")
 
 
 def input_week() -> int:
