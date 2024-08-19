@@ -106,9 +106,11 @@ def _find_version_number(files: list[str], stable_version: bool) -> str | None:
         if match:
             existing_versions.append(match.group(1))
 
-    existing_versions = [match.group(1) for f in files if (match := re.search(r"_v([^_]+)$", f))]
+    existing_versions = [
+        match.group(1) for f in files if (match := re.search(r"_v([^_]+)$", f))
+    ]
 
-    #existing_versions = [re.search(r"_v([^_]+)$", f).group(1) for f in files]
+    # existing_versions = [re.search(r"_v([^_]+)$", f).group(1) for f in files]
     print(existing_versions)
     if not stable_version and len(files) == 0:
         return "0"
