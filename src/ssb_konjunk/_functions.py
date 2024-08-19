@@ -14,5 +14,4 @@ def input_valid_int() -> int:
             break  # Break the loop if a valid integer is entered
         except ValueError:
             print("Vennligst skriv inn et gyldig tall som f.eks.", 42)
-
     return valid_int
