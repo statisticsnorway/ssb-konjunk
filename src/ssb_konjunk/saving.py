@@ -107,18 +107,16 @@ def _find_version_number(files: list[str], stable_version: bool) -> str | None:
             existing_versions.append(match.group(1))
 
     existing_versions = [
-        match.group(1) for f in files if (match := re.search(r"_v([^_]+)$", f))
+        match.group(1) for f in files if (match := re.search(r"_v([^_]+)\.", f))
     ]
 
-    # existing_versions = [re.search(r"_v([^_]+)$", f).group(1) for f in files]
-    print(existing_versions)
     if not stable_version and len(files) == 0:
         return "0"
     elif not stable_version and existing_versions[-1] == "0":
         return "0"
     elif not stable_version and existing_versions[-1] != "0":
         print(
-            f"En stabil versjon (versjon {files[-1]}) finnes allerede. Denne lagres med versjonsnummer 0."
+            f"En stabil versjon (versjon {files[-1]}) finnes allerede. Versjonsnummer 0 overskrives fordi stable_version er satt til False av bruker."
         )
         return "0"
     elif stable_version and len(files) == 0:
@@ -144,7 +142,7 @@ def _find_version_number(files: list[str], stable_version: bool) -> str | None:
             else:
                 return None
     else:
-        raise ValueError("Noe gikk galt når rett versjonsnummer skulle settes.")
+        raise ValueError("Noe gikk galt da rett versjonsnummer skulle settes.")
 
 
 def _verify_base_filename(name: str) -> str:
