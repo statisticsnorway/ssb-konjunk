@@ -100,7 +100,10 @@ def _get_files(folder_path: str, fs: dapla.gcs.GCSFileSystem | None) -> list[str
 
 def _find_version_number(files: list[str], stable_version: bool) -> str | None:
     """Find the correct version number to use for saving."""
-    existing_versions = [re.search(r"_v([^_]+)$", f).group(1) for f in files]
+    if None is in files:
+        return None
+    else:
+        existing_versions = [re.search(r"_v([^_]+)$", f).group(1) for f in files]
     print(existing_versions)
     if not stable_version and len(files) == 0:
         return "0"
