@@ -17,7 +17,7 @@ def test_remove_edge_slashes() -> None:
 
 
 def test_structure_ssb_filepath() -> None:
-    """Test of function _structure_ssb_filepath-"""
+    """Test of function _structure_ssb_filepath."""
     filename_1 = _structure_ssb_filepath(
         (2023, 2024),
         "Y",
