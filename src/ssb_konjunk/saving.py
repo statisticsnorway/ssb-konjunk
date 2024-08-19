@@ -1,6 +1,6 @@
 """Functions used for get in touch with you files and save them.
 
-Follows the :crossed_fingers: the standardization for versioning and names.
+Follows the the standardization for versioning and names.
 """
 
 import glob
@@ -72,13 +72,13 @@ def _structure_ssb_filepath(
     else:
         file_path = f"{bucket}/{statistic}/{datatilstand}"
 
-    # Sykt rart som jeg ikke visste før nå. 0 er None, som teknisk sett er riktig, men er jo en gyldig int.
+    # Handle versionizing or not.
     if version_number is None:
         file_path = f"{file_path}/{file_name}_{time_stamp}"
     elif isinstance(version_number, int):
         file_path = f"{file_path}/{file_name}_{time_stamp}_v{version_number}.{filetype}"
     else:
-        raise ValueError("version_number has to be int or None!")
+        raise ValueError("version_number has to be int or None.")
     return file_path
 
 
@@ -91,7 +91,8 @@ def _get_files(folder_path: str, fs: dapla.gcs.GCSFileSystem | None) -> list[str
         filenames = fs.glob(match_string)
     else:
         filenames = glob.glob(match_string)
-    # Tror faktisk det er så enkelt.
+    
+    # Sorts the filenames according to version numbers.
     filenames.sort()
 
     return filenames
@@ -107,7 +108,7 @@ def _find_version_number(files: list[str], stable_version: bool) -> str | None:
         return "0"
     elif not stable_version and existing_versions[-1] != "0":
         print(
-            f"FYI: A stable version {files[-1]} is saved previously. Saves as version 0."
+            f"En stabil versjon (versjon {files[-1]}) finnes allerede. Denne lagres med versjonsnummer 0."
         )
         return "0"
     elif stable_version and len(files) == 0:
@@ -116,7 +117,7 @@ def _find_version_number(files: list[str], stable_version: bool) -> str | None:
         return "1"
     elif stable_version and existing_versions[-1] != "0":
         overwrite = input(
-            f"Do you want to overwrite the existing version (_v{existing_versions[-1]})? Confirm by 'y'"
+            f"Vil du overskrive eksisterende versjon (_v{existing_versions[-1]})? Bekreft med 'y'."
         )
         if overwrite.lower() == "y":
             version = existing_versions[-1]
@@ -124,7 +125,7 @@ def _find_version_number(files: list[str], stable_version: bool) -> str | None:
             return str(version)
         else:
             make_new_version = input(
-                "Do you want to make a new version (i.e. increase the version number by one)? Confirm by 'y'"
+                "Vil du lage en ny versjon (altså øke versjonsnummeret med en)? Bekreft med 'y'."
             )
             if make_new_version.lower() == "y":
                 version = existing_versions[-1]
@@ -133,7 +134,7 @@ def _find_version_number(files: list[str], stable_version: bool) -> str | None:
             else:
                 return None
     else:
-        raise ValueError("Something went wrong when finding the version number.")
+        raise ValueError("Noe gikk galt når rett versjonsnummer skulle settes.")
 
 
 def _verify_base_filename(name: str) -> str:
@@ -143,21 +144,21 @@ def _verify_base_filename(name: str) -> str:
         old_name = name
         name = name.lower()
         print(
-            f"Base filename changed from {old_name} to {name}. No upper case letters allowed."
+            f"Basefilnavnet ble endret fra {old_name} til {name}. Store bokstaver er ikke tillatt."
         )
     # Raises error if starts with numbers
     if name[0].isdigit():
         raise ValueError(
-            f"Base filename cannot start with a digit. Change it. \nCurrent base filename: {name}."
+            f"Basefilnavnet kan ikke starte med et siffer. Dette må endres. \nNåværende basefilnavn: {name}."
         )
     if "parquet" in name:
         raise ValueError(
-            "The file format 'parquet' should not be specified in the base file name. Remove it."
+            "Filformatet 'parquet' skal ikke være en del av basefilnavnet, fjern det."
         )
 
     if "csv" in name:
         raise ValueError(
-            "The file format 'csv' should not be specified in the base file name. Remove it."
+            "Filformatet 'csv' skal ikke være en del av basefilnavnet, fjern det.."
         )
     # Raises error if not valid signs are present in base file name
     not_valid_signs = [
@@ -181,7 +182,7 @@ def _verify_base_filename(name: str) -> str:
     for letter in name:
         if letter in not_valid_signs:
             raise ValueError(
-                f"Not valid signs present in base filename. Not valid signs are: {not_valid_signs}"
+                f"Ugyldige tegn finnes i basefilnavnet, fjern det. Ugyldige tegn er: {not_valid_signs}"
             )
     return name
 
@@ -197,7 +198,7 @@ def _verify_datatilstand(datatilstand: str) -> str:
         "temp",
     ]:
         datatilstand = input(
-            "Datatilstand må være enten inndata, klargjorte-data, statistikk eller utdata:"
+            "Datatilstanden må være enten inndata, klargjorte-data, statistikk eller utdata."
         )
         datatilstand = _verify_datatilstand(datatilstand)
         return datatilstand
@@ -235,7 +236,7 @@ def _save_df(
     # Uknown filetype sent as argument
     else:
         raise ValueError(
-            f"The filetype {filetype} is not supported for saving. Nothing saved for {file_path}."
+            f"Filtypen {filetype} er ikke støttet. Ingenting er blitt lagret for denne filstien: {file_path}."
         )
 
 
@@ -254,7 +255,7 @@ def write_ssb_file(
     seperator: str = ";",
     encoding: str = "latin1",
 ) -> None:
-    """Function to save a file at SSB-format.
+    """Function to write and save a dataframe at SSB-format.
 
     Args:
         df: The dataframe to save.
@@ -277,7 +278,7 @@ def write_ssb_file(
     # Check content in df
     if not len(df) > 0:
         raise ValueError(
-            "There are no rows in the dataset. Fix this and try to save again."
+            "Dataframen har ingen rader. Fiks dette og prøv igjen."
         )
     # Veirfy name of datatilstand and base filename
     file_name = _verify_base_filename(file_name)
@@ -317,9 +318,9 @@ def read_ssb_file(
     seperator: str = ";",
     encoding: str = "latin1",
 ) -> pd.DataFrame | None:
-    """Function to get a saved file, stored at SSB-format.
+    """Function to read a saved file, stored at SSB-format.
 
-    Get the last version saved in the datatilstand specified (klargjorte-data, statistikk, utdata)
+    Get the last version saved in the datatilstand specified (klargjorte-data, statistikk, utdata).
     at the correct bucket path and with the speficed name.
     If it is a year table, the filename is automatically adjusted.
 
