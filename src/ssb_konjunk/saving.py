@@ -91,7 +91,7 @@ def _get_files(folder_path: str, fs: dapla.gcs.GCSFileSystem | None) -> list[str
         filenames = fs.glob(match_string)
     else:
         filenames = glob.glob(match_string)
-    
+
     # Sorts the filenames according to version numbers.
     filenames.sort()
 
@@ -277,9 +277,7 @@ def write_ssb_file(
     """
     # Check content in df
     if not len(df) > 0:
-        raise ValueError(
-            "Dataframen har ingen rader. Fiks dette og prøv igjen."
-        )
+        raise ValueError("Dataframen har ingen rader. Fiks dette og prøv igjen.")
     # Veirfy name of datatilstand and base filename
     file_name = _verify_base_filename(file_name)
     # Verify 'datatilstand'
