@@ -29,7 +29,7 @@ def _remove_edge_slashes(input_string: str) -> str:
 
 
 def _structure_ssb_filepath(
-    dates: tuple[int],
+    dates: tuple[int, ...],
     frequency: str,
     bucket: str,
     statistic: str,
@@ -250,7 +250,7 @@ def _save_df(
 
 def write_ssb_file(
     df: pd.DataFrame,
-    dates: tuple[int],
+    dates: tuple[int, ...],
     frequency: str,
     bucket: str,
     statistic: str,
@@ -311,7 +311,7 @@ def write_ssb_file(
 
 
 def read_ssb_file(
-    dates: tuple[int],
+    dates: tuple[int, ...],
     frequency: str,
     bucket: str,
     statistic: str,
