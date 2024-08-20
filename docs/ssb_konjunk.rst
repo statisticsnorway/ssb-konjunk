@@ -1,8 +1,6 @@
 ssb\_konjunk package
 ====================
 
-Submodules
-----------
 
 ssb\_konjunk.data\_formating module
 -----------------------------------
@@ -20,18 +18,18 @@ ssb\_konjunk.fame module
    :undoc-members:
    :show-inheritance:
 
-ssb\_konjunk.functions module
------------------------------
-
-.. automodule:: ssb_konjunk.functions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 ssb\_konjunk.prompts module
 ---------------------------
 
 .. automodule:: ssb_konjunk.prompts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ssb\_konjunk.saving module
+--------------------------
+
+.. automodule:: ssb_konjunk.saving
    :members:
    :undoc-members:
    :show-inheritance:
@@ -48,14 +46,6 @@ ssb\_konjunk.xml\_handling module
 ---------------------------------
 
 .. automodule:: ssb_konjunk.xml_handling
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: ssb_konjunk
    :members:
    :undoc-members:
    :show-inheritance:
