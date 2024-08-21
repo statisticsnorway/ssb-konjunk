@@ -12,21 +12,21 @@ import pandas as pd
 from ssb_konjunk import timestamp
 
 
-def _remove_edge_slashes(input_string: str) -> str:
+def _remove_edge_slashes(input_string: str, only_last: bool: False) -> str:
     """Function to remove edge slashes in strings.
 
     Args:
         input_string: The string to remove / for.
+        only_last: True if only move the potential last edge slash. Default: False.
 
     Returns:
         str: String without slashes.
     """
-    if input_string.startswith("/"):
+    if input_string.startswith("/") and not only_last:
         input_string = input_string[1:]
     if input_string.endswith("/"):
         input_string = input_string[:-1]
     return input_string
-
 
 def _structure_ssb_filepath(
     dates: tuple[int, ...],
@@ -58,7 +58,10 @@ def _structure_ssb_filepath(
     Raises:
         ValueError: Raise if version number is not None or int.
     """
-    bucket = _remove_edge_slashes(bucket)
+    if fs is None:
+        bucket = _remove_edge_slashes(bucket, only_last=True)
+    else:
+        bucket = _remove_edge_slashes(bucket)
     statistic = _remove_edge_slashes(statistic)
     datatilstand = _remove_edge_slashes(datatilstand)
     file_name = _remove_edge_slashes(file_name)
