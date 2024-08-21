@@ -12,7 +12,7 @@ import pandas as pd
 from ssb_konjunk import timestamp
 
 
-def _remove_edge_slashes(input_string: str, only_last: bool: False) -> str:
+def _remove_edge_slashes(input_string: str, only_last: bool= False) -> str:
     """Function to remove edge slashes in strings.
 
     Args:
