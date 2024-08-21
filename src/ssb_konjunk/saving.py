@@ -82,7 +82,7 @@ def _structure_ssb_filepath(
     return file_path
 
 
-def _get_files(folder_path: str, fs: dapla.gcs.GCSFileSystem | None) -> list[str]:
+def _get_files(folder_path: str, file_ext:str, fs: dapla.gcs.GCSFileSystem | None) -> list[str]:
     """Function to list files in a folder based on base name and timestamp."""
     filenames = []
 
@@ -91,6 +91,9 @@ def _get_files(folder_path: str, fs: dapla.gcs.GCSFileSystem | None) -> list[str
         filenames = fs.glob(match_string)
     else:
         filenames = glob.glob(match_string)
+
+    # Only include files with the relevant file extension
+    filenames = [i for i in filenames if i.endswith(file_ext)]
 
     # Sorts the filenames according to version numbers.
     filenames.sort()
@@ -301,7 +304,7 @@ def write_ssb_file(
         folder=folder,
     )
     # Get list with the filenames, if several, ordered by the highest version number at last.
-    files = _get_files(file_path, fs=fs)
+    files = _get_files(file_path, filetype, fs=fs)
     # Find version number/decide whether to overwrite or make new version.
     version_number = _find_version_number(files, stable_version)
 
@@ -362,7 +365,7 @@ def read_ssb_file(
 
     if not version_number:
         # If version number not specified then list out versions.
-        files = _get_files(file_path, fs=fs)
+        files = _get_files(file_path, filetype, fs=fs)
         file_path = files[-1]
 
     # Different functions used for reading depending on the filetype.
