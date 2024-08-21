@@ -8,7 +8,6 @@ from ssb_konjunk.saving import _structure_ssb_filepath
 from ssb_konjunk.saving import _verify_base_filename
 from ssb_konjunk.saving import _verify_datatilstand
 from ssb_konjunk.saving import _get_files
-from dapla import FileClient
 
 
 
