@@ -39,6 +39,7 @@ def _structure_ssb_filepath(
     folder: str | None = None,
     version_number: int | None = None,
     filetype: str = "parquet",
+    fs: dapla.gcs.GCSFileSystem | None =None,
 ) -> str:
     """Structure the name of the file to SSB-format and the path.
 
@@ -52,6 +53,7 @@ def _structure_ssb_filepath(
         folder: Optional string for if you want folders betwen 'datatilstand' and file.
         version_number: Optional int for reading specific file.
         filetype: String with default 'parquet', specifies file type.
+        fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
 
     Returns:
         str: the full path to the file.
@@ -308,6 +310,7 @@ def write_ssb_file(
         datatilstand=datatilstand,
         file_name=file_name,
         folder=folder,
+        fs=fs,
     )
     # Get list with the filenames, if several, ordered by the highest version number at last.
     files = _get_files(file_path, filetype, fs=fs)
@@ -367,6 +370,7 @@ def read_ssb_file(
         folder=folder,
         version_number=version_number,
         filetype=filetype,
+        fs=fs,
     )
 
     if not version_number:
