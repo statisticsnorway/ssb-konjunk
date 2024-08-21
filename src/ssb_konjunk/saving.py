@@ -39,7 +39,7 @@ def _structure_ssb_filepath(
     folder: str | None = None,
     version_number: int | None = None,
     filetype: str = "parquet",
-    fs: dapla.gcs.GCSFileSystem | None =None,
+    fs: dapla.gcs.GCSFileSystem | None = None,
 ) -> str:
     """Structure the name of the file to SSB-format and the path.
 
