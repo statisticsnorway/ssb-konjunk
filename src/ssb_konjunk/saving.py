@@ -12,7 +12,7 @@ import pandas as pd
 from ssb_konjunk import timestamp
 
 
-def _remove_edge_slashes(input_string: str, only_last: bool= False) -> str:
+def _remove_edge_slashes(input_string: str, only_last: bool = False) -> str:
     """Function to remove edge slashes in strings.
 
     Args:
@@ -27,6 +27,7 @@ def _remove_edge_slashes(input_string: str, only_last: bool= False) -> str:
     if input_string.endswith("/"):
         input_string = input_string[:-1]
     return input_string
+
 
 def _structure_ssb_filepath(
     dates: tuple[int, ...],
@@ -85,7 +86,9 @@ def _structure_ssb_filepath(
     return file_path
 
 
-def _get_files(folder_path: str, filetype:str, fs: dapla.gcs.GCSFileSystem | None) -> list[str]:
+def _get_files(
+    folder_path: str, filetype: str, fs: dapla.gcs.GCSFileSystem | None
+) -> list[str]:
     """Function to list files in a folder based on base name and timestamp."""
     filenames = []
 
