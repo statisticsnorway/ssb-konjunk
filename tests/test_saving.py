@@ -7,6 +7,9 @@ from ssb_konjunk.saving import _remove_edge_slashes
 from ssb_konjunk.saving import _structure_ssb_filepath
 from ssb_konjunk.saving import _verify_base_filename
 from ssb_konjunk.saving import _verify_datatilstand
+from ssb_konjunk.saving import _get_files
+from dapla import FileClient
+
 
 
 def test_remove_edge_slashes() -> None:
@@ -122,3 +125,10 @@ def test_verify_datatilstand() -> None:
 
     # Need to pass input, inndata. For running: pytest -s
     # assert _verify_datatilstand('overnatting') == 'inndata'
+
+def test_verify_list_filtypes() -> None:
+    """Test of function _structure_ssb_filepath without version number."""
+    filetype = 'parquet'
+    testlist = _get_files("ssb-vare-tjen-korttid-data-produkt-test/vhi/inndata/permanente_pypitestfiler/ra-0187/ra-0187_p2024-01-01_p2024-01-31", filetype = filetype, fs = FileClient.get_gcs_file_system()) 
+    
+    assert all(item.endswith(filetype) for item in testlist)

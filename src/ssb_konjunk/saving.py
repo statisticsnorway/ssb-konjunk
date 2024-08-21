@@ -82,7 +82,7 @@ def _structure_ssb_filepath(
     return file_path
 
 
-def _get_files(folder_path: str, file_ext:str, fs: dapla.gcs.GCSFileSystem | None) -> list[str]:
+def _get_files(folder_path: str, filetype:str, fs: dapla.gcs.GCSFileSystem | None) -> list[str]:
     """Function to list files in a folder based on base name and timestamp."""
     filenames = []
 
@@ -93,7 +93,7 @@ def _get_files(folder_path: str, file_ext:str, fs: dapla.gcs.GCSFileSystem | Non
         filenames = glob.glob(match_string)
 
     # Only include files with the relevant file extension
-    filenames = [i for i in filenames if i.endswith(file_ext)]
+    filenames = [i for i in filenames if i.endswith(filetype)]
 
     # Sorts the filenames according to version numbers.
     filenames.sort()
