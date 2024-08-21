@@ -12,16 +12,17 @@ import pandas as pd
 from ssb_konjunk import timestamp
 
 
-def _remove_edge_slashes(input_string: str) -> str:
+def _remove_edge_slashes(input_string: str, only_last: bool = False) -> str:
     """Function to remove edge slashes in strings.
 
     Args:
         input_string: The string to remove / for.
+        only_last: True if only move the potential last edge slash. Default: False.
 
     Returns:
         str: String without slashes.
     """
-    if input_string.startswith("/"):
+    if input_string.startswith("/") and not only_last:
         input_string = input_string[1:]
     if input_string.endswith("/"):
         input_string = input_string[:-1]
@@ -38,6 +39,7 @@ def _structure_ssb_filepath(
     folder: str | None = None,
     version_number: int | None = None,
     filetype: str = "parquet",
+    fs: dapla.gcs.GCSFileSystem | None = None,
 ) -> str:
     """Structure the name of the file to SSB-format and the path.
 
@@ -51,6 +53,7 @@ def _structure_ssb_filepath(
         folder: Optional string for if you want folders betwen 'datatilstand' and file.
         version_number: Optional int for reading specific file.
         filetype: String with default 'parquet', specifies file type.
+        fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
 
     Returns:
         str: the full path to the file.
@@ -58,7 +61,10 @@ def _structure_ssb_filepath(
     Raises:
         ValueError: Raise if version number is not None or int.
     """
-    bucket = _remove_edge_slashes(bucket)
+    if fs is None:
+        bucket = _remove_edge_slashes(bucket, only_last=True)
+    else:
+        bucket = _remove_edge_slashes(bucket)
     statistic = _remove_edge_slashes(statistic)
     datatilstand = _remove_edge_slashes(datatilstand)
     file_name = _remove_edge_slashes(file_name)
@@ -82,7 +88,9 @@ def _structure_ssb_filepath(
     return file_path
 
 
-def _get_files(folder_path: str, fs: dapla.gcs.GCSFileSystem | None) -> list[str]:
+def _get_files(
+    folder_path: str, filetype: str, fs: dapla.gcs.GCSFileSystem | None
+) -> list[str]:
     """Function to list files in a folder based on base name and timestamp."""
     filenames = []
 
@@ -91,6 +99,9 @@ def _get_files(folder_path: str, fs: dapla.gcs.GCSFileSystem | None) -> list[str
         filenames = fs.glob(match_string)
     else:
         filenames = glob.glob(match_string)
+
+    # Only include files with the relevant file extension
+    filenames = [i for i in filenames if i.endswith(filetype)]
 
     # Sorts the filenames according to version numbers.
     filenames.sort()
@@ -299,9 +310,10 @@ def write_ssb_file(
         datatilstand=datatilstand,
         file_name=file_name,
         folder=folder,
+        fs=fs,
     )
     # Get list with the filenames, if several, ordered by the highest version number at last.
-    files = _get_files(file_path, fs=fs)
+    files = _get_files(file_path, filetype, fs=fs)
     # Find version number/decide whether to overwrite or make new version.
     version_number = _find_version_number(files, stable_version)
 
@@ -358,11 +370,12 @@ def read_ssb_file(
         folder=folder,
         version_number=version_number,
         filetype=filetype,
+        fs=fs,
     )
 
     if not version_number:
         # If version number not specified then list out versions.
-        files = _get_files(file_path, fs=fs)
+        files = _get_files(file_path, filetype, fs=fs)
         file_path = files[-1]
 
     # Different functions used for reading depending on the filetype.

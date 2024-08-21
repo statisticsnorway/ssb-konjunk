@@ -122,3 +122,24 @@ def test_verify_datatilstand() -> None:
 
     # Need to pass input, inndata. For running: pytest -s
     # assert _verify_datatilstand('overnatting') == 'inndata'
+
+
+def test_verify_list_filtypes() -> None:
+    """Test of function _structure_ssb_filepath without version number."""
+    filenames = [
+        "ssb-vare-tjen-korttid-data-produkt-test/vhi/inndata/utvalg/ra-0187/ra-0187_p2024-01-01_p2024-01-31.csv",
+        "ssb-vare-tjen-korttid-data-produkt-test/vhi/inndata/utvalg/ra-0187/ra-0187_p2024-01-01_p2024-01-31.parquet",
+        "ssb-vare-tjen-korttid-data-produkt-test/vhi/inndata/utvalg/ra-0187/ra-0187_p2024-01-01_p2024-01-31_69.parquet",
+        "ssb-vare-tjen-korttid-data-produkt-test/vhi/inndata/utvalg/ra-0187/ra-0187_p2024-01-01_p2024-01-31_v69.parquet",
+        "ssb-vare-tjen-korttid-data-produkt-test/vhi/inndata/utvalg/ra-0187/ra-0187_p2024-01-01_p2024-01-31_v70.csv",
+    ]
+
+    filetype = "parquet"
+
+    # Only include files with the relevant file extension
+    filenames = [i for i in filenames if i.endswith(filetype)]
+
+    # Sorts the filenames according to version numbers.
+    filenames.sort()
+
+    assert all(item.endswith(filetype) for item in filenames)
