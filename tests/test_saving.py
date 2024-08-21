@@ -7,7 +7,6 @@ from ssb_konjunk.saving import _remove_edge_slashes
 from ssb_konjunk.saving import _structure_ssb_filepath
 from ssb_konjunk.saving import _verify_base_filename
 from ssb_konjunk.saving import _verify_datatilstand
-from ssb_konjunk.saving import _get_files
 
 
 
@@ -133,7 +132,7 @@ def test_verify_list_filtypes() -> None:
  'ssb-vare-tjen-korttid-data-produkt-test/vhi/inndata/utvalg/ra-0187/ra-0187_p2024-01-01_p2024-01-31_v69.parquet',
  'ssb-vare-tjen-korttid-data-produkt-test/vhi/inndata/utvalg/ra-0187/ra-0187_p2024-01-01_p2024-01-31_v70.csv']
     
-    filtype = 'parquet'
+    filetype = 'parquet'
 
     # Only include files with the relevant file extension
     filenames = [i for i in filenames if i.endswith(filetype)]
