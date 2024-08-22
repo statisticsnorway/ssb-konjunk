@@ -323,9 +323,10 @@ def write_ssb_file(
     # Find version number/decide whether to overwrite or make new version.
     version_number = _find_version_number(files, stable_version)
 
-    file_path = f"{file_path}_v{version_number}.{filetype}"
+    if version_number:
+        file_path = f"{file_path}_v{version_number}.{filetype}"
 
-    _save_df(df, file_path, filetype, fs, seperator, encoding)
+        _save_df(df, file_path, filetype, fs, seperator, encoding)
 
 
 def read_ssb_file(
