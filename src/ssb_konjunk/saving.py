@@ -305,7 +305,7 @@ def write_ssb_file(
     # Veirfy name of datatilstand and base filename
     file_name = _verify_base_filename(file_name)
     # Verify 'datatilstand' if not the kortnavn is temp or oppdrag
-    if not kortnavn.lower().isin(["temp", "oppdrag"]):
+    if kortnavn.lower() not in ["temp", "oppdrag"]:
         datatilstand = _verify_datatilstand(datatilstand)
     # Get the filepath, only without version number and filetype
     file_path = _structure_ssb_filepath(
