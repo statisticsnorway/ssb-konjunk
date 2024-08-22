@@ -72,19 +72,19 @@ def _structure_ssb_filepath(
 
     # Get the timestamp at correct format
     time_stamp = timestamp.get_ssb_timestamp(*periode, frequency=frequency)
-    
+
     # Handle case with undermappe in datatilstand and temp and oppdrag folders.
-    if undermappe and undermappe != '' and datatilstand != '':
+    if undermappe and undermappe != "" and datatilstand != "":
         undermappe = _remove_edge_slashes(undermappe)
         file_path = f"{bucket}/{kortnavn}/{datatilstand}/{undermappe}"
-    elif undermappe and undermappe != '' and datatilstand == '':
+    elif undermappe and undermappe != "" and datatilstand == "":
         undermappe = _remove_edge_slashes(undermappe)
         file_path = f"{bucket}/{kortnavn}/{undermappe}"
-    elif (not undermappe or undermappe == '') and datatilstand != '':
+    elif (not undermappe or undermappe == "") and datatilstand != "":
         file_path = f"{bucket}/{kortnavn}/{datatilstand}"
     else:
         file_path = f"{bucket}/{kortnavn}"
- 
+
     # Handle versionizing or not.
     if version_number is None:
         file_path = f"{file_path}/{file_name}_{time_stamp}"
@@ -271,7 +271,7 @@ def write_ssb_file(
     bucket: str,
     kortnavn: str,
     file_name: str,
-    datatilstand: str = '',
+    datatilstand: str = "",
     undermappe: str | None = None,
     stable_version: bool = True,
     filetype: str = "parquet",
@@ -305,7 +305,7 @@ def write_ssb_file(
     # Veirfy name of datatilstand and base filename
     file_name = _verify_base_filename(file_name)
     # Verify 'datatilstand' if not the kortnavn is temp or oppdrag
-    if not kortnavn.lower().isin(['temp', 'oppdrag']):
+    if not kortnavn.lower().isin(["temp", "oppdrag"]):
         datatilstand = _verify_datatilstand(datatilstand)
     # Get the filepath, only without version number and filetype
     file_path = _structure_ssb_filepath(
@@ -334,7 +334,7 @@ def read_ssb_file(
     bucket: str,
     kortnavn: str,
     file_name: str,
-    datatilstand: str = '',
+    datatilstand: str = "",
     undermappe: str | None = None,
     filetype: str = "parquet",
     version_number: int | None = None,

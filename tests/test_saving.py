@@ -67,7 +67,7 @@ def test_structure_ssb_filepath() -> None:
         filename_3
         == "ssb-reiseliv-korttid-data-produkt-prod/overnatting/inndata/mellommappe/min_fil_p2023_p2024"
     ), filename_3
-    
+
     filename_4 = _structure_ssb_filepath(
         (2023, 2024),
         "Y",
@@ -78,10 +78,12 @@ def test_structure_ssb_filepath() -> None:
         undermappe="",
         filetype="csv",
     )
-    
-    assert (filename_4 == "ssb-reiseliv-korttid-data-produkt-prod/oppdrag/min_fil_p2023_p2024"
+
+    assert (
+        filename_4
+        == "ssb-reiseliv-korttid-data-produkt-prod/oppdrag/min_fil_p2023_p2024"
     ), filename_4
-    
+
     filename_5 = _structure_ssb_filepath(
         (2023, 2024),
         "Y",
@@ -92,10 +94,11 @@ def test_structure_ssb_filepath() -> None:
         undermappe="",
         filetype="csv",
     )
-    
-    assert (filename_5 == "ssb-reiseliv-korttid-data-produkt-prod/oppdrag/38-99/min_fil_p2023_p2024"
-    ), filename_5
 
+    assert (
+        filename_5
+        == "ssb-reiseliv-korttid-data-produkt-prod/oppdrag/38-99/min_fil_p2023_p2024"
+    ), filename_5
 
 
 def test_find_version_number() -> None:
