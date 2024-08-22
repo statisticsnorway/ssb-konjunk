@@ -30,13 +30,13 @@ def _remove_edge_slashes(input_string: str, only_last: bool = False) -> str:
 
 
 def _structure_ssb_filepath(
-    dates: tuple[int, ...],
+    periode: tuple[int, ...],
     frequency: str,
     bucket: str,
-    statistic: str,
+    kortnavn: str,
     datatilstand: str,
     file_name: str,
-    folder: str | None = None,
+    undermappe: str | None = None,
     version_number: int | None = None,
     filetype: str = "parquet",
     fs: dapla.gcs.GCSFileSystem | None = None,
@@ -44,13 +44,13 @@ def _structure_ssb_filepath(
     """Structure the name of the file to SSB-format and the path.
 
     Args:
-        dates: Dates like ints in tuple for timestamp.
+        periode: Dates like ints in tuple for timestamp.
         frequency: Frequency like str for timestamp.
         bucket: String for gcp bucket.
-        statistic: String for statistic or data-product.
+        kortnavn: String for statistic or data-product.
         datatilstand: String for 'datatilstand'.
         file_name: String for Filename.
-        folder: Optional string for if you want folders betwen 'datatilstand' and file.
+        undermappe: Optional string for if you want folders betwen 'datatilstand' and file.
         version_number: Optional int for reading specific file.
         filetype: String with default 'parquet', specifies file type.
         fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
@@ -61,23 +61,30 @@ def _structure_ssb_filepath(
     Raises:
         ValueError: Raise if version number is not None or int.
     """
+    # Handle that path starts with / in prodsonen.
     if fs is None:
         bucket = _remove_edge_slashes(bucket, only_last=True)
     else:
         bucket = _remove_edge_slashes(bucket)
-    statistic = _remove_edge_slashes(statistic)
+    kortnavn = _remove_edge_slashes(kortnavn)
     datatilstand = _remove_edge_slashes(datatilstand)
     file_name = _remove_edge_slashes(file_name)
 
-    # Get the timestamp at corrext format
-    time_stamp = timestamp.get_ssb_timestamp(*dates, frequency=frequency)
-
-    if folder:
-        folder = _remove_edge_slashes(folder)
-        file_path = f"{bucket}/{statistic}/{datatilstand}/{folder}"
+    # Get the timestamp at correct format
+    time_stamp = timestamp.get_ssb_timestamp(*periode, frequency=frequency)
+    
+    # Handle case with undermappe in datatilstand and temp and oppdrag folders.
+    if undermappe and undermappe != '' and datatilstand != '':
+        undermappe = _remove_edge_slashes(undermappe)
+        file_path = f"{bucket}/{kortnavn}/{datatilstand}/{undermappe}"
+    elif undermappe and undermappe != '' and datatilstand == '':
+        undermappe = _remove_edge_slashes(undermappe)
+        file_path = f"{bucket}/{kortnavn}/{undermappe}"
+    elif (not undermappe or undermappe == '') and datatilstand != '':
+        file_path = f"{bucket}/{kortnavn}/{datatilstand}"
     else:
-        file_path = f"{bucket}/{statistic}/{datatilstand}"
-
+        file_path = f"{bucket}/{kortnavn}"
+ 
     # Handle versionizing or not.
     if version_number is None:
         file_path = f"{file_path}/{file_name}_{time_stamp}"
@@ -214,7 +221,6 @@ def _verify_datatilstand(datatilstand: str) -> str:
         "klargjorte-data",
         "statistikk",
         "utdata",
-        "temp",
     ]:
         datatilstand = input(
             "Datatilstanden må være enten inndata, klargjorte-data, statistikk eller utdata."
@@ -238,7 +244,6 @@ def _save_df(
     if filetype == "parquet":
 
         if fs:
-            # Noe enklere i koden og kan brukes med alle filformater.
             with fs.open(file_path, "wb") as f:
                 df.to_parquet(f, index=False)
                 f.close()
@@ -261,13 +266,13 @@ def _save_df(
 
 def write_ssb_file(
     df: pd.DataFrame,
-    dates: tuple[int, ...],
+    periode: tuple[int, ...],
     frequency: str,
     bucket: str,
-    statistic: str,
-    datatilstand: str,
+    kortnavn: str,
     file_name: str,
-    folder: str | None = None,
+    datatilstand: str = '',
+    undermappe: str | None = None,
     stable_version: bool = True,
     filetype: str = "parquet",
     fs: dapla.gcs.GCSFileSystem | None = None,
@@ -278,13 +283,13 @@ def write_ssb_file(
 
     Args:
         df: The dataframe to save.
-        dates: Up to six arguments with int, to create timestamp for. E.g. (2022,2,2023,4) is p_2022-02_p2023-04 when frequency = 'M'.
+        periode: Up to six arguments with int, to create timestamp for. E.g. (2022,2,2023,4) is p_2022-02_p2023-04 when frequency = 'M'.
         frequency: monthly (M), daily(D), quarter (Q), terital (T), weekly (W).
-        bucket: GCP bucket.
-        statistic: Name of statistic or data product.
-        datatilstand: Data tilstand following ssb standards.
+        bucket: GCP bucket passed with a FileClient object or path in prodsonen.
+        kortnavn: Name of statistic or data product, temp or oppdrag is also valid.
         file_name: Name for file.
-        folder: Optional folder under 'datatilstand'.
+        datatilstand: Datatilstand following SSB standards, except when temp and oppdrag is the kortnavn.
+        undermappe: Optional folder under 'datatilstand'.
         stable_version: Bool for whether you should have checks in place in case of overwrite.
         filetype: the filetype to save as. Default: 'parquet'.
         fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
@@ -299,17 +304,18 @@ def write_ssb_file(
         raise ValueError("Dataframen har ingen rader. Fiks dette og prøv igjen.")
     # Veirfy name of datatilstand and base filename
     file_name = _verify_base_filename(file_name)
-    # Verify 'datatilstand'
-    datatilstand = _verify_datatilstand(datatilstand)
+    # Verify 'datatilstand' if not the kortnavn is temp or oppdrag
+    if not kortnavn.lower().isin(['temp', 'oppdrag']):
+        datatilstand = _verify_datatilstand(datatilstand)
     # Get the filepath, only without version number and filetype
     file_path = _structure_ssb_filepath(
-        dates=dates,
+        periode=periode,
         frequency=frequency,
         bucket=bucket,
-        statistic=statistic,
+        kortnavn=kortnavn,
         datatilstand=datatilstand,
         file_name=file_name,
-        folder=folder,
+        undermappe=undermappe,
         fs=fs,
     )
     # Get list with the filenames, if several, ordered by the highest version number at last.
@@ -323,13 +329,13 @@ def write_ssb_file(
 
 
 def read_ssb_file(
-    dates: tuple[int, ...],
+    periode: tuple[int, ...],
     frequency: str,
     bucket: str,
-    statistic: str,
-    datatilstand: str,
+    kortnavn: str,
     file_name: str,
-    folder: str | None = None,
+    datatilstand: str = '',
+    undermappe: str | None = None,
     filetype: str = "parquet",
     version_number: int | None = None,
     fs: dapla.gcs.GCSFileSystem | None = None,
@@ -343,13 +349,13 @@ def read_ssb_file(
     If it is a year table, the filename is automatically adjusted.
 
     Args:
-        dates: Up to six arguments with int, to create timestamp for. E.g. (2022,2,2023,4) is p_2022-02_p2023-04 when frequency = 'M'.
+        periode: Up to six arguments with int, to create timestamp for. E.g. (2022,2,2023,4) is p_2022-02_p2023-04 when frequency = 'M'.
         frequency: monthly (M), daily(D), quarter (Q), terital (T), weekly (W).
-        bucket: GCP bucket.
-        statistic: Name of statistic or data product.
-        datatilstand: Data tilstand following ssb standards.
-        folder: Optional folder under 'datatilstand'.
+        bucket: GCP bucket passed with a FileClient object or path in prodsonen.
+        kortnavn: Name of statistic or data product, temp and oppdrag is also valid.
         file_name: Name for file.
+        datatilstand: Datatilstand following SSB standards, except when temp and oppdrag is the kortnavn.
+        undermappe: Optional folder under 'datatilstand'.
         version_number: possibility to get another version, than the newest (i.e. highest version number). Default: np.nan.
         filetype: the filetype to save as. Default: 'parquet'.
         fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
@@ -361,13 +367,13 @@ def read_ssb_file(
     """
     # Get the filepath, only without version number and filetype.
     file_path = _structure_ssb_filepath(
-        dates=dates,
+        periode=periode,
         frequency=frequency,
         bucket=bucket,
-        statistic=statistic,
+        kortnavn=kortnavn,
         datatilstand=datatilstand,
         file_name=file_name,
-        folder=folder,
+        undermappe=undermappe,
         version_number=version_number,
         filetype=filetype,
         fs=fs,

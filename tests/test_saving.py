@@ -42,7 +42,7 @@ def test_structure_ssb_filepath() -> None:
         "overnatting",
         "inndata",
         "min_fil",
-        folder="",
+        undermappe="",
         version_number=None,
         filetype="parquet",
     )
@@ -59,7 +59,7 @@ def test_structure_ssb_filepath() -> None:
         "overnatting",
         "inndata",
         "min_fil",
-        folder="mellommappe/",
+        undermappe="mellommappe/",
         filetype="csv",
     )
 
@@ -67,6 +67,35 @@ def test_structure_ssb_filepath() -> None:
         filename_3
         == "ssb-reiseliv-korttid-data-produkt-prod/overnatting/inndata/mellommappe/min_fil_p2023_p2024"
     ), filename_3
+    
+    filename_4 = _structure_ssb_filepath(
+        (2023, 2024),
+        "Y",
+        "ssb-reiseliv-korttid-data-produkt-prod",
+        "oppdrag",
+        "",
+        "min_fil",
+        undermappe="",
+        filetype="csv",
+    )
+    
+    assert (filename_4 == "ssb-reiseliv-korttid-data-produkt-prod/oppdrag/min_fil_p2023_p2024"
+    ), filename_4
+    
+    filename_5 = _structure_ssb_filepath(
+        (2023, 2024),
+        "Y",
+        "ssb-reiseliv-korttid-data-produkt-prod",
+        "oppdrag",
+        "38-99",
+        "min_fil",
+        undermappe="",
+        filetype="csv",
+    )
+    
+    assert (filename_5 == "ssb-reiseliv-korttid-data-produkt-prod/oppdrag/38-99/min_fil_p2023_p2024"
+    ), filename_5
+
 
 
 def test_find_version_number() -> None:
@@ -118,7 +147,7 @@ def test_verify_base_filename() -> None:
 def test_verify_datatilstand() -> None:
     """Test function _verify_datatilstand."""
     assert _verify_datatilstand("utdata") == "utdata"
-    assert _verify_datatilstand("temp") == "temp"
+    assert _verify_datatilstand("klargjorte-data") == "klargjorte-data"
 
     # Need to pass input, inndata. For running: pytest -s
     # assert _verify_datatilstand('overnatting') == 'inndata'
