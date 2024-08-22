@@ -376,8 +376,11 @@ def read_ssb_file(
     if not version_number:
         # If version number not specified then list out versions.
         files = _get_files(file_path, filetype, fs=fs)
+        # If list is empty, no matching files of any version were found.
+        if not files:
+            raise FileNotFoundError("Could not find any files matching format.")
+        # Otherwise, use the newest version of file.
         file_path = files[-1]
-
     # Different functions used for reading depending on the filetype.
     if filetype == "csv":
         if fs:
