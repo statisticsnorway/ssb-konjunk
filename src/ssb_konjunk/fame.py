@@ -13,7 +13,7 @@ from dapla import FileClient
 fs = FileClient.get_gcs_file_system()
 
 
-def change_date_format_fame(series: pd.Series) -> pd.Series:
+def change_date_format_fame(series: pd.Series[str]) -> pd.Series[str]:
     """Function for turning ISO-8601 to fame time format.
 
     Args:
@@ -31,9 +31,9 @@ def change_date_format_fame(series: pd.Series) -> pd.Series:
 
 
 def write_out_fame_format_txt(
-    names: pd.Series,
-    dates: pd.Series,
-    values: pd.Series,
+    names: pd.Series[str],
+    dates: pd.Series[str],
+    values: pd.Series[float],
     gcp_path: str,
 ) -> None:
     """Function to write out txt file in fame format.
