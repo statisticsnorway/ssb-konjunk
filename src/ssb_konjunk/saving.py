@@ -356,6 +356,9 @@ def read_ssb_file(
         seperator: the seperator to use it filetype is csv. Default: ';'.
         encoding: Encoding for file, base is latin1.
 
+    Raises:
+        FileNotFoundError: If no files matching the file path and filetype are found.
+
     Returns:
         pd.DataFrame: file as a data frame.
     """
@@ -376,6 +379,12 @@ def read_ssb_file(
     if not version_number:
         # If version number not specified then list out versions.
         files = _get_files(file_path, filetype, fs=fs)
+        # If list is empty, no matching files of any version were found.
+        if not files:
+            raise FileNotFoundError(
+                f"Fant ingen {filetype}-filer som matcher filstien '{file_path}'."
+            )
+        # Otherwise, use the newest version of file.
         file_path = files[-1]
 
     # Different functions used for reading depending on the filetype.
