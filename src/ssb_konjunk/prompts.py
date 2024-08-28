@@ -220,16 +220,17 @@ def iterate_years_months(
             ):
                 continue
             yield year, month
-            
+
+
 def bump_quarter(year: int, quarter: int) -> tuple[int, int]:
     """Bump period with a quarter further.
-    
+
     E.g. 2023 and quarter 4 as input, will be returned as 2024 and quarter 1.
-    
+
     Args:
         year: The year.
         quarter: The quarter.
-    
+
     Returns:
         tuple: The year and quarter with an "added" quarter.
     """
