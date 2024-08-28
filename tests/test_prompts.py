@@ -2,11 +2,11 @@ from datetime import datetime
 
 import pytest
 
+from ssb_konjunk.prompts import bump_quarter
 from ssb_konjunk.prompts import days_in_month
 from ssb_konjunk.prompts import extract_start_end_dates
 from ssb_konjunk.prompts import iterate_years_months
 from ssb_konjunk.prompts import validate_month
-from ssb_konjunk.prompts import bump_quarter
 
 """Test of function days in month"""
 
