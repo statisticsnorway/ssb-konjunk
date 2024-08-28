@@ -131,8 +131,12 @@ def test_iterate_years_months_invalid_month() -> None:
 
 def test_bump_quarter() -> None:
     # Test bump quarter
-    assert bump_quarter(year = 2023, quarter = 4) == (2024, 1), bump_quarter(year = 2023, quarter = 4)
-    assert bump_quarter(year = 2023, quarter = 1) == (2023, 2), bump_quarter(year = 2023, quarter = 1)
+    assert bump_quarter(year=2023, quarter=4) == (2024, 1), bump_quarter(
+        year=2023, quarter=4
+    )
+    assert bump_quarter(year=2023, quarter=1) == (2023, 2), bump_quarter(
+        year=2023, quarter=1
+    )
 
 
 def test_validate_month() -> None:
