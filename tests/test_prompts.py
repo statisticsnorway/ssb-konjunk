@@ -2,6 +2,7 @@ from datetime import datetime
 
 import pytest
 
+from ssb_konjunk.prompts import bump_quarter
 from ssb_konjunk.prompts import days_in_month
 from ssb_konjunk.prompts import extract_start_end_dates
 from ssb_konjunk.prompts import iterate_years_months
@@ -129,7 +130,14 @@ def test_iterate_years_months_invalid_month() -> None:
         list(iterate_years_months(2022, 2024, 0, 12))
 
 
-"""Test of the function validate_month"""
+def test_bump_quarter() -> None:
+    # Test bump quarter
+    assert bump_quarter(year=2023, quarter=4) == (2024, 1), bump_quarter(
+        year=2023, quarter=4
+    )
+    assert bump_quarter(year=2023, quarter=1) == (2023, 2), bump_quarter(
+        year=2023, quarter=1
+    )
 
 
 def test_validate_month() -> None:
