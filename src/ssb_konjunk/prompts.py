@@ -272,9 +272,13 @@ def validate_day(day: int | str) -> str:
     return str(day)
 
 
-def set_publishing_date():
+def set_publishing_date() -> str:
     """Set the date for publication of tables.
+
     Used for loading to Statbank.
+
+    Returns:
+        str: a date.
     """
     year = input("Year (YYYY): ")
     month = input("Month (MM): ")
@@ -289,8 +293,15 @@ def set_publishing_date():
     return date
 
 
-def check_publishing_date(date):
-    """Validate the publishing date"""
+def check_publishing_date(date: str) -> str:
+    """Validate the publishing date.
+
+    Args:
+        date: the date to check is on valid format.
+
+    Returns:
+        str: the returned and corrected date.
+    """
     today = str(datetime.datetime.today().date())
     date_ok = False
 
@@ -315,7 +326,12 @@ def check_publishing_date(date):
     return date
 
 
-def publishing_date():
+def publishing_date() -> str:
+    """Set publishing dat at format YYYY-MM-DD.
+
+    Returns:
+        str: the date.
+    """
     date = set_publishing_date()
     ok_date = check_publishing_date(date)
     return ok_date
