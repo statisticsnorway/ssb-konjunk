@@ -33,8 +33,4 @@ def round_half_up(df_col: pd.Series[float], digits: str = "1.") -> pd.Series[flo
         Series: a column in a data frame where all values are rounded off
     """
     df_col = df_col.copy()
-    df_col = df_col.map(
-        lambda x: Decimal(x).quantize(Decimal(digits), rounding=ROUND_HALF_UP)
-    )
-
-    return df_col
+    return df_col.map(lambda x: float(Decimal(x).quantize(Decimal(digits), rounding=ROUND_HALF_UP)) if pd.notna(x) else x)
