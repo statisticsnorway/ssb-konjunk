@@ -2,7 +2,9 @@ import math
 from decimal import ROUND_HALF_UP
 from decimal import Decimal
 from typing import Any
+
 import pandas as pd
+
 
 def round_half_up_float(n: float, decimals: int = 0) -> Any:
     """Round a float half up.
@@ -20,7 +22,7 @@ def round_half_up_float(n: float, decimals: int = 0) -> Any:
     return math.floor(n * multiplier + 0.5) / multiplier
 
 
-def round_half_up(df_col: pd.Series[float], digits: str = "1.") -> pd.Series[float]:
+def round_half_up(df_col: pd.Series[float], digits: str = "1.") -> pd.Series[float|int]:
     """Round a pandas column half up.
 
     The "normal" (half up) rounding should be used.
@@ -33,4 +35,10 @@ def round_half_up(df_col: pd.Series[float], digits: str = "1.") -> pd.Series[flo
         Series: a column in a data frame where all values are rounded off
     """
     df_col = df_col.copy()
-    return df_col.map(lambda x: float(Decimal(x).quantize(Decimal(digits), rounding=ROUND_HALF_UP)) if pd.notna(x) else x)
+    return df_col.map(
+        lambda x: (
+            float(Decimal(x).quantize(Decimal(digits), rounding=ROUND_HALF_UP))
+            if pd.notna(x)
+            else x
+        )
+    )
