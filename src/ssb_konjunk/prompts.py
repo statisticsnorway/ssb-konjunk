@@ -305,7 +305,7 @@ def check_publishing_date(date: str) -> str:
     today = str(datetime.datetime.today().date())
     date_ok = False
 
-    while date_ok == False:
+    while date_ok is False:
         if today == date:
             print("Publishing date is set to today.")
             publish_today = input("If correct enter, 'yes': ")

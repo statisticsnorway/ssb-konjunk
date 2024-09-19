@@ -1,5 +1,5 @@
 import math
-from decimal import *
+from decimal import Decimal
 
 import pandas as pd
 
