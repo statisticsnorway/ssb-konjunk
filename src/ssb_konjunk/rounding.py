@@ -1,12 +1,10 @@
 import math
 from decimal import ROUND_HALF_UP
 from decimal import Decimal
-
+from typing import Any
 import pandas as pd
-from pandera.typing import Series
 
-
-def round_half_up_float(n: float, decimals: int = 0) -> typing.Any:
+def round_half_up_float(n: float, decimals: int = 0) -> Any:
     """Round a float half up.
 
     Function from https://realpython.com/python-rounding/.
@@ -22,7 +20,7 @@ def round_half_up_float(n: float, decimals: int = 0) -> typing.Any:
     return math.floor(n * multiplier + 0.5) / multiplier
 
 
-def round_half_up(df_col: Series[int|float], digits: str = "1.") -> Series[int|float]:
+def round_half_up(df_col: pd.Series, digits: str = "1.") -> pd.Series:
     """Round a pandas column half up.
 
     The "normal" (half up) rounding should be used.
