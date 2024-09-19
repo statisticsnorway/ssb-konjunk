@@ -1,5 +1,5 @@
 import math
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 import pandas as pd
 
