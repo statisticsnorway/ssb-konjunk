@@ -270,3 +270,52 @@ def validate_day(day: int | str) -> str:
     if int(day) < 10:
         day = "0" + str(int(day))
     return str(day)
+
+
+def set_publishing_date():
+    """Set the date for publication of tables.
+    Used for loading to Statbank.
+    """
+    year = input("Year (YYYY): ")
+    month = input("Month (MM): ")
+    day = input("Day (DD): ")
+
+    assert int(month) < 13, f"{month} > 12. There are only 12 months in a year."
+    assert int(day) < 32, f"{day} > 31. It can only be maximum 31 days in a month."
+    assert int(year) > 1000, "Year have to have four digits."
+
+    date = f"{year}-{month}-{day}"
+
+    return date
+
+
+def check_publishing_date(date):
+    """Validate the publishing date"""
+    today = str(datetime.datetime.today().date())
+    date_ok = False
+
+    while date_ok == False:
+        if today == date:
+            print("Publishing date is set to today.")
+            publish_today = input("If correct enter, 'yes': ")
+
+            if publish_today.lower() != "yes":
+                date = set_publishing_date()
+            else:
+                date_ok = True
+
+        elif today > date:
+            print("Publishing date has passed.")
+            date = set_publishing_date()
+
+        else:
+            print(f"Publishing date is set to: {date}")
+            date_ok = True
+
+    return date
+
+
+def publishing_date():
+    date = set_publishing_date()
+    ok_date = check_publishing_date(date)
+    return ok_date
