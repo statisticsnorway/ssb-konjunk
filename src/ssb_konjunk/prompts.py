@@ -302,7 +302,7 @@ def check_publishing_date(date: str) -> str:
     Returns:
         str: the returned and corrected date.
     """
-    today = str(datetime.datetime.today().date())
+    today = str(datetime.today().date())
     date_ok = False
 
     while date_ok is False:
