@@ -1,7 +1,7 @@
 import math
 from decimal import ROUND_HALF_UP
 from decimal import Decimal
-from typing import Any, Union
+from typing import Any
 
 import pandas as pd
 
