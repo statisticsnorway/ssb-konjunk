@@ -5,7 +5,7 @@ from decimal import Decimal
 import pandas as pd
 
 
-def round_half_up_float(n: float, decimals: int = 0) -> float | int:
+def round_half_up_float(n: float, decimals: int = 0) -> float:
     """Round a float half up.
 
     Function from https://realpython.com/python-rounding/.
@@ -18,7 +18,7 @@ def round_half_up_float(n: float, decimals: int = 0) -> float | int:
         float|int: the rounded off number.
     """
     multiplier = 10**decimals
-    return math.floor(n * multiplier + 0.5) / multiplier
+    return float(math.floor(n * multiplier + 0.5) / multiplier)
 
 
 def round_half_up(df_col: pd.Series[float], digits: str = "1.") -> pd.Series[float]:
