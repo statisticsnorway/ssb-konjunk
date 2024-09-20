@@ -22,7 +22,7 @@ def round_half_up_float(n: float, decimals: int = 0) -> Any:
     return math.floor(n * multiplier + 0.5) / multiplier
 
 
-def round_half_up(df_col: pd.Series[float], digits: str = "1.") -> pd.Series:
+def round_half_up(df_col: pd.Series[float], digits: str = "1.") -> pd.Series[float]:
     """Round a pandas column half up.
 
     The "normal" (half up) rounding should be used.
