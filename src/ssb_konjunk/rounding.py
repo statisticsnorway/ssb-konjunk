@@ -6,7 +6,7 @@ from typing import Any
 import pandas as pd
 
 
-def round_half_up_float(n: float, decimals: int = 0) -> Any:
+def round_half_up_float(n: float, decimals: int = 0) -> float|int:
     """Round a float half up.
 
     Function from https://realpython.com/python-rounding/.
