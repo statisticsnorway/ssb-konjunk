@@ -21,14 +21,14 @@ def round_half_up_float(n: float, decimals: int = 0) -> float | int:
     return float(math.floor(n * multiplier + 0.5) / multiplier)
 
 
-def round_half_up(df: pd.DataFrame, column:str, digits: str = "1.") -> pd.DataFrame:
+def round_half_up(df: pd.DataFrame, column: str, digits: str = "1.") -> pd.DataFrame:
     """Round a pandas column half up.
 
     The "normal" (half up) rounding should be used.
 
     Args:
         df: a column in a data frame where all values will be rounded off.
-        column: name of the column to round off values in. 
+        column: name of the column to round off values in.
         digits: number of digits after . gives the number of digits rounded off to. Default: no digits.
 
     Returns:

@@ -13,13 +13,12 @@ def test_round_half_up_float() -> None:
     assert round_half_up_float(2.499, 2) == 2.5
 
 
-
 def test_round_half_up() -> None:
     """Test of function round_half_up."""
-    df = pd.DataFrame({'a': [1.45, 1.51]})
+    df = pd.DataFrame({"a": [1.45, 1.51]})
 
-    assert round_half_up(df, 'a')['a'][0] == 1.0
-    assert round_half_up(df, 'a')['a'][1] == 2.0
-    
-    assert round_half_up(df, 'a', '.1')['a'][0] == 1.5
-    assert round_half_up(df, 'a', '.1')['a'][1] == 1.5
+    assert round_half_up(df, "a")["a"][0] == 1.0
+    assert round_half_up(df, "a")["a"][1] == 2.0
+
+    assert round_half_up(df, "a", ".1")["a"][0] == 1.5
+    assert round_half_up(df, "a", ".1")["a"][1] == 1.5
