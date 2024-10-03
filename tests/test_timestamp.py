@@ -15,6 +15,7 @@ from ssb_konjunk.timestamp import _get_timestamp_daily
 from ssb_konjunk.timestamp import _get_timestamp_special
 from ssb_konjunk.timestamp import _get_timestamp_yearly
 from ssb_konjunk.timestamp import get_ssb_timestamp
+from ssb_konjunk.timestamp import check_periodic_year
 
 
 def test_check_even() -> None:
@@ -173,3 +174,11 @@ def test_check_valid_year() -> None:
         match=f"The order of args is start date and then end date. Therefore first year arg can not be bigger than the last. Your args are start year:{year1}  end year:{year2}.",
     ):
         _check_valid_year(year1, year2)
+
+def test_check_periodic_year() -> None:
+    """Test of function check_periodic_year."""
+    assert check_periodic_year(2024, 2021, 3) == True
+    assert check_periodic_year(2024, 2021, 2) == False
+    assert check_periodic_year(2021, 2024, 3) == True
+    assert check_periodic_year(2021, 2021, 3) == True
+    assert check_periodic_year(2021, 2022, 1) == True
