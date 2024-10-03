@@ -49,3 +49,11 @@ ssb\_konjunk.xml\_handling module
    :members:
    :undoc-members:
    :show-inheritance:
+   
+ssb\_konjunk.rounding module
+---------------------------------
+
+.. automodule:: ssb_konjunk.rounding
+   :members:
+   :undoc-members:
+   :show-inheritance:
