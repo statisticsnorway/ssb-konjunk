@@ -178,8 +178,8 @@ def test_check_valid_year() -> None:
 
 def test_check_periodic_year() -> None:
     """Test of function check_periodic_year."""
-    assert check_periodic_year(2024, 2021, 3) == True
-    assert check_periodic_year(2024, 2021, 2) == False
-    assert check_periodic_year(2021, 2024, 3) == True
-    assert check_periodic_year(2021, 2021, 3) == True
-    assert check_periodic_year(2021, 2022, 1) == True
+    assert check_periodic_year(2024, 2021, 3)
+    assert not check_periodic_year(2024, 2021, 2)
+    assert check_periodic_year(2021, 2024, 3)
+    assert check_periodic_year(2021, 2021, 3)
+    assert check_periodic_year(2021, 2022, 1)
