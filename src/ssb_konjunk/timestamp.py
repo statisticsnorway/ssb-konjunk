@@ -263,3 +263,26 @@ def get_ssb_timestamp(*args: int, frequency: str = "M") -> str | None:
                 return _get_timestamp_yearly(*valid_args)
             else:
                 return _get_timestamp_special(*valid_args, frequency=frequency)
+
+
+def check_periodic_year(year: int, cycle_year: int, period: int) -> bool:
+    """Check if a year is a part of a periodic cycle.
+
+    An example of use: a functionality should be performed every third
+    year, starting in year 2021. I.e. not in 2022 and 2023, but in
+    2024. Then this function should return True when passing
+    2024 as the year argument, 2021 (or 2015, 2018, 2024 and so) is
+    passed as the cycle year and period is passed as 3 (triennal period).
+
+    Args:
+        year: the year to check.
+        cycle_year: a year in the cycle.
+        period: the number of years in a period.
+
+    Returns:
+        bool: whether or not the year is part of the triennal cycle.
+    """
+    if abs(year - cycle_year) % period == 0:
+        return True
+    else:
+        return False
