@@ -282,4 +282,7 @@ def check_periodic_year(year: int, cycle_year: int, period: int) -> bool:
     Returns:
         bool: whether or not the year is part of the triennal cycle.
     """
-    return abs(year - cycle_year) % period == 0
+    if abs(year - cycle_year) % period == 0:
+        return True
+    else:
+        return False
