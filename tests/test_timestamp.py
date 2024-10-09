@@ -45,9 +45,13 @@ def test_test_get_timestamp_special() -> None:
         _get_timestamp_special(2020, 1, 2021, 2, frequency="M") == "p2020-01_p2021-02"
     )
     # Testing quarter
-    assert _get_timestamp_special(2020, 1, 2021, 2, frequency="Q") == "p2020-Q1_p2021-Q2"
+    assert (
+        _get_timestamp_special(2020, 1, 2021, 2, frequency="Q") == "p2020-Q1_p2021-Q2"
+    )
     # Testing term
-    assert _get_timestamp_special(2020, 1, 2021, 2, frequency="B") == "p2020-B1_p2021-B2"
+    assert (
+        _get_timestamp_special(2020, 1, 2021, 2, frequency="B") == "p2020-B1_p2021-B2"
+    )
 
 
 def test_get_ssb_timestamp() -> None:

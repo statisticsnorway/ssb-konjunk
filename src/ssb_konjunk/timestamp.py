@@ -218,7 +218,6 @@ def _get_timestamp_special(*args: int, frequency: str) -> str | None:
             return None
 
 
-
 def get_ssb_timestamp(*args: int, frequency: str = "M") -> str | None:
     r"""Function to create a string in ssb timestamp format.
 
