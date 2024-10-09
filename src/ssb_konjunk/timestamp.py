@@ -196,6 +196,8 @@ def _get_timestamp_special(*args: int, frequency: str) -> str | None:
     if frequency in ["M", "W"]:
         if frequency == "M":
             frequency = "-"
+        if frequency == "W":
+            frequency = "-W"
         if len(args) == 2:
             return f"p{args[0]}{frequency}{args[1]:02}"
         elif len(args) == 4:
@@ -204,13 +206,17 @@ def _get_timestamp_special(*args: int, frequency: str) -> str | None:
             )
         else:
             return None
+
     else:
+        if frequency in ["Q", "B", "T", "H"]:
+            frequency = f"-{frequency}"
         if len(args) == 2:
             return f"p{args[0]}{frequency}{args[1]}"
         elif len(args) == 4:
             return f"p{args[0]}{frequency}{args[1]}_p{args[2]}{frequency}{args[3]}"
         else:
             return None
+
 
 
 def get_ssb_timestamp(*args: int, frequency: str = "M") -> str | None:
