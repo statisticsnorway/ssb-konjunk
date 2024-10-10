@@ -49,7 +49,7 @@ def test_structure_ssb_filepath() -> None:
 
     assert (
         filename_2
-        == "ssb-reiseliv-korttid-data-produkt-prod/overnatting/inndata/min_fil_p2023_p2024"
+        == "ssb-reiseliv-korttid-data-produkt-prod/overnatting/inndata/min_fil_p2023_p2024_"
     ), filename_2
 
     filename_3 = _structure_ssb_filepath(
@@ -65,7 +65,7 @@ def test_structure_ssb_filepath() -> None:
 
     assert (
         filename_3
-        == "ssb-reiseliv-korttid-data-produkt-prod/overnatting/inndata/mellommappe/min_fil_p2023_p2024"
+        == "ssb-reiseliv-korttid-data-produkt-prod/overnatting/inndata/mellommappe/min_fil_p2023_p2024_"
     ), filename_3
 
     filename_4 = _structure_ssb_filepath(
@@ -81,7 +81,7 @@ def test_structure_ssb_filepath() -> None:
 
     assert (
         filename_4
-        == "ssb-reiseliv-korttid-data-produkt-prod/oppdrag/min_fil_p2023_p2024"
+        == "ssb-reiseliv-korttid-data-produkt-prod/oppdrag/min_fil_p2023_p2024_"
     ), filename_4
 
     filename_5 = _structure_ssb_filepath(
@@ -97,7 +97,7 @@ def test_structure_ssb_filepath() -> None:
 
     assert (
         filename_5
-        == "ssb-reiseliv-korttid-data-produkt-prod/oppdrag/38-99/min_fil_p2023_p2024"
+        == "ssb-reiseliv-korttid-data-produkt-prod/oppdrag/38-99/min_fil_p2023_p2024_"
     ), filename_5
 
 
