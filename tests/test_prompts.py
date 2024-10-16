@@ -7,6 +7,7 @@ from ssb_konjunk.prompts import days_in_month
 from ssb_konjunk.prompts import extract_start_end_dates
 from ssb_konjunk.prompts import iterate_years_months
 from ssb_konjunk.prompts import validate_month
+from ssb_konjunk.prompts import get_previous_month
 
 """Test of function days in month"""
 
@@ -148,3 +149,6 @@ def test_validate_month() -> None:
 
     assert validate_month(10) == "10"
     assert validate_month("10") == "10"
+
+def test_get_previous_month() -> None:
+    assert get_previous_month(2022, 1) == 
