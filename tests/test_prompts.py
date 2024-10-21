@@ -5,9 +5,9 @@ import pytest
 from ssb_konjunk.prompts import bump_quarter
 from ssb_konjunk.prompts import days_in_month
 from ssb_konjunk.prompts import extract_start_end_dates
+from ssb_konjunk.prompts import get_previous_month
 from ssb_konjunk.prompts import iterate_years_months
 from ssb_konjunk.prompts import validate_month
-from ssb_konjunk.prompts import get_previous_month
 
 """Test of function days in month"""
 
@@ -150,5 +150,12 @@ def test_validate_month() -> None:
     assert validate_month(10) == "10"
     assert validate_month("10") == "10"
 
+
 def test_get_previous_month() -> None:
-    assert get_previous_month(2022, 1) == 
+    prev_month = get_previous_month(2022, 1)
+    assert prev_month[0] == 2021, f"Previous year for previous month: {prev_month[0]}"
+    assert prev_month[1] == 12, f"Previous month for previous month: {prev_month[1]}"
+
+    prev_month = get_previous_month(2022, 12)
+    assert prev_month[0] == 2022, f"Previous year for previous month: {prev_month[0]}"
+    assert prev_month[1] == 11, f"Previous month for previous month: {prev_month[1]}"

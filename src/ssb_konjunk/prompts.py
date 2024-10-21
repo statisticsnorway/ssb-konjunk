@@ -336,9 +336,10 @@ def publishing_date() -> str:
     ok_date = check_publishing_date(date)
     return ok_date
 
-def get_previous_month(year: str|int, month:str|int) -> tuple[int, int]:
+
+def get_previous_month(year: str | int, month: str | int) -> tuple[int, int]:
     """Turn e.g. month 01 year 2023 into month 12 and year 2022.
-    
+
     Args:
         year: the current year YYYY
         month: the current month MM
@@ -346,11 +347,11 @@ def get_previous_month(year: str|int, month:str|int) -> tuple[int, int]:
         tuple[int, int]: the previous month with year.
     """
     prev_month = int(month) - 1
-    
+
     if prev_month != 0:
         prev_year = year
     else:
         prev_month = 12
         prev_year = int(year) - 1
-        
+
     return prev_year, prev_month
