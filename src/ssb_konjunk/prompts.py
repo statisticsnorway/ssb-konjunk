@@ -354,4 +354,4 @@ def get_previous_month(year: str | int, month: str | int) -> tuple[int, int]:
         prev_month = 12
         prev_year = int(year) - 1
 
-    return (prev_year, prev_month)
+    return prev_year, prev_month
