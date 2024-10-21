@@ -337,7 +337,7 @@ def publishing_date() -> str:
     return ok_date
 
 
-def get_previous_month(year: str | int, month: str | int) -> list[int, int]:
+def get_previous_month(year: str | int, month: str | int) -> list[int]:
     """Turn e.g. month 01 year 2023 into month 12 and year 2022.
 
     Args:
@@ -345,7 +345,7 @@ def get_previous_month(year: str | int, month: str | int) -> list[int, int]:
         month: the current month MM.
 
     Returns:
-        list[int, int]: the previous month with year.
+        list[int]: the previous month with year.
     """
     prev_month = int(month) - 1
 
