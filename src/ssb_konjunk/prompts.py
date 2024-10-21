@@ -344,7 +344,7 @@ def get_previous_month(year: str | int, month: str | int) -> list[int, int]:
         year: the current year YYYY.
         month: the current month MM.
 
-    Return:
+    Returns:
         list[int, int]: the previous month with year.
     """
     prev_month = int(month) - 1
