@@ -8,6 +8,8 @@ from calendar import monthrange
 from datetime import datetime
 from typing import Any
 
+import pendulum
+
 
 def _input_valid_int() -> int:
     """Input function for valid int.
@@ -23,7 +25,7 @@ def _input_valid_int() -> int:
             valid_int = int(user_input)
             break  # Break the loop if a valid integer is entered
         except ValueError:
-            print("Vennligst skriv inn ett gyldig tall som,", 42)
+            print("Vennligst skriv inn et gyldig tall som f.eks.", 42)
 
     return valid_int
 
@@ -35,13 +37,14 @@ def input_year() -> int:
         int: Year as int
     """
     # Get the desired year from the user
-    print("Skriv inn år i format YYYY som", 2024)
+    now = pendulum.now("Europe/Oslo").year
+    print("Skriv inn år i format YYYY som", now)
     while True:
         year = _input_valid_int()
-        if 2000 <= year <= 2030:
+        if year == now:
             return year
         else:
-            print("Er du sikker på at du skal kjøre statistikk for dette året,", year)
+            print("Er du sikker på at du skal kjøre statistikk for dette året?", year)
             if input("y/n") == "y":
                 return year
 
@@ -68,7 +71,7 @@ def input_term() -> int:
     Returns:
         int: term
     """
-    print("Skriv inn termin i format t, som:", 3)
+    print("Skriv inn termin i format b, som:", 3)
     while True:
         term = _input_valid_int()
         if 1 <= term <= 6:
@@ -89,7 +92,37 @@ def input_quarter() -> int:
         if 1 <= quarter <= 4:
             return quarter
         else:
-            print("Ikke en gyldig kvartal, vennligst skriv inn et tall fra 1 til 4.")
+            print("Ikke et gyldig kvartal, vennligst skriv inn et tall fra 1 til 4.")
+
+
+def input_trimester() -> int:
+    """Input function for trimester.
+
+    Returns:
+        int: trimester
+    """
+    print("Skriv inn trimester i format t, som:", 2)
+    while True:
+        trimester = _input_valid_int()
+        if 1 <= trimester <= 3:
+            return trimester
+        else:
+            print("Ikke et gyldig trimester, vennligst skriv inn et tall fra 1 til 3.")
+
+
+def input_week() -> int:
+    """Input function for week.
+
+    Returns:
+        int: week
+    """
+    print("Skriv inn week i format w, som:", 52)
+    while True:
+        week = _input_valid_int()
+        if 1 <= week <= 52:
+            return week
+        else:
+            print("Ikke en gyldig uke, vennligst skriv inn et tall fra 1 til 52.")
 
 
 def days_in_month(year: int, month: int) -> list[str]:
@@ -150,62 +183,6 @@ def months_in_term(term: int) -> tuple[int, int]:
     return month_term_dict[term]
 
 
-def find_file_for_month_daily(
-    files: list[str], desired_year: int, desired_month: int
-) -> str:
-    """Function to retrieve spesific file str for period form list of file strings.
-
-    Args:
-        files: List of file strings.
-        desired_year: Int to represent year(yyyy).
-        desired_month: Int to represent a month(m).
-
-    Returns:
-        str: Filename on linux, Filepath on dapla
-    """
-    for file in files:
-        if (
-            extract_start_end_dates(file)[0].year == desired_year
-            and extract_start_end_dates(file)[1].year == desired_year
-            and extract_start_end_dates(file)[0].month == desired_month
-            and extract_start_end_dates(file)[1].month == desired_month
-        ):
-            break
-    return file
-
-
-def delta_month(month: int, periods: int) -> int:
-    """Function to shift month backwards or forward.
-
-    Args:
-        month: Current month you are using.
-        periods: Periods you want to move, can be positive or negative int.
-
-    Returns:
-        int: Month we have shifted to.
-
-    Raises:
-        ValueError: If periods are are more or less than a year.
-        ValueError: If period is 0.
-    """
-    if periods < -11 or periods > 11:
-        raise ValueError(
-            "Input periods must be between -11 and 11. If youre doing a going a year back in time, please change year."
-        )
-    elif periods == 0:
-        raise ValueError("Input periods is 0, you should remove the function!")
-    else:
-        # Taking period adding periods.
-        new_month = month + (periods)
-        # If new_month is above twelve, i take negative twelve to get month from new year.
-        if new_month > 12:
-            new_month = new_month - 12
-        # If new_month is below 1, I take 12 negative new_month. This should give the right month from last year.
-        elif new_month < 1:
-            new_month = new_month + 12
-        return new_month
-
-
 def iterate_years_months(
     start_year: int, end_year: int, start_month: int, end_month: int
 ) -> Any:
@@ -243,3 +220,139 @@ def iterate_years_months(
             ):
                 continue
             yield year, month
+
+
+def bump_quarter(year: int, quarter: int) -> tuple[int, int]:
+    """Bump period with a quarter further.
+
+    E.g. 2023 and quarter 4 as input, will be returned as 2024 and quarter 1.
+
+    Args:
+        year: The year.
+        quarter: The quarter.
+
+    Returns:
+        tuple: The year and quarter with an "added" quarter.
+    """
+    if quarter == 4:
+        bumped_quarter = 1
+        bumped_year = year + 1
+    else:
+        bumped_quarter = quarter + 1
+        bumped_year = year
+
+    return bumped_year, bumped_quarter
+
+
+def validate_month(month: int | str) -> str:
+    """Ensure month to have leading zero if before october.
+
+    Args:
+        month: the number of the month
+
+    Returns:
+        str: the number of the month with leading zero if relevant
+    """
+    if int(month) < 10:
+        month = "0" + str(int(month))
+    return str(month)
+
+
+def validate_day(day: int | str) -> str:
+    """Ensure day to have leading zero if it less than 10.
+
+    Args:
+        day: the number of the month
+
+    Returns:
+        str: the number of the day with leading zero if relevant
+    """
+    if int(day) < 10:
+        day = "0" + str(int(day))
+    return str(day)
+
+
+def set_publishing_date() -> str:
+    """Set the date for publication of tables.
+
+    Used for loading to Statbank.
+
+    Returns:
+        str: a date.
+    """
+    year = input("Year (YYYY): ")
+    month = input("Month (MM): ")
+    day = input("Day (DD): ")
+
+    assert int(month) < 13, f"{month} > 12. There are only 12 months in a year."
+    assert int(day) < 32, f"{day} > 31. It can only be maximum 31 days in a month."
+    assert int(year) > 1000, "Year have to have four digits."
+
+    date = f"{year}-{month}-{day}"
+
+    return date
+
+
+def check_publishing_date(date: str) -> str:
+    """Validate the publishing date.
+
+    Args:
+        date: the date to check is on valid format.
+
+    Returns:
+        str: the returned and corrected date.
+    """
+    today = str(datetime.today().date())
+    date_ok = False
+
+    while date_ok is False:
+        if today == date:
+            print("Publishing date is set to today.")
+            publish_today = input("If correct enter, 'yes': ")
+
+            if publish_today.lower() != "yes":
+                date = set_publishing_date()
+            else:
+                date_ok = True
+
+        elif today > date:
+            print("Publishing date has passed.")
+            date = set_publishing_date()
+
+        else:
+            print(f"Publishing date is set to: {date}")
+            date_ok = True
+
+    return date
+
+
+def publishing_date() -> str:
+    """Set publishing dat at format YYYY-MM-DD.
+
+    Returns:
+        str: the date.
+    """
+    date = set_publishing_date()
+    ok_date = check_publishing_date(date)
+    return ok_date
+
+
+def get_previous_month(year: str | int, month: str | int) -> list[int]:
+    """Turn e.g. month 01 year 2023 into month 12 and year 2022.
+
+    Args:
+        year: the current year YYYY.
+        month: the current month MM.
+
+    Returns:
+        list[int]: the previous month with year.
+    """
+    prev_month = int(month) - 1
+
+    if prev_month != 0:
+        prev_year = int(year)
+    else:
+        prev_month = 12
+        prev_year = int(year) - 1
+
+    return [prev_year, prev_month]
