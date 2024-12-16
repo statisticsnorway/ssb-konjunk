@@ -1,4 +1,5 @@
 import pandas as pd
+from prompts import validate_month
 
 
 def format_time_period(
@@ -23,7 +24,7 @@ def format_time_period(
     if quarter != "" and month == "":
         df[col_name] = f"{year}K{int(quarter)}"
     elif quarter == "" and month != "":
-        df[col_name] = f"{year}M{int(quarter)}"
+        df[col_name] = f"{year}M{validate_month(month)}"
     else:
         df[col_name] = f"{year}"
 
