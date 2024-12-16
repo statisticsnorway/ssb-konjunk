@@ -1,5 +1,6 @@
 import pandas as pd
-from prompts import validate_month
+
+from ssb_konjunk import prompts
 
 
 def format_time_period(
@@ -24,7 +25,7 @@ def format_time_period(
     if quarter != "" and month == "":
         df[col_name] = f"{year}K{int(quarter)}"
     elif quarter == "" and month != "":
-        df[col_name] = f"{year}M{validate_month(month)}"
+        df[col_name] = f"{year}M{prompts.validate_month(month)}"
     else:
         df[col_name] = f"{year}"
 
