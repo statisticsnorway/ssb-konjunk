@@ -2,7 +2,11 @@ import pandas as pd
 
 
 def format_time_period(
-    df: pd.DataFrame, year: int, quarter: int | str = "", col_name: str = "periode", month: int | str = ""
+    df: pd.DataFrame,
+    year: int,
+    quarter: int | str = "",
+    col_name: str = "periode",
+    month: int | str = "",
 ) -> pd.DataFrame:
     """Add column with time period.
 
