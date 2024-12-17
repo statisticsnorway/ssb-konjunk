@@ -87,7 +87,7 @@ def _structure_ssb_filepath(
 
     # Handle versionizing or not.
     if version_number is None:
-        file_path = f"{file_path}/{file_name}_{time_stamp}"
+        file_path = f"{file_path}/{file_name}_{time_stamp}_"
     elif isinstance(version_number, int):
         file_path = f"{file_path}/{file_name}_{time_stamp}_v{version_number}.{filetype}"
     else:
@@ -323,9 +323,12 @@ def write_ssb_file(
     # Find version number/decide whether to overwrite or make new version.
     version_number = _find_version_number(files, stable_version)
 
-    file_path = f"{file_path}_v{version_number}.{filetype}"
+    if version_number:
+        if file_path.endswith("_"):
+            file_path = file_path[:-1]
+        file_path = f"{file_path}_v{version_number}.{filetype}"
 
-    _save_df(df, file_path, filetype, fs, seperator, encoding)
+        _save_df(df, file_path, filetype, fs, seperator, encoding)
 
 
 def read_ssb_file(

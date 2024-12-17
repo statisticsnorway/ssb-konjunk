@@ -2,8 +2,10 @@ from datetime import datetime
 
 import pytest
 
+from ssb_konjunk.prompts import bump_quarter
 from ssb_konjunk.prompts import days_in_month
 from ssb_konjunk.prompts import extract_start_end_dates
+from ssb_konjunk.prompts import get_previous_month
 from ssb_konjunk.prompts import iterate_years_months
 from ssb_konjunk.prompts import quarter_for_month
 from ssb_konjunk.prompts import validate_month
@@ -130,7 +132,14 @@ def test_iterate_years_months_invalid_month() -> None:
         list(iterate_years_months(2022, 2024, 0, 12))
 
 
-"""Test of the function validate_month"""
+def test_bump_quarter() -> None:
+    # Test bump quarter
+    assert bump_quarter(year=2023, quarter=4) == (2024, 1), bump_quarter(
+        year=2023, quarter=4
+    )
+    assert bump_quarter(year=2023, quarter=1) == (2023, 2), bump_quarter(
+        year=2023, quarter=1
+    )
 
 
 def test_validate_month() -> None:
@@ -153,3 +162,12 @@ def test_quarter_for_month() -> None:
     # Test with invalid month
     with pytest.raises(ValueError):
         quarter_for_month(13)
+
+def test_get_previous_month() -> None:
+    prev_month = get_previous_month(2022, 1)
+    assert prev_month[0] == 2021, f"Previous year for previous month: {prev_month[0]}"
+    assert prev_month[1] == 12, f"Previous month for previous month: {prev_month[1]}"
+
+    prev_month = get_previous_month(2022, 12)
+    assert prev_month[0] == 2022, f"Previous year for previous month: {prev_month[0]}"
+    assert prev_month[1] == 11, f"Previous month for previous month: {prev_month[1]}"

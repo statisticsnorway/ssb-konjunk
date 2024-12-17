@@ -26,10 +26,26 @@ ssb\_konjunk.prompts module
    :undoc-members:
    :show-inheritance:
 
+ssb\_konjunk.rounding module
+----------------------------
+
+.. automodule:: ssb_konjunk.rounding
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 ssb\_konjunk.saving module
 --------------------------
 
 .. automodule:: ssb_konjunk.saving
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ssb\_konjunk.statbank\_format module
+------------------------------------
+
+.. automodule:: ssb_konjunk.statbank_format
    :members:
    :undoc-members:
    :show-inheritance:

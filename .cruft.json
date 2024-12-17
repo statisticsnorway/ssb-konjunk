@@ -1,7 +1,7 @@
 {
   "template": "https://github.com/statisticsnorway/ssb-pypitemplate.git",
-  "commit": "be07b1714e102b263e86c5f6f5578af4db38a03e",
-  "checkout": null,
+  "commit": "364d8a1371f3eefd7228f0189126db6ba96e76ee",
+  "checkout": "2024.11.26",
   "context": {
     "cookiecutter": {
       "project_name": "ssb-konjunk",

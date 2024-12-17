@@ -222,6 +222,28 @@ def iterate_years_months(
             yield year, month
 
 
+def bump_quarter(year: int, quarter: int) -> tuple[int, int]:
+    """Bump period with a quarter further.
+
+    E.g. 2023 and quarter 4 as input, will be returned as 2024 and quarter 1.
+
+    Args:
+        year: The year.
+        quarter: The quarter.
+
+    Returns:
+        tuple: The year and quarter with an "added" quarter.
+    """
+    if quarter == 4:
+        bumped_quarter = 1
+        bumped_year = year + 1
+    else:
+        bumped_quarter = quarter + 1
+        bumped_year = year
+
+    return bumped_year, bumped_quarter
+
+
 def validate_month(month: int | str) -> str:
     """Ensure month to have leading zero if before october.
 
@@ -249,7 +271,7 @@ def validate_day(day: int | str) -> str:
         day = "0" + str(int(day))
     return str(day)
 
-
+  
 def quarter_for_month(month: str | int) -> int:
     """Find corresponding quarter for a month.
 
@@ -302,3 +324,88 @@ def months_in_quarter(quarter: int | str) -> list[int]:
         return [7, 8, 9]
     else:
         return [10, 11, 12]
+
+def set_publishing_date() -> str:
+    """Set the date for publication of tables.
+
+    Used for loading to Statbank.
+
+    Returns:
+        str: a date.
+    """
+    year = input("Year (YYYY): ")
+    month = input("Month (MM): ")
+    day = input("Day (DD): ")
+
+    assert int(month) < 13, f"{month} > 12. There are only 12 months in a year."
+    assert int(day) < 32, f"{day} > 31. It can only be maximum 31 days in a month."
+    assert int(year) > 1000, "Year have to have four digits."
+
+    date = f"{year}-{month}-{day}"
+
+    return date
+
+
+def check_publishing_date(date: str) -> str:
+    """Validate the publishing date.
+
+    Args:
+        date: the date to check is on valid format.
+
+    Returns:
+        str: the returned and corrected date.
+    """
+    today = str(datetime.today().date())
+    date_ok = False
+
+    while date_ok is False:
+        if today == date:
+            print("Publishing date is set to today.")
+            publish_today = input("If correct enter, 'yes': ")
+
+            if publish_today.lower() != "yes":
+                date = set_publishing_date()
+            else:
+                date_ok = True
+
+        elif today > date:
+            print("Publishing date has passed.")
+            date = set_publishing_date()
+
+        else:
+            print(f"Publishing date is set to: {date}")
+            date_ok = True
+
+    return date
+
+
+def publishing_date() -> str:
+    """Set publishing dat at format YYYY-MM-DD.
+
+    Returns:
+        str: the date.
+    """
+    date = set_publishing_date()
+    ok_date = check_publishing_date(date)
+    return ok_date
+
+
+def get_previous_month(year: str | int, month: str | int) -> list[int]:
+    """Turn e.g. month 01 year 2023 into month 12 and year 2022.
+
+    Args:
+        year: the current year YYYY.
+        month: the current month MM.
+
+    Returns:
+        list[int]: the previous month with year.
+    """
+    prev_month = int(month) - 1
+
+    if prev_month != 0:
+        prev_year = int(year)
+    else:
+        prev_month = 12
+        prev_year = int(year) - 1
+
+    return [prev_year, prev_month]
