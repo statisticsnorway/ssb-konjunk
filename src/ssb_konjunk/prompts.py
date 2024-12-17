@@ -258,7 +258,7 @@ def quarter_for_month(month: str | int) -> int:
 
     Returns:
         int: The corresponding quarter.
-        
+
     Raises:
         ValueError: If invalid month
     """
