@@ -271,6 +271,59 @@ def validate_day(day: int | str) -> str:
         day = "0" + str(int(day))
     return str(day)
 
+  
+def quarter_for_month(month: str | int) -> int:
+    """Find corresponding quarter for a month.
+
+    Args:
+        month: Month to find corresponding quarter for.
+
+    Returns:
+        int: The corresponding quarter.
+
+    Raises:
+        ValueError: If invalid month
+    """
+    month = int(month)
+
+    if month < 1 or month > 12:
+        raise ValueError(f"Invalid month: {month}")
+
+    if month < 4:
+        return 1
+    elif month < 7:
+        return 2
+    elif month < 10:
+        return 3
+    else:
+        return 4
+
+
+def months_in_quarter(quarter: int | str) -> list[int]:
+    """Return the three months in the quarter.
+
+    Args:
+        quarter: the relevant quarter.
+
+    Returns:
+        list: a list with the months in the quarter.
+
+    Raises:
+        ValueError: If invalid quarter.
+    """
+    quarter = int(quarter)
+
+    if quarter < 1 or quarter > 4:
+        raise ValueError(f"Invalid quarter: {quarter}")
+
+    if quarter == 1:
+        return [1, 2, 3]
+    elif quarter == 2:
+        return [4, 5, 6]
+    elif quarter == 3:
+        return [7, 8, 9]
+    else:
+        return [10, 11, 12]
 
 def set_publishing_date() -> str:
     """Set the date for publication of tables.
