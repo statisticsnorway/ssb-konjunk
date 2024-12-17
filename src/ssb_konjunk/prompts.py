@@ -300,5 +300,5 @@ def months_in_quarter(quarter: int | str) -> list[int]:
         return [4, 5, 6]
     elif quarter == 3:
         return [7, 8, 9]
-    elif quarter == 4:
+    else:
         return [10, 11, 12]
