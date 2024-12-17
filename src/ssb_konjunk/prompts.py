@@ -285,7 +285,7 @@ def months_in_quarter(quarter: int | str) -> list[int]:
 
     Returns:
         list: a list with the months in the quarter.
-        
+
     Raises:
         ValueError: If invalid quarter.
     """
