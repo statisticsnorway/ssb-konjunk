@@ -249,20 +249,21 @@ def validate_day(day: int | str) -> str:
         day = "0" + str(int(day))
     return str(day)
 
-def quarter_for_month(month: str|int) -> int:
+
+def quarter_for_month(month: str | int) -> int:
     """Find corresponding quarter for a month.
-    
+
     Args:
         month: Month to find corresponding quarter for.
-        
+
     Returns:
         int: The corresponding quarter.
     """
     month = int(month)
-    
+
     if month < 1 or month > 12:
         raise ValueError(f"Invalid month: {month}")
-    
+
     if month < 4:
         return 1
     elif month < 7:
