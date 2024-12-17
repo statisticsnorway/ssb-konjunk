@@ -6,6 +6,7 @@ from ssb_konjunk.prompts import days_in_month
 from ssb_konjunk.prompts import extract_start_end_dates
 from ssb_konjunk.prompts import iterate_years_months
 from ssb_konjunk.prompts import validate_month
+from ssb_konjunk.prompts import quarter_for_month
 
 """Test of function days in month"""
 
@@ -140,3 +141,14 @@ def test_validate_month() -> None:
 
     assert validate_month(10) == "10"
     assert validate_month("10") == "10"
+
+def test_quarter_for_month() -> None:
+    # Test with valid integer month
+    assert quarter_for_month(2) == 1
+    
+    # Test with valid string month
+    assert quarter_for_month('12') == 4
+    
+    # Test with invalid month
+    with pytest.raises(ValueError):
+        quarter_for_month(13)
