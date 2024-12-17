@@ -49,3 +49,11 @@ ssb\_konjunk.xml\_handling module
    :members:
    :undoc-members:
    :show-inheritance:
+
+ssb\_konjunk.statbank\_formating module
+---------------------------------
+
+.. automodule:: ssb_konjunk.statbank_formating
+   :members:
+   :undoc-members:
+   :show-inheritance:
