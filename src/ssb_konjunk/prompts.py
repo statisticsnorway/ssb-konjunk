@@ -276,25 +276,26 @@ def quarter_for_month(month: str | int) -> int:
     else:
         return 4
 
+
 def months_in_quarter(quarter: int | str) -> list[int]:
     """Return the three months in the quarter.
-    
+
     Args:
         quarter: the relevant quarter.
-        
+
     Returns:
         list: a list with the months in the quarter.
     """
     quarter = int(quarter)
-    
+
     if quarter < 1 or quarter > 4:
         raise ValueError(f"Invalid quarter: {quarter}")
-    
+
     if quarter == 1:
-        return [1,2,3]
+        return [1, 2, 3]
     elif quarter == 2:
-        return [4,5,6]
+        return [4, 5, 6]
     elif quarter == 3:
-        return [7,8,9]
+        return [7, 8, 9]
     elif quarter == 4:
-        return [10,11,12]
+        return [10, 11, 12]
