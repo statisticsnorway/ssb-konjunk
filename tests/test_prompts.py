@@ -163,6 +163,7 @@ def test_quarter_for_month() -> None:
     with pytest.raises(ValueError):
         quarter_for_month(13)
 
+
 def test_get_previous_month() -> None:
     prev_month = get_previous_month(2022, 1)
     assert prev_month[0] == 2021, f"Previous year for previous month: {prev_month[0]}"

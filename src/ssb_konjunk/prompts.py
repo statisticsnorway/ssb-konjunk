@@ -271,7 +271,7 @@ def validate_day(day: int | str) -> str:
         day = "0" + str(int(day))
     return str(day)
 
-  
+
 def quarter_for_month(month: str | int) -> int:
     """Find corresponding quarter for a month.
 
@@ -324,6 +324,7 @@ def months_in_quarter(quarter: int | str) -> list[int]:
         return [7, 8, 9]
     else:
         return [10, 11, 12]
+
 
 def set_publishing_date() -> str:
     """Set the date for publication of tables.
