@@ -221,9 +221,10 @@ def _verify_datatilstand(datatilstand: str) -> str:
         "klargjorte-data",
         "statistikk",
         "utdata",
+        "logg"
     ]:
         datatilstand = input(
-            "Datatilstanden må være enten inndata, klargjorte-data, statistikk eller utdata."
+            "Datatilstanden må være enten inndata, klargjorte-data, statistikk eller utdata (eller logg)."
         )
         datatilstand = _verify_datatilstand(datatilstand)
         return datatilstand
