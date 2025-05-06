@@ -258,13 +258,13 @@ def _save_df(
         else:
             df.to_csv(file_path, sep=seperator, index=False, encoding=encoding)
     # Save as jsonl
-    elif filetype == 'jsonl':
-        df.to_json(orient='records', lines=True)
+    elif filetype == "jsonl":
+        df.to_json(orient="records", lines=True)
 
     # Save as json
-    elif filetype == 'json':
-        df.to_json(orient='records', lines=False)
-        
+    elif filetype == "json":
+        df.to_json(orient="records", lines=False)
+
     # Uknown filetype sent as argument
     else:
         raise ValueError(
@@ -415,9 +415,9 @@ def read_ssb_file(
             df = pd.read_csv(file_path, sep=seperator, encoding=encoding)
     elif filetype == "parquet":
         df = pd.read_parquet(file_path, filesystem=fs)
-    elif filetype == 'jsonl':
+    elif filetype == "jsonl":
         df = pd.read_json(file_path, lines=True)
-    elif filetype == 'json':
+    elif filetype == "json":
         df = pd.read_json(file_path, lines=False)
     # Returns pandas df.
     return df
