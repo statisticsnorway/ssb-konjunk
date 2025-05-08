@@ -261,11 +261,11 @@ def _save_df(
             df.to_csv(file_path, sep=seperator, index=False, encoding=encoding)
     # Save as jsonl
     elif filetype == "jsonl":
-        df.to_json(orient="records", lines=True)
+        df.to_json(file_path, orient="records", lines=True)
 
     # Save as json
     elif filetype == "json":
-        df.to_json(orient="records", lines=False)
+        df.to_json(file_path, orient="records", lines=False)
 
     # Uknown filetype sent as argument
     else:
