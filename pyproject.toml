@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "ssb-konjunk"
-version = "0.1.22"
-description = "SSB Konjunk"
-authors = ["Edvard Garmannslund <ged@ssb.no>"]
+version = "1.0.0"
+description = "SSB Konjunk 422"
+authors = ["Johanne Saxegaard <jox@ssb.no>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/statisticsnorway/ssb-konjunk"
