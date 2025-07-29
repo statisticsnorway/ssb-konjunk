@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "ssb-konjunk"
-version = "0.1.22"
-description = "SSB Konjunk"
-authors = ["Edvard Garmannslund <ged@ssb.no>"]
+version = "1.0.0"
+description = "SSB Konjunk 422"
+authors = ["Johanne Saxegaard <jox@ssb.no>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/statisticsnorway/ssb-konjunk"
@@ -60,6 +60,9 @@ relative_files = true
 show_missing = true
 fail_under = 50
 
+[tool.deptry.per_rule_ignores]
+DEP001 = ["nox", "nox_poetry"]  # packages available by default
+
 [tool.mypy]
 strict = true
 warn_unreachable = true
@@ -96,7 +99,7 @@ select = [
     "RUF",  # the ruff developer's own rules
 ]
 ignore = [
-    "ANN202", # Don't requiere return type annotation for private functions.
+    "ANN202", # Don't require return type annotation for private functions.
     "ANN401", # Allow type annotation with type Any.
     "D100",   # Supress undocumented-public-module. Only doc of public api required.
     "FBT001", # Allow boolean positional arguments in a function.
