@@ -18,7 +18,6 @@
 [pypi status]: https://pypi.org/project/ssb-konjunk/
 [documentation]: https://statisticsnorway.github.io/ssb-konjunk
 [tests]: https://github.com/statisticsnorway/ssb-konjunk/actions?workflow=Tests
-
 [sonarcov]: https://sonarcloud.io/summary/overall?id=statisticsnorway_ssb-konjunk
 [sonarquality]: https://sonarcloud.io/summary/overall?id=statisticsnorway_ssb-konjunk
 [pre-commit]: https://github.com/pre-commit/pre-commit
