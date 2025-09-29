@@ -8,6 +8,7 @@ import re
 
 import dapla
 import pandas as pd
+import warnings
 
 from ssb_konjunk import timestamp
 
@@ -418,14 +419,18 @@ def read_ssb_file(
         else:
             df = pd.read_csv(file_path, sep=seperator, encoding=encoding)
     elif filetype == "parquet":
-         df = pd.read_parquet(file_path, columns=columns, filesystem=fs)
+        df = pd.read_parquet(file_path, columns=columns, filesystem=fs)
     elif filetype == "jsonl":
         if columns is not None:
-            warnings.warn(f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn.")
+            warnings.warn(
+                f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn."
+            )
         df = pd.read_json(file_path, lines=True)
     elif filetype == "json":
         if columns is not None:
-            warnings.warn(f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn.")
+            warnings.warn(
+                f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn."
+            )
         df = pd.read_json(file_path, lines=False)
     # Returns pandas df.
     return df
