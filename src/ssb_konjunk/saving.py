@@ -350,6 +350,7 @@ def read_ssb_file(
     datatilstand: str = "",
     undermappe: str | None = None,
     filetype: str = "parquet",
+    columns: list | None = None,
     version_number: int | None = None,
     fs: dapla.gcs.GCSFileSystem | None = None,
     seperator: str = ";",
@@ -371,6 +372,7 @@ def read_ssb_file(
         undermappe: Optional folder under 'datatilstand'.
         version_number: possibility to get another version, than the newest (i.e. highest version number). Default: np.nan.
         filetype: the filetype to save as. Default: 'parquet'.
+        columns: Columns to read from the file. If None (default), all columns are read.
         fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
         seperator: the seperator to use it filetype is csv. Default: ';'.
         encoding: Encoding for file, base is latin1.
@@ -411,15 +413,19 @@ def read_ssb_file(
         if fs:
             # Samme som tidligere kan brukes til å lese alle filformater.
             with fs.open(file_path, "r") as f:
-                df = pd.read_csv(f, sep=seperator, encoding=encoding)
+                df = pd.read_csv(f, sep=seperator, encoding=encoding, usecols=columns)
                 f.close()
         else:
             df = pd.read_csv(file_path, sep=seperator, encoding=encoding)
     elif filetype == "parquet":
-        df = pd.read_parquet(file_path, filesystem=fs)
+         df = pd.read_parquet(file_path, columns=columns, filesystem=fs)
     elif filetype == "jsonl":
+        if columns is not None:
+            warnings.warn(f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn.")
         df = pd.read_json(file_path, lines=True)
     elif filetype == "json":
+        if columns is not None:
+            warnings.warn(f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn.")
         df = pd.read_json(file_path, lines=False)
     # Returns pandas df.
     return df
