@@ -5,10 +5,10 @@ Follows the the standardization for versioning and names.
 
 import glob
 import re
+import warnings
 
 import dapla
 import pandas as pd
-import warnings
 
 from ssb_konjunk import timestamp
 
@@ -351,7 +351,7 @@ def read_ssb_file(
     datatilstand: str = "",
     undermappe: str | None = None,
     filetype: str = "parquet",
-    columns: list | None = None,
+    columns: list[str] | None = None,
     version_number: int | None = None,
     fs: dapla.gcs.GCSFileSystem | None = None,
     seperator: str = ";",
@@ -423,13 +423,14 @@ def read_ssb_file(
     elif filetype == "jsonl":
         if columns is not None:
             warnings.warn(
-                f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn."
+                f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn.",
+                stacklevel=2,
             )
-        df = pd.read_json(file_path, lines=True)
     elif filetype == "json":
         if columns is not None:
             warnings.warn(
-                f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn."
+                f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn.",
+                stacklevel=2,
             )
         df = pd.read_json(file_path, lines=False)
     # Returns pandas df.
