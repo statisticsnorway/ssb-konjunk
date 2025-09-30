@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ssb-konjunk"
-version = "1.0.0"
+version = "1.0.1"
 description = "SSB Konjunk 422"
 authors = ["Johanne Saxegaard <jox@ssb.no>"]
 license = "MIT"
