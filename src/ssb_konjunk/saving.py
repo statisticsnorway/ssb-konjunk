@@ -417,7 +417,7 @@ def read_ssb_file(
                 df = pd.read_csv(f, sep=seperator, encoding=encoding, usecols=columns)
                 f.close()
         else:
-            df = pd.read_csv(file_path, sep=seperator, encoding=encoding)
+            df = pd.read_csv(file_path, sep=seperator, encoding=encoding, usecols=columns)
     elif filetype == "parquet":
         df = pd.read_parquet(file_path, columns=columns, filesystem=fs)
     elif filetype == "jsonl":
