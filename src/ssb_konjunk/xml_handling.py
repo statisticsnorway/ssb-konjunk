@@ -8,7 +8,6 @@ def read_xml(xml_file: str) -> ET.Element:
 
     Args:
         xml_file: Strin value for xml filepath.
-        fs: filesystem
 
     Returns:
         ET.Element: Root of xml file.
