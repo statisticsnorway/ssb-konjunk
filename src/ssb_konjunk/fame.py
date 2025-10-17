@@ -6,6 +6,8 @@ https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 """
 
 # Importing external packages
+from __future__ import annotations
+
 import pandas as pd
 
 
