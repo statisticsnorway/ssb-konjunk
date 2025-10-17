@@ -6,8 +6,6 @@ Follows the the standardization for versioning and names.
 import glob
 import re
 import warnings
-
-import dapla
 import pandas as pd
 
 from ssb_konjunk import timestamp
@@ -40,7 +38,6 @@ def _structure_ssb_filepath(
     undermappe: str | None = None,
     version_number: int | None = None,
     filetype: str = "parquet",
-    fs: dapla.gcs.GCSFileSystem | None = None,
 ) -> str:
     """Structure the name of the file to SSB-format and the path.
 
@@ -54,7 +51,6 @@ def _structure_ssb_filepath(
         undermappe: Optional string for if you want folders betwen 'datatilstand' and file.
         version_number: Optional int for reading specific file.
         filetype: String with default 'parquet', specifies file type.
-        fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
 
     Returns:
         str: the full path to the file.
@@ -62,11 +58,7 @@ def _structure_ssb_filepath(
     Raises:
         ValueError: Raise if version number is not None or int.
     """
-    # Handle that path starts with / in prodsonen.
-    if fs is None:
-        bucket = _remove_edge_slashes(bucket, only_last=True)
-    else:
-        bucket = _remove_edge_slashes(bucket)
+    bucket = _remove_edge_slashes(bucket)
     kortnavn = _remove_edge_slashes(kortnavn)
     datatilstand = _remove_edge_slashes(datatilstand)
     file_name = _remove_edge_slashes(file_name)
@@ -97,16 +89,12 @@ def _structure_ssb_filepath(
 
 
 def _get_files(
-    folder_path: str, filetype: str, fs: dapla.gcs.GCSFileSystem | None
-) -> list[str]:
+    folder_path: str, filetype: str) -> list[str]:
     """Function to list files in a folder based on base name and timestamp."""
     filenames = []
 
     match_string = f"{folder_path}*"
-    if fs:
-        filenames = fs.glob(match_string)
-    else:
-        filenames = glob.glob(match_string)
+    filenames = glob.glob(match_string)
 
     # Only include files with the relevant file extension
     filenames = [i for i in filenames if i.endswith(filetype)]
@@ -238,28 +226,16 @@ def _save_df(
     df: pd.DataFrame,
     file_path: str,
     filetype: str,
-    fs: dapla.gcs.GCSFileSystem | None,
     seperator: str,
     encoding: str,
 ) -> None:
     """Do the actual saving, either as csv or parquet."""
     # Save as parquet
     if filetype == "parquet":
-
-        if fs:
-            with fs.open(file_path, "wb") as f:
-                df.to_parquet(f, index=False)
-                f.close()
-        else:
-            df.to_parquet(file_path, index=False)
+        df.to_parquet(file_path, index=False)
     # Save as csv
     elif filetype == "csv":
-        if fs:
-            with fs.open(file_path, "wb") as f:
-                df.to_csv(f, sep=seperator, index=False, encoding=encoding)
-                f.close()
-        else:
-            df.to_csv(file_path, sep=seperator, index=False, encoding=encoding)
+        df.to_csv(file_path, sep=seperator, index=False, encoding=encoding)
     # Save as jsonl
     elif filetype == "jsonl":
         df.to_json(file_path, orient="records", lines=True)
@@ -286,7 +262,6 @@ def write_ssb_file(
     undermappe: str | None = None,
     stable_version: bool = True,
     filetype: str = "parquet",
-    fs: dapla.gcs.GCSFileSystem | None = None,
     seperator: str = ";",
     encoding: str = "latin1",
 ) -> None:
@@ -303,7 +278,6 @@ def write_ssb_file(
         undermappe: Optional folder under 'datatilstand'.
         stable_version: Bool for whether you should have checks in place in case of overwrite.
         filetype: the filetype to save as. Default: 'parquet'.
-        fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
         seperator: the seperator to use it filetype is csv. Default: ';'.
         encoding: Encoding for file, base is latin1.
 
@@ -327,10 +301,9 @@ def write_ssb_file(
         datatilstand=datatilstand,
         file_name=file_name,
         undermappe=undermappe,
-        fs=fs,
     )
     # Get list with the filenames, if several, ordered by the highest version number at last.
-    files = _get_files(file_path, filetype, fs=fs)
+    files = _get_files(file_path, filetype)
     # Find version number/decide whether to overwrite or make new version.
     version_number = _find_version_number(files, stable_version)
 
@@ -339,7 +312,7 @@ def write_ssb_file(
             file_path = file_path[:-1]
         file_path = f"{file_path}_v{version_number}.{filetype}"
 
-        _save_df(df, file_path, filetype, fs, seperator, encoding)
+        _save_df(df, file_path, filetype, seperator, encoding)
 
 
 def read_ssb_file(
@@ -353,7 +326,6 @@ def read_ssb_file(
     filetype: str = "parquet",
     columns: list[str] | None = None,
     version_number: int | None = None,
-    fs: dapla.gcs.GCSFileSystem | None = None,
     seperator: str = ";",
     encoding: str = "latin1",
 ) -> pd.DataFrame | None:
@@ -374,7 +346,6 @@ def read_ssb_file(
         version_number: possibility to get another version, than the newest (i.e. highest version number). Default: np.nan.
         filetype: the filetype to save as. Default: 'parquet'.
         columns: Columns to read from the file. If None (default), all columns are read.
-        fs: the filesystem, pass with gsc Filesystem if Dapla. Default: None.
         seperator: the seperator to use it filetype is csv. Default: ';'.
         encoding: Encoding for file, base is latin1.
 
@@ -395,12 +366,11 @@ def read_ssb_file(
         undermappe=undermappe,
         version_number=version_number,
         filetype=filetype,
-        fs=fs,
     )
 
     if not version_number:
         # If version number not specified then list out versions.
-        files = _get_files(file_path, filetype, fs=fs)
+        files = _get_files(file_path, filetype)
         # If list is empty, no matching files of any version were found.
         if not files:
             raise FileNotFoundError(
@@ -411,17 +381,11 @@ def read_ssb_file(
 
     # Different functions used for reading depending on the filetype.
     if filetype == "csv":
-        if fs:
-            # Samme som tidligere kan brukes til å lese alle filformater.
-            with fs.open(file_path, "r") as f:
-                df = pd.read_csv(f, sep=seperator, encoding=encoding, usecols=columns)
-                f.close()
-        else:
-            df = pd.read_csv(
+        df = pd.read_csv(
                 file_path, sep=seperator, encoding=encoding, usecols=columns
             )
     elif filetype == "parquet":
-        df = pd.read_parquet(file_path, columns=columns, filesystem=fs)
+        df = pd.read_parquet(file_path, columns=columns)
     elif filetype == "jsonl":
         if columns is not None:
             warnings.warn(
