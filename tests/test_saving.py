@@ -120,6 +120,7 @@ def test_find_version_number() -> None:
 
     assert _find_version_number(files, stable_version=False) == "0"
 
+
 def test_verify_base_filename() -> None:
     """Test function _verify_base_filename."""
     assert _verify_base_filename("MINFIL") == "minfil"

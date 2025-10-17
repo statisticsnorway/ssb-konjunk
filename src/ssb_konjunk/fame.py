@@ -8,6 +8,7 @@ https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 # Importing external packages
 import pandas as pd
 
+
 def change_date_format_fame(series: pd.Series[str]) -> pd.Series[str]:
     """Function for turning ISO-8601 to fame time format.
 

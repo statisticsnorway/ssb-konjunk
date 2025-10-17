@@ -6,6 +6,7 @@ Follows the the standardization for versioning and names.
 import glob
 import re
 import warnings
+
 import pandas as pd
 
 from ssb_konjunk import timestamp
@@ -88,8 +89,7 @@ def _structure_ssb_filepath(
     return file_path
 
 
-def _get_files(
-    folder_path: str, filetype: str) -> list[str]:
+def _get_files(folder_path: str, filetype: str) -> list[str]:
     """Function to list files in a folder based on base name and timestamp."""
     filenames = []
 
@@ -381,9 +381,7 @@ def read_ssb_file(
 
     # Different functions used for reading depending on the filetype.
     if filetype == "csv":
-        df = pd.read_csv(
-                file_path, sep=seperator, encoding=encoding, usecols=columns
-            )
+        df = pd.read_csv(file_path, sep=seperator, encoding=encoding, usecols=columns)
     elif filetype == "parquet":
         df = pd.read_parquet(file_path, columns=columns)
     elif filetype == "jsonl":
