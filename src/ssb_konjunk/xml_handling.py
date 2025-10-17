@@ -2,10 +2,8 @@
 
 import xml.etree.ElementTree as ET
 
-import dapla
 
-
-def read_xml(xml_file: str, fs: dapla.gcs.GCSFileSystem | None = None) -> ET.Element:
+def read_xml(xml_file: str) -> ET.Element:
     """Funtion to get xml root from disk.
 
     Args:
@@ -15,14 +13,9 @@ def read_xml(xml_file: str, fs: dapla.gcs.GCSFileSystem | None = None) -> ET.Ele
     Returns:
         ET.Element: Root of xml file.
     """
-    if fs:
-        with fs.open(xml_file, mode="r") as file:
-            single_xml = file.read()
-            file.close()
-    else:
-        with open(xml_file) as file:
-            single_xml = file.read()
-            file.close()
+    with open(xml_file) as file:
+        single_xml = file.read()
+        file.close()
 
     return ET.fromstring(single_xml)
 
