@@ -7,11 +7,6 @@ https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 
 # Importing external packages
 import pandas as pd
-from dapla import FileClient
-
-# Getting filesystem
-fs = FileClient.get_gcs_file_system()
-
 
 def change_date_format_fame(series: pd.Series[str]) -> pd.Series[str]:
     """Function for turning ISO-8601 to fame time format.
@@ -34,7 +29,7 @@ def write_out_fame_format_txt(
     names: pd.Series[str],
     dates: pd.Series[str],
     values: pd.Series[float],
-    gcp_path: str,
+    path: str,
 ) -> None:
     """Function to write out txt file in fame format.
 
@@ -42,9 +37,9 @@ def write_out_fame_format_txt(
         names: Pandas series containing name or type for value.
         dates: Pandas series containing date for values.
         values: Pandas series containing values.
-        gcp_path: String to google cloud.
+        path: String to output file.
     """
-    with fs.open(gcp_path, "w") as f:
+    with open(path, "w") as f:
         # Write data rows
         for name, date, value in zip(names, dates, values, strict=False):
             # Apply format specification
