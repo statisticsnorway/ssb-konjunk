@@ -131,23 +131,15 @@ def _find_version_number(files: list[str], stable_version: bool) -> str | None:
     elif stable_version and existing_versions[-1] == "0":
         return "1"
     elif stable_version and existing_versions[-1] != "0":
-        overwrite = input(
-            f"Vil du overskrive eksisterende versjon (_v{existing_versions[-1]})? Bekreft med 'y'."
+        make_new_version = input(
+            "Vil du lage en ny versjon (altså øke versjonsnummeret med en)? Bekreft med 'y'."
         )
-        if overwrite.lower() == "y":
+        if make_new_version.lower() == "y":
             version = existing_versions[-1]
-            version = version.split(".")[0]
+            version = int(version.split(".")[0]) + 1
             return str(version)
         else:
-            make_new_version = input(
-                "Vil du lage en ny versjon (altså øke versjonsnummeret med en)? Bekreft med 'y'."
-            )
-            if make_new_version.lower() == "y":
-                version = existing_versions[-1]
-                version = int(version.split(".")[0]) + 1
-                return str(version)
-            else:
-                return None
+            return None
     else:
         raise ValueError("Noe gikk galt da rett versjonsnummer skulle settes.")
 
