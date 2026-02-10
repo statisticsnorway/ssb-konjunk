@@ -390,7 +390,7 @@ def read_ssb_file(
                 f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn.",
                 stacklevel=2,
             )
-        df = pd.read_json(file_path, lines=False)
+        df = pd.read_json(file_path, lines=True)
     elif filetype == "json":
         if columns is not None:
             warnings.warn(
