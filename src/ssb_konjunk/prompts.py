@@ -44,8 +44,9 @@ def input_year() -> int:
         if year == now:
             return year
         else:
-            print("Er du sikker på at du skal kjøre statistikk for dette året?", year)
-            if input("y/n") == "y":
+            print("Er du sikker på at du skal kjøre statistikk for dette året? ja/nei", year)
+            user_input = input().strip().lower()
+            if user_input in ("j","ja"):
                 return year
 
 
