@@ -9,6 +9,7 @@ import warnings
 
 import pandas as pd
 
+from gcsfs import GCSFileSystem
 from ssb_konjunk import timestamp
 
 
@@ -39,6 +40,7 @@ def _structure_ssb_filepath(
     undermappe: str | None = None,
     version_number: int | None = None,
     filetype: str = "parquet",
+    fs: GCSFileSystem | None = None,
 ) -> str:
     """Structure the name of the file to SSB-format and the path.
 
@@ -59,7 +61,10 @@ def _structure_ssb_filepath(
     Raises:
         ValueError: Raise if version number is not None or int.
     """
-    bucket = _remove_edge_slashes(bucket, only_last=True)
+    if fs is None:
+        bucket = _remove_edge_slashes(bucket, only_last=True)
+    else:
+        bucket = _remove_edge_slashes(bucket)
     kortnavn = _remove_edge_slashes(kortnavn)
     datatilstand = _remove_edge_slashes(datatilstand)
     file_name = _remove_edge_slashes(file_name)
@@ -89,12 +94,17 @@ def _structure_ssb_filepath(
     return file_path
 
 
-def _get_files(folder_path: str, filetype: str) -> list[str]:
+def _get_files(
+    folder_path: str, filetype: str, fs: GCSFileSystem | None
+) -> list[str]:
     """Function to list files in a folder based on base name and timestamp."""
     filenames = []
 
     match_string = f"{folder_path}*"
-    filenames = glob.glob(match_string)
+    if fs:
+        filenames = fs.glob(match_string)
+    else:
+        filenames = glob.glob(match_string)
 
     # Only include files with the relevant file extension
     filenames = [i for i in filenames if i.endswith(filetype)]
