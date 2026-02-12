@@ -59,7 +59,7 @@ def _structure_ssb_filepath(
     Raises:
         ValueError: Raise if version number is not None or int.
     """
-    bucket = _remove_edge_slashes(bucket)
+    bucket = _remove_edge_slashes(bucket, only_last=True)
     kortnavn = _remove_edge_slashes(kortnavn)
     datatilstand = _remove_edge_slashes(datatilstand)
     file_name = _remove_edge_slashes(file_name)
