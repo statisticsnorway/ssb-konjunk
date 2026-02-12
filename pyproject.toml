@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ssb-konjunk"
-version = "2.0.3"
+version = "2.0.4"
 description = "SSB Konjunk 422"
 authors = ["Johanne Saxegaard <jox@ssb.no>, Halvor Steffenssen <hvr@ssb.no>"]
 license = "MIT"
@@ -19,6 +19,7 @@ click = ">=8.0.1"
 pandas = ">=2.2.0"
 pendulum = ">=3.0.0"
 pandas-stubs = ">=2.2.2.240807"
+ipykernel = "^7.2.0"
 
 [tool.poetry.group.dev.dependencies]
 pygments = ">=2.10.0"
