@@ -44,8 +44,12 @@ def input_year() -> int:
         if year == now:
             return year
         else:
-            print("Er du sikker på at du skal kjøre statistikk for dette året?", year)
-            if input("y/n") == "y":
+            print(
+                "Er du sikker på at du skal kjøre statistikk for dette året? ja/nei",
+                year,
+            )
+            user_input = input().strip().lower()
+            if user_input in ("j", "ja"):
                 return year
 
 
@@ -271,7 +275,7 @@ def validate_day(day: int | str) -> str:
         day = "0" + str(int(day))
     return str(day)
 
-  
+
 def quarter_for_month(month: str | int) -> int:
     """Find corresponding quarter for a month.
 
@@ -324,6 +328,7 @@ def months_in_quarter(quarter: int | str) -> list[int]:
         return [7, 8, 9]
     else:
         return [10, 11, 12]
+
 
 def set_publishing_date() -> str:
     """Set the date for publication of tables.

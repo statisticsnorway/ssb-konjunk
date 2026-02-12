@@ -120,9 +120,6 @@ def test_find_version_number() -> None:
 
     assert _find_version_number(files, stable_version=False) == "0"
 
-    # Need to pass input, first n and then y. For running: pytest -s
-    # assert _find_version_number(files, stable_version=True) == '3'
-
 
 def test_verify_base_filename() -> None:
     """Test function _verify_base_filename."""
@@ -151,9 +148,6 @@ def test_verify_datatilstand() -> None:
     """Test function _verify_datatilstand."""
     assert _verify_datatilstand("utdata") == "utdata"
     assert _verify_datatilstand("klargjorte-data") == "klargjorte-data"
-
-    # Need to pass input, inndata. For running: pytest -s
-    # assert _verify_datatilstand('overnatting') == 'inndata'
 
 
 def test_verify_list_filtypes() -> None:
