@@ -40,6 +40,12 @@ You can install _SSB Konjunk_ via [pip] from [PyPI]:
 pip install ssb-konjunk
 ```
 
+If you want the additional dash components you will have to install with the dash dependency
+```console
+pip install ssb-konjunk['dash']
+```
+
+
 ## Usage
 
 Please see the [Reference Guide] for details.
