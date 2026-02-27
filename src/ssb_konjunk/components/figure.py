@@ -1,7 +1,8 @@
+from typing import Any
 import plotly.graph_objects as go
+import pandas as pd
 
-
-def generate_fig(title: str, x, y):
+def generate_fig(title: str, x: list[int] | pd.Series[Any] | pd.Index[Any], y: list[int] | pd.Series[Any] | pd.Index[Any]) -> go.Figure:
     #print('x', x)
     #print('y', y)
     layout = go.Layout(
@@ -29,7 +30,7 @@ def generate_fig(title: str, x, y):
     return fig
 
 
-def generate_sparkline(data: list[int]):
+def generate_sparkline(data: list[int]) -> go.Figure:
     # Create a sparkline chart
     if len(data) > 6:
         data = data[-6:]

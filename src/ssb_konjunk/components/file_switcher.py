@@ -5,15 +5,15 @@ from ssb_dash_components import Dropdown
 
 class FileSwitcher(html.Div):
 
-    class ids:
-        store = "file-switcher-store"
-        toogle = "file-switcher-toggle"
-        switcher = "file-switcher"
+    class AIOids:
+        store: str = "file-switcher-store"
+        toogle: str = "file-switcher-toggle"
+        switcher: str = "file-switcher"
 
     # Make the ids class a public class
-    ids = ids
+    ids = AIOids
 
-    def __init__(self, aio_id=None):
+    def __init__(self, aio_id=None): # type: ignore
 
         select_dropdown = Dropdown(
             items=[
@@ -31,5 +31,5 @@ class FileSwitcher(html.Div):
             Output(self.ids.store, "data"),
             Input(self.ids.toogle, "value")
         )
-        def switch_file(item):
+        def switch_file(item): # type: ignore
             return item

@@ -6,7 +6,7 @@ from .card import Card
 from .indirect import indirect
 
 
-def generate_table_card(table, fig: None | Figure, indirect_num: float | int | None):
+def generate_table_card(table: html.Div, fig: None | Figure, indirect_num: float | int | None) -> html.Div:
     if fig:
         if indirect_num:
             indirect_div = indirect(indirect_num)

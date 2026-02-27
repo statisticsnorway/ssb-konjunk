@@ -13,10 +13,10 @@ def generate_custom_table(
     header_1: Optional[list[str]] = None,
     header_2: Optional[list[str]] = None,
     sparkline_data: pd.DataFrame | None = None,
-    max_rows=100,
-    color_last=True,
-    indent_first=True,
-):
+    max_rows: int = 100,
+    color_last: bool = True,
+    indent_first: bool = True,
+) -> html.Div:
 
     rows = []
     for i in range(min(len(dataframe), max_rows)):

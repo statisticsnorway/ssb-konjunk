@@ -1,5 +1,5 @@
 import uuid
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 from dataclasses import dataclass
 
 from dash import Output, Input, State, html, callback
@@ -7,11 +7,11 @@ import pandas as pd
 
 from ssb_dash_components.Dropdown import Dropdown
 
-from components.header import header
-from components.file_switcher import FileSwitcher
-from components.table_card import generate_table_card
-from components.table import generate_custom_table
-from components.figure import generate_fig
+from .header import header
+from .file_switcher import FileSwitcher
+from .table_card import generate_table_card
+from .table import generate_custom_table
+from .figure import generate_fig
 
 from .table import generate_custom_table
 
@@ -48,27 +48,27 @@ class AnalyticsPageAIO(html.Div):  # html.Div will be the "parent" component
     reduce the amount of boilerplate code needed for each new table.
     """
 
-    class ids:
-        dropdown = lambda aio_id: {
+    class AIOids:
+        dropdown: Callable[..., dict[str, Any]] = lambda aio_id: {
             "component": "TableAIO",
             "subcomponent": "dropdown",
             "aio_id": aio_id,
         }
 
-        dropdown_container = lambda aio_id: {
+        dropdown_container: Callable[..., dict[str, Any]] = lambda aio_id: {
             "component": "TableAIO",
             "subcomponent": "dropdown_container",
             "aio_id": aio_id,
         }
 
-        table_container = lambda aio_id: {
+        table_container: Callable[..., dict[str, Any]] = lambda aio_id: {
             "component": "TableAIO",
             "subcomponent": "table_container",
             "aio_id": aio_id,
         }
 
     # Make the ids class a public class
-    ids = ids
+    ids = AIOids
 
     # Define the arguments of the All-in-One component
     def __init__(
@@ -76,7 +76,7 @@ class AnalyticsPageAIO(html.Div):  # html.Div will be the "parent" component
         component_header: str,
         table_getters: list[Tables],
         get_dropdown_data_function: Callable[[Optional[str]], list[dict[str, str]]],
-        aio_id=None,
+        aio_id: None | str = None,
     ):
         """
         All in one component to define the layout of each table page.
@@ -122,7 +122,7 @@ class AnalyticsPageAIO(html.Div):  # html.Div will be the "parent" component
             Input(FileSwitcher.ids.store, "data"),
             Input(self.ids.dropdown(aio_id), 'value')
         )
-        def update_dropdown(prev_store, value):
+        def update_dropdown(prev_store, value): # type: ignore
             options = get_dropdown_data_function(prev_store)
             if (value is None) or (value == 'None'):
                 value = options[0]["id"]
@@ -137,8 +137,8 @@ class AnalyticsPageAIO(html.Div):  # html.Div will be the "parent" component
             Input(self.ids.dropdown(aio_id), "value"),
             State(FileSwitcher.ids.store, "data"),
         )
-        def update_table(value, prev_store):
-            all_tables = []
+        def update_table(value, prev_store): # type: ignore
+            all_tables: list[html.Div] = []
             if (value is None) or (len(value) == 0):
                 return all_tables
             for item in table_getters:

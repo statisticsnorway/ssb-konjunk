@@ -3,7 +3,7 @@ from dash import html
 from ssb_dash_components.Glossary import Glossary
 
 
-def indirect(number: float | int):
+def indirect(number: float | int) -> html.Div:
     return html.Div(
         html.Div(
             children=[
