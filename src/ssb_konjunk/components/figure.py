@@ -2,7 +2,7 @@ from typing import Any
 import plotly.graph_objects as go
 import pandas as pd
 
-def generate_fig(title: str, x: list[int] | pd.Series[Any] | pd.Index[Any], y: list[int] | pd.Series[Any] | pd.Index[Any]) -> go.Figure:
+def generate_fig(title: str, x: list[int] | pd.Series | pd.Index, y: list[int] | pd.Series | pd.Index) -> go.Figure:
     #print('x', x)
     #print('y', y)
     layout = go.Layout(
