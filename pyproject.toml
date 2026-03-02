@@ -1,6 +1,6 @@
 [project]
 name = "ssb-konjunk"
-version = "2.0.6"
+version = "2.0.7"
 description = "SSB Konjunk 422"
 authors = [
     {name = "Johanne Saxegaard", email = "jox@ssb.no"}, 
