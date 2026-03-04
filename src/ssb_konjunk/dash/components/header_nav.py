@@ -1,11 +1,12 @@
-from dash import dcc, html, page_registry
+from dash import dcc
+from dash import html
+from dash import page_registry
 
 from .file_switcher import FileSwitcher
 
 
 def header_nav() -> html.Div:
-    """
-    Funksjon for å generer navigasjonsmenyen på toppen.
+    """Funksjon for å generer navigasjonsmenyen på toppen.
 
     Args:
         None

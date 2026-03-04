@@ -1,5 +1,4 @@
 from dash import html
-
 from ssb_dash_components.Glossary import Glossary
 
 
@@ -12,7 +11,7 @@ def indirect(number: float | int) -> html.Div:
                     explanation="Summering av siste kolonne på laveste NACE-nivå",
                     iconType="Info",
                 ),
-                html.P("{:.2f}".format(number), className="main-number"),
+                html.P(f"{number:.2f}", className="main-number"),
             ],
             className="indirect-wrapper",
         ),

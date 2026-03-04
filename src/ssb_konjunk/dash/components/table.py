@@ -1,8 +1,6 @@
-from typing import Optional
-
-from dash import dcc, html
-
 import pandas as pd
+from dash import dcc
+from dash import html
 
 from .figure import generate_sparkline
 
@@ -10,8 +8,8 @@ from .figure import generate_sparkline
 def generate_custom_table(
     title: str,
     dataframe: pd.DataFrame,
-    header_1: Optional[list[str]] = None,
-    header_2: Optional[list[str]] = None,
+    header_1: list[str] | None = None,
+    header_2: list[str] | None = None,
     sparkline_data: pd.DataFrame | None = None,
     max_rows: int = 100,
     color_last: bool = True,

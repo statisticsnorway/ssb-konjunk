@@ -1,10 +1,12 @@
-from typing import Any
-import plotly.graph_objects as go
 import pandas as pd
+import plotly.graph_objects as go
 
-def generate_fig(title: str, x: list[int] | pd.Series | pd.Index, y: list[int] | pd.Series | pd.Index) -> go.Figure:
-    #print('x', x)
-    #print('y', y)
+
+def generate_fig(
+    title: str, x: list[int] | pd.Series | pd.Index, y: list[int] | pd.Series | pd.Index
+) -> go.Figure:
+    # print('x', x)
+    # print('y', y)
     layout = go.Layout(
         autosize=True,
         xaxis=go.layout.XAxis(linecolor="black", linewidth=1, mirror=True),

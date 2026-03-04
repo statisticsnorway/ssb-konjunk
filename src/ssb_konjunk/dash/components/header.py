@@ -1,5 +1,4 @@
 from dash import html
-
 from ssb_dash_components import Header
 
 

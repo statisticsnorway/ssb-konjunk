@@ -8,10 +8,10 @@ import re
 import warnings
 
 import pandas as pd
+from gcsfs import GCSFileSystem
 
 from ssb_konjunk import timestamp
 
-from gcsfs import GCSFileSystem
 
 def _remove_edge_slashes(input_string: str, only_last: bool = False) -> str:
     """Function to remove edge slashes in strings.

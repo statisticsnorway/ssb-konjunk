@@ -1,5 +1,8 @@
-from dash import dcc, html, callback, Input, Output
-
+from dash import Input
+from dash import Output
+from dash import callback
+from dash import dcc
+from dash import html
 from ssb_dash_components import Dropdown
 
 
@@ -13,7 +16,7 @@ class FileSwitcher(html.Div):
     # Make the ids class a public class
     ids = AIOids
 
-    def __init__(self, aio_id=None): # type: ignore
+    def __init__(self, aio_id=None):  # type: ignore
 
         select_dropdown = Dropdown(
             items=[
@@ -23,13 +26,12 @@ class FileSwitcher(html.Div):
             id=self.ids.toogle,
             value="latest",
             description="Select the file to use",
-            showDescription= True
+            showDescription=True,
         )
-        super().__init__([select_dropdown, dcc.Store(id=self.ids.store)], id=self.ids.switcher)
+        super().__init__(
+            [select_dropdown, dcc.Store(id=self.ids.store)], id=self.ids.switcher
+        )
 
-        @callback(
-            Output(self.ids.store, "data"),
-            Input(self.ids.toogle, "value")
-        )
-        def switch_file(item): # type: ignore
+        @callback(Output(self.ids.store, "data"), Input(self.ids.toogle, "value"))
+        def switch_file(item):  # type: ignore
             return item
