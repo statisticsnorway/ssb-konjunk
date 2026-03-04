@@ -1,10 +1,11 @@
 [project]
 name = "ssb-konjunk"
-version = "2.1.0"
+version = "2.1.1"
 description = "SSB Konjunk 422"
 authors = [
-    {name = "Johanne Saxegaard", email = "jox@ssb.no"},
-    {name = "Halvor Steffenssen", email = "hvr@ssb.no"}
+    {name = "Johanne Saxegaard", email = "jox@ssb.no"}, 
+    {name = "Halvor Steffenssen", email = "hvr@ssb.no"},
+    {name = "Didrik Bo-Tangen", email = "dbo@ssb.no"}
 ]
 license = "MIT"
 readme = "README.md"
