@@ -3,8 +3,6 @@ from functools import total_ordering
 
 import pendulum
 
-from from ssb_konjunk.dash.utils import period_parser
-
 
 @total_ordering
 class Period:

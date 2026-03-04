@@ -1,12 +1,14 @@
-from dash import dcc, html
+from dash import dcc
+from dash import html
 from plotly.graph_objects import Figure
-
 
 from .card import Card
 from .indirect import indirect
 
 
-def generate_table_card(table: html.Div, fig: None | Figure, indirect_num: float | int | None) -> html.Div:
+def generate_table_card(
+    table: html.Div, fig: None | Figure, indirect_num: float | int | None
+) -> html.Div:
     if fig:
         if indirect_num:
             indirect_div = indirect(indirect_num)

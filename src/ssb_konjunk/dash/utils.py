@@ -1,6 +1,6 @@
 from functools import cache
 from typing import Optional
-from ssb_konjunk.dash.calculations..calc_data import get_data_manager
+from ssb_konjunk.dash.calculations.calc_data import get_data_manager
 
 _config = None
 
@@ -17,7 +17,7 @@ def get_data(file: Optional[str] = None):
     parameterverdien. Resultatet caches for å unngå gjentatte lasting av samme fil.
 
     Args:
-        file (Optional[str]): Hvis satt til "old", hentes eldre datasett. Standard er None, 
+        file (Optional[str]): Hvis satt til "old", hentes eldre datasett. Standard er None,
             som gir det nyeste datasettet.
 
     Returns:
@@ -25,7 +25,7 @@ def get_data(file: Optional[str] = None):
     """
     if _config is None:
         raise RuntimeError("Package not configured. Call setup(config) in start_dash first.")
-    
+
     if file == "old":
         return get_data_manager(_config.select_file(1))
     else:
@@ -36,8 +36,8 @@ def dropdown_getter(file: Optional[str] = None) -> list[dict[str, str]]:
     """
     Oppretter en liste over perioder for nedtrekksmeny basert på tilgjengelige data.
 
-    Henter perioder fra en `DataManager` og returnerer dem som en liste av ordbøker 
-    med 'id' og 'title'-felter, sortert i synkende rekkefølge. Brukes typisk som 
+    Henter perioder fra en `DataManager` og returnerer dem som en liste av ordbøker
+    med 'id' og 'title'-felter, sortert i synkende rekkefølge. Brukes typisk som
     datakilde til grensesnitt-komponenter som dropdowns.
 
     Args:

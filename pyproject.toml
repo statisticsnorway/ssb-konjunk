@@ -3,7 +3,7 @@ name = "ssb-konjunk"
 version = "2.1.0"
 description = "SSB Konjunk 422"
 authors = [
-    {name = "Johanne Saxegaard", email = "jox@ssb.no"}, 
+    {name = "Johanne Saxegaard", email = "jox@ssb.no"},
     {name = "Halvor Steffenssen", email = "hvr@ssb.no"}
 ]
 license = "MIT"
