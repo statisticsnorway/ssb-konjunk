@@ -3,6 +3,7 @@ from datetime import date
 from datetime import datetime
 from typing import Literal
 
+import pandas as pd
 import pendulum
 import polars as pl
 
