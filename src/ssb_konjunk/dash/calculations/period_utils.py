@@ -1,4 +1,3 @@
-from typing import Optional
 from functools import total_ordering
 
 import pendulum
@@ -131,8 +130,8 @@ class AllPeriods:
     def create_period_range(
         self,
         n_months: int = 12,
-        year: Optional[int] = None,
-        month: Optional[int] = None,
+        year: int | None = None,
+        month: int | None = None,
     ) -> list[Period]:
         if year and month:
             dt = pendulum.local(year, month, 1)
@@ -150,9 +149,9 @@ class AllPeriods:
     def __str__(self):
         return f"AllPeriods<{[str(item) for item in self.periods]}>"
 
+
 def _pad_month(month: int) -> str:
-    """
-    Funksjonen gjør om ett- og tosifrete ints til str med en null foran hvis input bare er ett siffer.
+    """Funksjonen gjør om ett- og tosifrete ints til str med en null foran hvis input bare er ett siffer.
 
     Args:
         month: int, ett eller to siffer.

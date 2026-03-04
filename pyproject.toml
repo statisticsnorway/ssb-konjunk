@@ -1,9 +1,9 @@
 [project]
 name = "ssb-konjunk"
-version = "2.1.1"
+version = "2.1.2"
 description = "SSB Konjunk 422"
 authors = [
-    {name = "Johanne Saxegaard", email = "jox@ssb.no"}, 
+    {name = "Johanne Saxegaard", email = "jox@ssb.no"},
     {name = "Halvor Steffenssen", email = "hvr@ssb.no"},
     {name = "Didrik Bo-Tangen", email = "dbo@ssb.no"}
 ]
@@ -22,6 +22,7 @@ dependencies = [
     "urllib3>=2.6.3",
     "starlette>=0.52.1",
     "gcsfs>=2026.2.0",
+    "black (>=26.1.0,<27.0.0)",
 ]
 
 [project.optional-dependencies]
