@@ -1,6 +1,10 @@
+import shutil
+import tempfile
 from functools import cache
+from pathlib import Path
 from typing import Any
 
+import ssb_konjunk
 from ssb_konjunk.dash.calculations.calc_data import DataManager
 from ssb_konjunk.dash.calculations.calc_data import get_data_manager
 
@@ -64,8 +68,7 @@ def dropdown_getter(file: str | None = None) -> list[dict[str, str]]:
 
 @cache
 def get_assets_folder() -> str:
-    """
-    Lager en temp mappe som har assets fra pakken og assets lokalt.
+    """Lager en temp mappe som har assets fra pakken og assets lokalt.
 
     lokale assets overskriver pakke assets.
 
