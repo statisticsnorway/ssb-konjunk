@@ -1,0 +1,11 @@
+@import "main.css";
+
+.kontroller-main-layout {
+    display: flex;
+}
+
+.kontroller-subpage-container {
+    display: grid;
+    columns: 1;
+    gap: 20px;
+}

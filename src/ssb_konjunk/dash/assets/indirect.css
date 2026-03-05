@@ -1,0 +1,27 @@
+
+@import "main.css";
+
+.indirect-container {
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.indirect-wrapper {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+.indirect-label {
+ font-size: 16px;
+ font-weight: bolder;
+ color: var(--secondary-color);
+ margin:0px
+}
+
+.main-number {
+ font-size:46px;
+ color: var(--secondary-color);
+ margin:0px;
+ font-weight: bolder;
+}
