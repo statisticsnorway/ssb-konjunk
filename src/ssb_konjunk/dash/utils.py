@@ -10,6 +10,7 @@ from ssb_konjunk.dash.calculations.calc_data import get_data_manager
 
 _config = None
 
+
 def setup(config: type[Any]) -> None:
     """Setter global konfigurasjon for modulen.
 
@@ -65,6 +66,7 @@ def dropdown_getter(file: str | None = None) -> list[dict[str, str]]:
         for item in sorted(datas.get_all_periods(), reverse=True)
     ]
     return dropdown_data
+
 
 @cache
 def get_assets_folder() -> str:
