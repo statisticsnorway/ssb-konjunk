@@ -19,7 +19,7 @@
     padding-bottom:20px;
     padding-left:20px;
     padding-right:20px;
-    
+
 }
 
 table {
@@ -27,7 +27,7 @@ table {
 }
 
 td {
-    
+
     white-space: nowrap;
 overflow: hidden;
 text-overflow: ellipsis;
@@ -99,11 +99,11 @@ table, th, td {
 }
 
 .nav-row-container {
-    
+
     display:flex;
     flex-direction: row;
     align-items: flex-end;
-    
+
 }
 .nav-item-container{
     height: fit-content;
@@ -117,11 +117,10 @@ table, th, td {
 .nav-item {
     color: var(--main-secondary);
     font-size:18px;
-    
+
 }
 
 a.nav-item:hover {
     color: var(--main-color);
     font-size:18px
 }
-

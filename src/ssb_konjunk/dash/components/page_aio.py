@@ -21,6 +21,7 @@ from .table_card import generate_table_card
 @dataclass
 class ReturnData:
     """Dataclass to define what data the page component expects from getter functions.
+
     Choosen to improve readability for type hints. Also allows for validation implementation if needed.
     """
 
@@ -34,7 +35,7 @@ class ReturnData:
 
 @dataclass
 class Tables:
-    """Dataclass to define how a table and graph should be constructed"""
+    """Dataclass to define how a table and graph should be constructed."""
 
     getter_function: Callable[[str | None, int | None], ReturnData]
     table_header: str
@@ -44,11 +45,14 @@ class Tables:
 # All-in-One Components should be suffixed with 'AIO'
 class AnalyticsPageAIO(html.Div):  # html.Div will be the "parent" component
     """All in on component to define how a page should look like.
+
     Since most pages have a similar layout, the layout is abstracted into this component to
     reduce the amount of boilerplate code needed for each new table.
     """
 
     class AIOids:
+        """The ids of the components."""
+
         dropdown: Callable[..., dict[str, Any]] = lambda aio_id: {
             "component": "TableAIO",
             "subcomponent": "dropdown",
@@ -77,7 +81,7 @@ class AnalyticsPageAIO(html.Div):  # html.Div will be the "parent" component
         table_getters: list[Tables],
         get_dropdown_data_function: Callable[[str | None], list[dict[str, str]]],
         aio_id: None | str = None,
-    ):
+    ) -> None:
         """All in one component to define the layout of each table page.
 
         The All-in-One component dictionary IDs are available as
@@ -120,7 +124,7 @@ class AnalyticsPageAIO(html.Div):  # html.Div will be the "parent" component
             Input(FileSwitcher.ids.store, "data"),
             Input(self.ids.dropdown(aio_id), "value"),
         )
-        def update_dropdown(prev_store, value):  # type: ignore
+        def update_dropdown(prev_store: str, value: str):  # type: ignore
             options = get_dropdown_data_function(prev_store)
             if (value is None) or (value == "None"):
                 value = options[0]["id"]
@@ -135,7 +139,7 @@ class AnalyticsPageAIO(html.Div):  # html.Div will be the "parent" component
             Input(self.ids.dropdown(aio_id), "value"),
             State(FileSwitcher.ids.store, "data"),
         )
-        def update_table(value, prev_store):  # type: ignore
+        def update_table(value: str, prev_store: str):  # type: ignore
             all_tables: list[html.Div] = []
             if (value is None) or (len(value) == 0):
                 return all_tables

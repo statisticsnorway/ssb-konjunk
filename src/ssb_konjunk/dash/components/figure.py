@@ -5,8 +5,16 @@ import plotly.graph_objects as go
 def generate_fig(
     title: str, x: list[int] | pd.Series | pd.Index, y: list[int] | pd.Series | pd.Index
 ) -> go.Figure:
-    # print('x', x)
-    # print('y', y)
+    """Genererer en horisontal stolpediagram-figur med gitt data og tittel.
+
+    Args:
+        title (str): Tittelen som vises på figuren.
+        x (list[int] | pd.Series | pd.Index): Verdier på X-aksen.
+        y (list[int] | pd.Series | pd.Index): Verdier på Y-aksen.
+
+    Returns:
+        go.Figure: En Plotly `Figure` med horisontale stolper.
+    """
     layout = go.Layout(
         autosize=True,
         xaxis=go.layout.XAxis(linecolor="black", linewidth=1, mirror=True),
@@ -33,6 +41,14 @@ def generate_fig(
 
 
 def generate_sparkline(data: list[int]) -> go.Figure:
+    """Genererer en liten sparkline-graf fra en liste med tall.
+
+    Args:
+        data (list[int]): Liste med tall som skal vises i sparklinen.
+
+    Returns:
+        go.Figure: En Plotly `Figure` som viser sparkline-grafen.
+    """
     # Create a sparkline chart
     if len(data) > 6:
         data = data[-6:]

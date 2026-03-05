@@ -54,6 +54,7 @@ def _structure_ssb_filepath(
         undermappe: Optional string for if you want folders betwen 'datatilstand' and file.
         version_number: Optional int for reading specific file.
         filetype: String with default 'parquet', specifies file type.
+        fs: S check to see if it uses the GCSFileSystem.
 
     Returns:
         str: the full path to the file.

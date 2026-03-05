@@ -7,17 +7,23 @@ from ssb_dash_components import Dropdown
 
 
 class FileSwitcher(html.Div):
+    """Switches the files from the previous version and the newest version."""
 
     class AIOids:
+        """The ids of the components."""
+
         store: str = "file-switcher-store"
         toogle: str = "file-switcher-toggle"
         switcher: str = "file-switcher"
 
-    # Make the ids class a public class
     ids = AIOids
 
-    def __init__(self, aio_id=None):  # type: ignore
+    def __init__(self, aio_id: str | None = None) -> None:
+        """Initialize the FileSwitcher component.
 
+        Args:
+            aio_id: Optional id for the AIO component.
+        """
         select_dropdown = Dropdown(
             items=[
                 {"id": "old", "title": "Previous"},
@@ -33,5 +39,5 @@ class FileSwitcher(html.Div):
         )
 
         @callback(Output(self.ids.store, "data"), Input(self.ids.toogle, "value"))
-        def switch_file(item):  # type: ignore
+        def switch_file(item: str):  # type: ignore
             return item

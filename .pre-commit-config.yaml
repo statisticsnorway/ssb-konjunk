@@ -62,6 +62,7 @@ repos:
         entry: pydoclint
         language: system
         types: [python]
+        args: ["--allow-init-docstring=True"]
       - id: ruff
         name: ruff
         entry: ruff check --fix --exit-non-zero-on-fix

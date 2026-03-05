@@ -34,7 +34,7 @@ class DataManager:
     ------------------
     - `self.raw_source`, `self.calendar_source`, `self.season_source`, `self.weigth_source`:
     Datastrukturer for ulike måter å representere eller justere tidsserier.
-    - `get_table_X_v2(...)`: Metoder for å hente ulike tabellvarianter (1–7), hver tilpasset spesifikke analysetyper.
+    - `get_table_X_v2(...)`: Metoder for å hente ulike tabellvarianter (1-7), hver tilpasset spesifikke analysetyper.
     - Statiske hjelpefunksjoner for sortering, prosentberegning og visuell formatering.
     - Intern periodehåndtering for fleksibel datoanalyse.
 
@@ -51,7 +51,7 @@ class DataManager:
 
     """
 
-    def __init__(self, data: pd.DataFrame, *args, **kwargs):
+    def __init__(self, data: pd.DataFrame) -> None:
         """Initialiserer klassen med behandlet og strukturert tidsseriedata.
 
         Filtrerer bort spesifikke 'nar'-verdier, sorterer data, henter klassifikasjonskoder,
@@ -61,8 +61,6 @@ class DataManager:
         Args:
             data (pd.DataFrame): Inndata som inneholder tidsseriedata, med blant annet
                 kolonnene 'nar', 'periode', 'jus', 'korr', 'ujust' og 'verdi'.
-            *args: Ekstra posisjonsargumenter (ikke i bruk).
-            **kwargs: Ekstra nøkkelordsargumenter (ikke i bruk).
         """
         nus = KlassClassification(
             classification_id="6", language="nb", include_future=False
@@ -116,7 +114,7 @@ class DataManager:
         )
 
     @staticmethod
-    def pad_single(x):
+    def pad_single(x: str) -> str:
         """Legger inn innrykk basert på nivå i hierarkisk kode.
 
         Gitt en streng der nivåer er adskilt med bindestrek (f.eks. '1 - 1.1 - 1.1.1'),
@@ -168,7 +166,7 @@ class DataManager:
         return (weights * chg_rate) / 100
 
     @property
-    def header_1(self):
+    def header_1(self) -> list[str]:
         """Lister standardkolonner for visning i tabelloversikt.
 
         Returns:
@@ -186,7 +184,7 @@ class DataManager:
         """
         return self.data["nar"].unique().tolist()  # pyright: ignore
 
-    def add_klass_codes(self, data: pd.DataFrame, on: str):
+    def add_klass_codes(self, data: pd.DataFrame, on: str) -> pd.dataframe:
         """Legger til klassifikasjonsnavn til et datasett basert på en spesifisert kolonne.
 
         Slår opp koder fra `self.class_codes` og legger til fullstendige navn i en ny kolonne,
@@ -258,7 +256,7 @@ class DataManager:
         """
         return [item.as_period() for item in self.periods.create_period_range(12)]
 
-    def format_aggregates(self, data: pd.Series):
+    def format_aggregates(self, data: pd.Series) -> pd.series:
         """Formaterer hierarkiske aggregeringskoder med innrykk.
 
         Bruker `pad_single` for å legge til visuelt innrykk basert på hierarkinivå

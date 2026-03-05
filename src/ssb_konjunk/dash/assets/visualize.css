@@ -40,7 +40,7 @@
 }
 
 .visualizer-dropdown-item:hover {
-    
+
 }
 
 .visualizer-nace-dropdown {
@@ -99,7 +99,7 @@
     color: white;
     }
 
-    .VirtualizedSelectOption:hover {    
+    .VirtualizedSelectOption:hover {
         background-color: var(--secondary-color);
         color:white
     }
