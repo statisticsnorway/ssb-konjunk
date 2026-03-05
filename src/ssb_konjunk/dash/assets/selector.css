@@ -1,7 +1,7 @@
 @import "main.css";
 
 .selector-option-text {
-    
+
 }
 
 .selector-option-active {
@@ -21,7 +21,7 @@
     padding-left: 6px;
 }
 .selector-container{
-    
+
     padding-left: 10px;
     border-right: 1px solid var(--main-color);
     height: 100%;

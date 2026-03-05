@@ -1,17 +1,24 @@
 from functools import cache
+from typing import Any
 
+from ssb_konjunk.dash.calculations.calc_data import DataManager
 from ssb_konjunk.dash.calculations.calc_data import get_data_manager
 
 _config = None
 
 
-def setup(config):
+def setup(config: type[Any]) -> None:
+    """Setter global konfigurasjon for modulen.
+
+    Args:
+        config (type[Config]): Klassen som inneholder konfigurasjonsinnstillinger.
+    """
     global _config
     _config = config
 
 
 @cache
-def get_data(file: str | None = None):
+def get_data(file: str | None = None) -> DataManager:
     """Henter en DataManager-instans basert på valgt datasett.
 
     Returnerer enten det nyeste datasettet eller et eldre alternativ, avhengig av

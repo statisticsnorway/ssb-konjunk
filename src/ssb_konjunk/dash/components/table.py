@@ -15,7 +15,25 @@ def generate_custom_table(
     color_last: bool = True,
     indent_first: bool = True,
 ) -> html.Div:
+    """Genererer en tilpasset HTML-tabell med valgfri overskrift og sparklines.
 
+    Tabellrader bygges fra `dataframe`. Kan legge til ekstra graf (sparkline)
+    per rad hvis `sparkline_data` er gitt. Støtter formatering som innrykk
+    på første kolonne og farging av siste kolonne.
+
+    Args:
+        title (str): Tittel som vises over tabellen.
+        dataframe (pd.DataFrame): Data som fyller tabellen.
+        header_1 (list[str] | None, optional): Første overskriftsrad. Defaults to None.
+        header_2 (list[str] | None, optional): Andre overskriftsrad. Defaults to None.
+        sparkline_data (pd.DataFrame | None, optional): Data for sparklines per rad. Defaults to None.
+        max_rows (int, optional): Maksimalt antall rader som vises. Defaults to 100.
+        color_last (bool, optional): Om siste kolonne skal ha grønn bakgrunn. Defaults to True.
+        indent_first (bool, optional): Om første kolonne skal ha innrykk. Defaults to True.
+
+    Returns:
+        html.Div: En Dash HTML-div som inneholder tabellen med eventuelle sparklines.
+    """
     rows = []
     for i in range(min(len(dataframe), max_rows)):
         row_data = dataframe.iloc[i]

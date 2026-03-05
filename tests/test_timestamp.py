@@ -87,14 +87,14 @@ def test_get_ssb_timestamp() -> None:
     # Test more than 6 args
     with pytest.raises(
         ValueError,
-        match="Du kan ikke ha flere enn seks argumenter for å lage en ssb timestamp. Du har: 7",
+        match=r"Du kan ikke ha flere enn seks argumenter for å lage en ssb timestamp. Du har: 7",
     ):
         get_ssb_timestamp(1, 2, 3, 4, 5, 6, 7)
 
     # Test for to small year
     with pytest.raises(
         ValueError,
-        match="Any valid year should be length 4, you have: 1, maybe you should check if year: 1 is correct.",
+        match=r"Any valid year should be length 4, you have: 1, maybe you should check if year: 1 is correct.",
     ):
         get_ssb_timestamp(1, frequency="Y")
 
