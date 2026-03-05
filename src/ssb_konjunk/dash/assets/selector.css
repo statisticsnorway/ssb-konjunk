@@ -1,0 +1,30 @@
+@import "main.css";
+
+.selector-option-text {
+    
+}
+
+.selector-option-active {
+    background-color: var(--main-color);
+    color: white;
+    padding-right: 70px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 6px;
+}
+
+.selector-option-passive {
+    background-color: transparent;
+    padding-right: 70px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    padding-left: 6px;
+}
+.selector-container{
+    
+    padding-left: 10px;
+    border-right: 1px solid var(--main-color);
+    height: 100%;
+    margin-right: 10px;
+    white-space: nowrap;
+}

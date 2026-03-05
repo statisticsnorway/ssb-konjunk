@@ -1,0 +1,105 @@
+@import "main.css";
+
+.visualize-selector-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px
+}
+
+.visualize-layout {
+    gap: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.visualize-content-container {
+    display: grid;
+    grid-template-columns: 30% 70%;
+}
+
+.visualize-alert-container {
+    position: absolute;
+    top: 100px;
+    right: 100px;
+}
+
+.visualizer-alert {
+    border-radius: 10px;
+    border-color: var(--error-color);
+    border-style: dotted;
+    border-width: 1px;
+    color: var(--error-color);
+    padding: 20px;
+}
+
+
+.visualizer-dropdown-item {
+    width: 100%;
+    margin:0px;
+    padding:0px
+}
+
+.visualizer-dropdown-item:hover {
+    
+}
+
+.visualizer-nace-dropdown {
+    border-color: black;
+    border-radius: 0px;
+    max-width: 350px;
+    min-width: 230px;
+}
+
+.visualizer-nace-dropdown:focus {
+    border-color: black;
+    border-radius: 0px;
+}
+.Select-control {
+    border-color: black;
+    border-radius: 0px;
+    height: 43px;
+}
+
+.Select-control:hover{
+    outline-width: 2px;
+    outline-color: var(--main-color);
+    outline-style: solid;
+    cursor: pointer;
+}
+
+.is-focused:not(.is-open)>.Select-control {
+    border: 0px solid var(--main-color);
+    outline: 3px solid var(--main-color);
+}
+
+.Select-control:focus{
+    outline-width: 2px;
+    outline-color: var(--main-color);
+    outline-style: solid;
+    cursor: pointer;
+}
+.Select-placeholder {
+    color:black;
+    opacity:0.8;
+}
+
+.Select-value {
+    border: 0px solid transparent !important;
+    color: black !important;
+    height: 43px;
+}
+.Select-value-icon {
+    display: none !important;
+}
+
+.Select-value-label {
+    height: 43px !important;
+}
+#react-select-2–value-item {
+    color: white;
+    }
+
+    .VirtualizedSelectOption:hover {    
+        background-color: var(--secondary-color);
+        color:white
+    }
