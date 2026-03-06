@@ -184,7 +184,7 @@ class DataManager:
         """
         return self.data["nar"].unique().tolist()  # pyright: ignore
 
-    def add_klass_codes(self, data: pd.DataFrame, on: str) -> pd.dataframe:
+    def add_klass_codes(self, data: pd.DataFrame, on: str) -> pd.DataFrame:
         """Legger til klassifikasjonsnavn til et datasett basert på en spesifisert kolonne.
 
         Slår opp koder fra `self.class_codes` og legger til fullstendige navn i en ny kolonne,
@@ -235,11 +235,11 @@ class DataManager:
                 else:
                     hierarchal_aggregates[key]
 
-        for key in sorted(map(int, hierarchal_aggregates.keys())):
-            main_aggregate.append(f"{key}")
+        for key_int in sorted(map(int, hierarchal_aggregates.keys())):
+            main_aggregate.append(f"{key_int}")
             main_aggregate.extend(
-                f"{key}.{sub}"
-                for sub in sorted(map(int, hierarchal_aggregates[str(key)]))
+                f"{key_int}.{sub}"
+                for sub in sorted(map(int, hierarchal_aggregates[str(key_int)]))
             )
 
         mapper = {item: idx for idx, item in enumerate(main_aggregate)}
@@ -256,7 +256,7 @@ class DataManager:
         """
         return [item.as_period() for item in self.periods.create_period_range(12)]
 
-    def format_aggregates(self, data: pd.Series) -> pd.series:
+    def format_aggregates(self, data: pd.Series) -> pd.Series:
         """Formaterer hierarkiske aggregeringskoder med innrykk.
 
         Bruker `pad_single` for å legge til visuelt innrykk basert på hierarkinivå

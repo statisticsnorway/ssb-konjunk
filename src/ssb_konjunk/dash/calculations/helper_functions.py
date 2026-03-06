@@ -395,7 +395,7 @@ def rounded_average(df: pd.DataFrame, ordered_columns: list[str]) -> pd.Series:
 
 def calc_change_rate(
     df: pd.DataFrame, ordered_columns: list[str], n: int = 1
-) -> pd.dateframe:
+) -> pd.DataFrame:
     """Beregner prosentvis endring mellom kolonner over n perioder.
 
     Args:
@@ -416,7 +416,7 @@ def calc_change_rate(
     return pd.concat(results, axis="columns", keys=ordered_columns[n:])
 
 
-def rolling_change_rate(df: pd.DataFrame, step: int = 1) -> pd.dateframe:
+def rolling_change_rate(df: pd.DataFrame, step: int = 1) -> pd.DataFrame:
     """Beregner rullende prosentvis endring mellom kolonner med gitt steg.
 
     Args:

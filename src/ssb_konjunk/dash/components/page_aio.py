@@ -37,7 +37,7 @@ class ReturnData:
 class Tables:
     """Dataclass to define how a table and graph should be constructed."""
 
-    getter_function: Callable[[str | None, int | None], ReturnData]
+    getter_function: Callable[[str | None, str | None], ReturnData]
     table_header: str
     figure_header: str
 

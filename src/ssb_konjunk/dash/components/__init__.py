@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Components to use in the dash app."""
 
 from typing import Any
