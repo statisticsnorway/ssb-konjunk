@@ -32,7 +32,7 @@ class DataManager:
 
     Hovedkomponenter:
     ------------------
-    - `self.raw_source`, `self.calendar_source`, `self.season_source`, `self.weigth_source`:
+    - `self.raw_source`, `self.calendar_source`, `self.season_source`, `self.weight_source`:
     Datastrukturer for ulike måter å representere eller justere tidsserier.
     - `get_table_X_v2(...)`: Metoder for å hente ulike tabellvarianter (1-7), hver tilpasset spesifikke analysetyper.
     - Statiske hjelpefunksjoner for sortering, prosentberegning og visuell formatering.
@@ -100,7 +100,7 @@ class DataManager:
             korr=pl.col("korr").cast(pl.Float64),
             periode=pl.col("periode").str.strptime(pl.Date, "%Y-%m", strict=False),
         )
-        self.weigth_source = DataSource(
+        self.weight_source = DataSource(
             polars_data, "periode", "verdi", "nar", internal_col="weight"
         )
         self.season_source = DataSource(
@@ -117,8 +117,8 @@ class DataManager:
     def pad_single(x: str) -> str:
         """Legger inn innrykk basert på nivå i hierarkisk kode.
 
-        Gitt en streng der nivåer er adskilt med bindestrek (f.eks. '1 - 1.1 - 1.1.1'),
-        returneres strengen med innrykk tilsvarende hierarkinivået.
+        Gitt en streng der nivåer er adskilt med bindestrek (f.eks. '42.1 - Bygging av veier og jernbane'),
+        returneres strengen med innrykk tilsvarende hierarkinivået på den første veriden.
 
         Args:
             x (str): En streng som representerer en hierarkisk kode.
@@ -276,13 +276,13 @@ class DataManager:
         Brukes for å definere "skip"-verdi, dvs. hvor langt bakover i tid man må hente data.
 
         Args:
-            period (str or None): Periode i tekstformat, f.eks. '2023M03'. Kan også være None.
+            period (str or None): Periode i tekstformat, f.eks. '2023-03'. Kan også være None.
 
         Returns:
             int: Antall måneder mellom siste dato og ønsket periode.
         """
         skip = 0
-        latest = self.weigth_source.latest_date()
+        latest = self.weight_source.latest_date()
         if (period is not None) and (latest is not None) and (period != "None"):
             skip = monthdelta(latest, parse_period(period))
         return skip
@@ -360,10 +360,16 @@ class DataManager:
             all_periods.append(latest)
         return all_periods
 
+        
     def get_sesonal_adjusted_3_mth_change(
-        self, period: str | None = None, max_nace_level: int | None = None
-    ) -> ReturnData:
-        """Henter sesongjusterte 3-måneders endringer og beregner vektede bidrag.
+        self,
+        period: str | None = None,
+        max_nace_level: int | None = None,
+        nace_filter: list[str] | None = None,
+        ) -> ReturnData:
+            
+        """
+        Henter sesongjusterte 3-måneders endringer og beregner vektede bidrag.
 
         Utfører rullerende 3-måneders gjennomsnitt på sesongjusterte serier og vekter,
         samt beregner prosentvis endring og vektet påvirkning. Returnerer dataene som
@@ -379,10 +385,10 @@ class DataManager:
             ReturnData: Et objekt som inneholder overskrifter, formaterte resultatdata,
             figursøyledata og sparkline-serier for de valgte periodene.
         """
+        
         skip = self._prep_skip(period)
-
-        header, weight = self.weigth_source.n_mean_rolling(3, skip=skip)
-        _, comparison_weight = self.weigth_source.n_mean_rolling(3, skip=3)
+        header, weight = self.weight_source.n_mean_rolling(3, skip=skip)
+        _, comparison_weight = self.weight_source.n_mean_rolling(3, skip=3)
         header_i, index_season = self.season_source.n_mean_rolling(3, skip=skip)
 
         header_i_pct, index_season_pct = (
@@ -406,17 +412,33 @@ class DataManager:
         table_data = multi_join(
             [weight, index_season, index_season_pct, weighted_pct], on="nar"
         )
-        if max_nace_level:
+        if max_nace_level is not None:
+            
+            numeric_mask = pl.col("nar").str.replace(".", "").str.contains(r"^\d+$")
+
             table_data = table_data.filter(
-                pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level
+                (numeric_mask & 
+                 (pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level)) |
+                (~numeric_mask)
             )
+            
             weighted_pct = weighted_pct.filter(
-                pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level
+                (numeric_mask & 
+                 (pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level)) |
+                (~numeric_mask)
             )
+        if nace_filter:
+            table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
+            weighted_pct = weighted_pct.filter(pl.col("nar").is_in(nace_filter))
+            table_data, weighted_pct = _normalize_weight(table_data, weighted_pct)
+            
         return ReturnData(
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
-            res_data=self._prep_df(table_data, "nar").round(1),
+            res_data=self._prep_df(table_data, "nar")
+                .round(1)
+                .sort_values(by="nar", key=self.sort_aggregates)
+                .reset_index(drop=True),
             figure_data=self._prep_df(weighted_pct, "nar")
             .set_index("nar")["weighted"]
             .iloc[::-1],
@@ -443,8 +465,8 @@ class DataManager:
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
-        header, weight = self.weigth_source.n_month(1, skip=skip)
-        _, comparison_weight = self.weigth_source.n_month(1, skip=1)
+        header, weight = self.weight_source.n_month(1, skip=skip)
+        _, comparison_weight = self.weight_source.n_month(1, skip=1)
         header_i, index_season = self.season_source.n_month(1, skip=skip)
         header_i_pct, index_season_pct = self.season_source.n_month_percent(
             1, skip=skip
@@ -504,8 +526,8 @@ class DataManager:
         """
         skip = self._prep_skip(period)
 
-        header, weight = self.weigth_source.n_month(1, skip=skip)
-        _, comparison_weight = self.weigth_source.n_month(1, skip=12)
+        header, weight = self.weight_source.n_month(1, skip=skip)
+        _, comparison_weight = self.weight_source.n_month(1, skip=12)
         header_i, index_season = self.calendar_source.n_month(1, skip=skip)
         header_i_pct, index_season_pct = self.calendar_source.n_percent_rolling(
             13, skip=skip
