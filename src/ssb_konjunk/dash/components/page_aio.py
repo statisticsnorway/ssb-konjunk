@@ -4,12 +4,13 @@ from dataclasses import dataclass
 from typing import Any
 
 import pandas as pd
+from ssb_dash_components.Dropdown import Dropdown
+
 from dash import Input
 from dash import Output
 from dash import State
 from dash import callback
 from dash import html
-from ssb_dash_components.Dropdown import Dropdown
 
 from .figure import generate_fig
 from .file_switcher import FileSwitcher

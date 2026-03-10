@@ -1,6 +1,7 @@
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
+
 
 @pytest.fixture
 def test_df():
@@ -12,13 +13,15 @@ def test_df():
     rows = []
     for nar in nars:
         for p in periods:
-            rows.append({
-                "nar": nar,
-                "periode": p,
-                "jus": np.random.uniform(80, 120),
-                "korr": np.random.uniform(80, 120),
-                "ujust": np.random.uniform(80, 120),
-                "verdi": np.random.uniform(10, 50),
-            })
+            rows.append(
+                {
+                    "nar": nar,
+                    "periode": p,
+                    "jus": np.random.uniform(80, 120),
+                    "korr": np.random.uniform(80, 120),
+                    "ujust": np.random.uniform(80, 120),
+                    "verdi": np.random.uniform(10, 50),
+                }
+            )
 
     return pd.DataFrame(rows)
