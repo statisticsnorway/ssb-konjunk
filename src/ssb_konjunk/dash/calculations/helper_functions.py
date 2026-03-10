@@ -111,7 +111,7 @@ class DataSource:
         """
         return ((series_1 - series_2) / series_2) * 100
 
-    def _create_date(self, date: datetime) -> str:
+    def _create_date(self, date: datetime.date) -> str:
         """Formaterer en datetime til en str med definert utdataformat.
 
         Args:
@@ -133,8 +133,8 @@ class DataSource:
             str: En str som representerer datoperioden (eks. "Jan 2023 - Mar 2023").
         """
         dates = self.data.get_column(self._date).unique().sort()
-        latest: datetime = dates[-1 - (n * skip)]
-        oldest: datetime = dates[-1 - ((n * skip) + n)]
+        latest: datetime.date = dates[-1 - (n * skip)]
+        oldest: datetime.date = dates[-1 - ((n * skip) + n)]
         return f"{self._create_date(oldest)} - {self._create_date(latest)}"
 
     def _base(self, n: int, *agg: pl.Expr, **named_aggs: pl.Expr):
@@ -211,7 +211,7 @@ class DataSource:
             },
         )
 
-    def n_percent_rolling(self, n: int, skip: int = 0) -> pl.DataFrame:
+    def n_percent_rolling(self, n: int, skip: int = 0) -> tuple[str, pl.DataFrame]:
         """Beregner rullerende prosentvis endring over en periode og returnerer med datoperiode-header.
 
         Denne metoden bruker en rullerende tidsvinduanalyse for å beregne prosentvis endring
@@ -230,8 +230,8 @@ class DataSource:
         def _gen_header(n: int, skip: int = 0):
             """Lager overskrift for hver perioden."""
             dates = self.data.get_column(self._date).unique().sort()
-            latest: datetime = dates[-1 - (skip)]
-            oldest: datetime = dates[-1 - ((skip) + n - 1)]
+            latest: datetime.date = dates[-1 - (skip)]
+            oldest: datetime.date = dates[-1 - ((skip) + n - 1)]
             return f"{self._create_date(oldest)} - {self._create_date(latest)}"
 
         def map_test(x: pl.DataFrame):
@@ -264,7 +264,7 @@ class DataSource:
             .explode(self._avg)
         )
 
-    def n_mean_rolling(self, n: int, skip: int = 0) -> pl.DataFrame:
+    def n_mean_rolling(self, n: int, skip: int = 0) -> tuple[str, pl.DataFrame]:
         """Beregner et rullerende gjennomsnitt for hver gruppe i datasettet og returnerer med datoperiode-header.
 
         Denne metoden beregner gjennomsnittet av verdiene innenfor et rullerende vindu på `n` måneder.
@@ -283,8 +283,8 @@ class DataSource:
         def _gen_header(n: int, skip: int = 0):
             """Lager overskrift for hver perioden."""
             dates = self.data.get_column(self._date).unique().sort()
-            latest: datetime = dates[-1 - (skip)]
-            oldest: datetime = dates[-1 - ((skip) + n - 1)]
+            latest: datetime.date = dates[-1 - (skip)]
+            oldest: datetime.date = dates[-1 - ((skip) + n - 1)]
             return f"{self._create_date(oldest)} - {self._create_date(latest)}"
 
         def map_test(x: pl.DataFrame):
