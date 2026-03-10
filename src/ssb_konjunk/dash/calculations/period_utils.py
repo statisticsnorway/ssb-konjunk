@@ -99,7 +99,7 @@ class Period:
         Returns:
             pendulum.DateTime: Dato og tid som representerer perioden.
         """
-        return self.period
+        return self._dt
 
     def subtract(
         self: Self,

@@ -393,44 +393,17 @@ def rounded_average(df: pd.DataFrame, ordered_columns: list[str]) -> pd.Series:
     return res.round(1)
 
 
-def calc_change_rate(
-    df: pd.DataFrame, ordered_columns: list[str], n: int = 1
-) -> pd.DataFrame:
-    """Beregner prosentvis endring mellom kolonner over n perioder.
-
-    Args:
-        df (pd.DataFrame): DataFrame med data.
-        ordered_columns (list[str]): Liste med kolonnenavn i rekkefølge.
-        n (int, optional): Antall perioder tilbake for endringsberegning. Defaults to 1.
-
-    Returns:
-        pd.DataFrame: Prosentvis endring per rad for hver kolonne (fra n. kolonne og fremover).
-    """
-    results = []
-    for i in range(n, len(ordered_columns), 1):
-        col_present = ordered_columns[i]
-        previous_period = ordered_columns[i - n]
-        chg_rate = (df[col_present] - df[previous_period]) * 100 / df[previous_period]
-        results.append(chg_rate)
-
-    return pd.concat(results, axis="columns", keys=ordered_columns[n:])
-
+def calc_change_rate(df: pd.DataFrame, ordered_columns: list[str], n: int = 1) -> pd.DataFrame:
+    return _percent_change_columns(df, ordered_columns, step=n)
 
 def rolling_change_rate(df: pd.DataFrame, step: int = 1) -> pd.DataFrame:
-    """Beregner rullende prosentvis endring mellom kolonner med gitt steg.
+    return _percent_change_columns(df, list(df.columns), step=step)
 
-    Args:
-        df (pd.DataFrame): DataFrame med kolonner som representerer perioder.
-        step (int, optional): Antall kolonner å hoppe over for å beregne endring. Defaults to 1.
-
-    Returns:
-        pd.DataFrame: Prosentvis endring per rad, med kolonner fra `step` og fremover.
-    """
+def _percent_change_columns(df: pd.DataFrame, columns: list[str], step: int = 1) -> pd.DataFrame:
     results = []
-    for i in range(step, len(df.columns), step):
-        col_present = df.columns[i]
-        previous_period = df.columns[i - step]
+    for i in range(step, len(columns), step):
+        col_present = columns[i]
+        previous_period = columns[i - step]
         chg_rate = (df[col_present] - df[previous_period]) * 100 / df[previous_period]
         results.append(chg_rate)
-
-    return pd.concat(results, axis="columns", keys=df.columns[step:])
+    return pd.concat(results, axis="columns", keys=columns[step:])
