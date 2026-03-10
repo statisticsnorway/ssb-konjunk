@@ -246,7 +246,9 @@ class DataManager:
         return index.map(mapper)
 
     @staticmethod
-    def _normalize_weight(table_data: pl.DataFrame) -> tuple[pl.DataFrame, pl.DataFrame]:
+    def _normalize_weight(
+        table_data: pl.DataFrame,
+    ) -> tuple[pl.DataFrame, pl.DataFrame]:
         """Normaliserer vektene til et datasett.
 
         Sørger for at vektene som blir brukt summerer opp til 100, og at vektet endring stemmer.
@@ -259,19 +261,25 @@ class DataManager:
             weighted_pct (pl.DataFrame): Samme datasett, men bare med vektet prosentendringsdata.
         """
         table_data = table_data.with_columns(
-            ((pl.col("weight") / table_data["weight"].sum() * 100).round(2)).alias("weight")
+            ((pl.col("weight") / table_data["weight"].sum() * 100).round(2)).alias(
+                "weight"
+            )
         )
         if "season1" in table_data.columns:
             table_data = table_data.with_columns(
-                ((0.01 * pl.col("season1") * pl.col("weight")).round(2)).alias("weighted")
+                ((0.01 * pl.col("season1") * pl.col("weight")).round(2)).alias(
+                    "weighted"
+                )
             )
         elif "calendar1" in table_data.columns:
             table_data = table_data.with_columns(
-                ((0.01 * pl.col("calendar1") * pl.col("weight")).round(2)).alias("weighted")
+                ((0.01 * pl.col("calendar1") * pl.col("weight")).round(2)).alias(
+                    "weighted"
+                )
             )
         else:
             raise ValueError("Wrong column name in table_data")
-        weighted_pct = table_data.select(['nar', 'weighted'])
+        weighted_pct = table_data.select(["nar", "weighted"])
         return table_data, weighted_pct
 
     def get_all_periods(self) -> list[str]:
@@ -335,7 +343,6 @@ class DataManager:
         formatted[sort_by] = self.format_aggregates(formatted[sort_by])
         formatted[sort_by] = formatted[sort_by].str[:format_len]
         return formatted
-    
 
     def create_periods_and_latest(
         self, period: str | None, periods: int
@@ -390,16 +397,13 @@ class DataManager:
             all_periods.append(latest)
         return all_periods
 
-        
     def get_sesonal_adjusted_3_mth_change(
         self,
         period: str | None = None,
         max_nace_level: int | None = None,
         nace_filter: list[str] | None = None,
-        ) -> ReturnData:
-            
-        """
-        Henter sesongjusterte 3-måneders endringer og beregner vektede bidrag.
+    ) -> ReturnData:
+        """Henter sesongjusterte 3-måneders endringer og beregner vektede bidrag.
 
         Utfører rullerende 3-måneders gjennomsnitt på sesongjusterte serier og vekter,
         samt beregner prosentvis endring og vektet påvirkning. Returnerer dataene som
@@ -416,7 +420,6 @@ class DataManager:
             ReturnData: Et objekt som inneholder overskrifter, formaterte resultatdata,
             figursøyledata og sparkline-serier for de valgte periodene.
         """
-        
         skip = self._prep_skip(period)
         header, weight = self.weight_source.n_mean_rolling(3, skip=skip)
         _, comparison_weight = self.weight_source.n_mean_rolling(3, skip=3)
@@ -443,36 +446,46 @@ class DataManager:
         table_data = multi_join(
             [weight, index_season, index_season_pct, weighted_pct], on="nar"
         )
-        
+
         if max_nace_level is not None:
-            
+
             numeric_mask = pl.col("nar").str.replace(".", "").str.contains(r"^\d+$")
 
             table_data = table_data.filter(
-                (numeric_mask & 
-                 (pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level)) |
-                (~numeric_mask)
+                (
+                    numeric_mask
+                    & (
+                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        <= max_nace_level
+                    )
+                )
+                | (~numeric_mask)
             )
-            
+
             weighted_pct = weighted_pct.filter(
-                (numeric_mask & 
-                 (pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level)) |
-                (~numeric_mask)
+                (
+                    numeric_mask
+                    & (
+                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        <= max_nace_level
+                    )
+                )
+                | (~numeric_mask)
             )
         if nace_filter:
             table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
             table_data, weighted_pct = self._normalize_weight(table_data)
-            
+
         return ReturnData(
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
-            res_data = (
+            res_data=(
                 self._prep_df(table_data, "nar")
                 .round(1)
                 .sort_values(
                     by="nar",
                     key=lambda col: col.map(lambda x: (str(x).count(" "), str(x))),
-                    ignore_index=True
+                    ignore_index=True,
                 )
             ),
             figure_data=self._prep_df(weighted_pct, "nar")
@@ -485,98 +498,104 @@ class DataManager:
         )
 
     def get_sesonal_adjusted_mth_change(
-            self,
-            period: str | None = None,
-            max_nace_level: int | None = None,
-            nace_filter: list[str] | None = None,
-            ) -> ReturnData:
-            """
-            Beregner månedlig sesongjustert endring og vektet bidrag for valgt periode.
-    
-            Utfører rullerende beregninger for én måned frem i tid på sesongjusterte data
-            og vekter. Returnerer strukturerte data for tabellvisning, figurer og sparkline-grafer.
-    
-            Args:
-                period (str or None): Valgfri referanseperiode, som '2023M03'. Hvis None, brukes siste tilgjengelige.
-                max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn). Brukes for å filtrere detaljeringsnivå.
-                nace_filter: (list[str] or None): Filter for hvilke nacer du ønsker å ha med i tabellen.
-    
-            Returns:
-                ReturnData: Et objekt med kolonneoverskrifter, formaterte tabeller, figursøyledata
-                og sparkline-serier for visualisering eller rapportering.
-            """
-    
-    
-            skip = self._prep_skip(period)
-            header, weight = self.weight_source.n_month(1, skip=skip)
-            _, comparison_weight = self.weight_source.n_mean_rolling(1, skip=1)
-            header_i, index_season = self.season_source.n_month(1, skip=skip)
-            header_i_pct, index_season_pct = self.season_source.n_month_percent(
-                1, skip=skip
+        self,
+        period: str | None = None,
+        max_nace_level: int | None = None,
+        nace_filter: list[str] | None = None,
+    ) -> ReturnData:
+        """Beregner månedlig sesongjustert endring og vektet bidrag for valgt periode.
+
+        Utfører rullerende beregninger for én måned frem i tid på sesongjusterte data
+        og vekter. Returnerer strukturerte data for tabellvisning, figurer og sparkline-grafer.
+
+        Args:
+            period (str or None): Valgfri referanseperiode, som '2023M03'. Hvis None, brukes siste tilgjengelige.
+            max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn). Brukes for å filtrere detaljeringsnivå.
+            nace_filter: (list[str] or None): Filter for hvilke nacer du ønsker å ha med i tabellen.
+
+        Returns:
+            ReturnData: Et objekt med kolonneoverskrifter, formaterte tabeller, figursøyledata
+            og sparkline-serier for visualisering eller rapportering.
+        """
+        skip = self._prep_skip(period)
+        header, weight = self.weight_source.n_month(1, skip=skip)
+        _, comparison_weight = self.weight_source.n_mean_rolling(1, skip=1)
+        header_i, index_season = self.season_source.n_month(1, skip=skip)
+        header_i_pct, index_season_pct = self.season_source.n_month_percent(
+            1, skip=skip
+        )
+        index_season_pct = index_season_pct.with_columns(
+            season=pl.col("season").round(1)
+        )
+        weighted_pct = (
+            index_season_pct.join(comparison_weight, on="nar")
+            .with_columns(
+                weighted=(pl.col("season") * (pl.col("weight") / 100)).round(2)
             )
-            index_season_pct = index_season_pct.with_columns(
-                season=pl.col("season").round(1)
-            )
-            weighted_pct = (
-                index_season_pct.join(comparison_weight, on="nar")
-                .with_columns(
-                    weighted=(pl.col("season") * (pl.col("weight") / 100)).round(2)
-                )
-                .drop("weight", "season")
-            )
-            sparkline_data = [self.season_source.n_month(1, i)[1] for i in range(6)]
-            sparkline_data.reverse()
-            table_data = multi_join(
-                        [weight, index_season, index_season_pct, weighted_pct], on="nar"
+            .drop("weight", "season")
+        )
+        sparkline_data = [self.season_source.n_month(1, i)[1] for i in range(6)]
+        sparkline_data.reverse()
+        table_data = multi_join(
+            [weight, index_season, index_season_pct, weighted_pct], on="nar"
+        )
+        if max_nace_level is not None:
+
+            numeric_mask = pl.col("nar").str.replace(".", "").str.contains(r"^\d+$")
+
+            table_data = table_data.filter(
+                (
+                    numeric_mask
+                    & (
+                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        <= max_nace_level
                     )
-            if max_nace_level is not None:
-                
-                numeric_mask = pl.col("nar").str.replace(".", "").str.contains(r"^\d+$")
-    
-                table_data = table_data.filter(
-                    (numeric_mask & 
-                     (pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level)) |
-                    (~numeric_mask)
                 )
-                
-                weighted_pct = weighted_pct.filter(
-                    (numeric_mask & 
-                     (pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level)) |
-                    (~numeric_mask)
+                | (~numeric_mask)
+            )
+
+            weighted_pct = weighted_pct.filter(
+                (
+                    numeric_mask
+                    & (
+                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        <= max_nace_level
+                    )
                 )
-    
-            if nace_filter:
-                table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
-                table_data, weighted_pct = self._normalize_weight(table_data)
-            return ReturnData(
-                header_1=self.header_1,
-                header_2=["", header, header_i, header_i_pct, header_i_pct],
-                res_data = (
+                | (~numeric_mask)
+            )
+
+        if nace_filter:
+            table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
+            table_data, weighted_pct = self._normalize_weight(table_data)
+        return ReturnData(
+            header_1=self.header_1,
+            header_2=["", header, header_i, header_i_pct, header_i_pct],
+            res_data=(
                 self._prep_df(table_data, "nar")
-                    .round(1)
-                    .sort_values(
-                        by="nar",
-                        key=lambda col: col.map(lambda x: (str(x).count(" "), str(x))),
-                        ignore_index=True
-                    )
-                ),
-                figure_data=self._prep_df(weighted_pct, "nar")
-                .set_index("nar")["weighted"]
-                .iloc[::-1],
-                sparkline_data=multi_join(sparkline_data, on="nar")
-                .to_pandas()
-                .sort_values(by="nar", key=self.sort_aggregates),
-                indirect=None,
-            )
+                .round(1)
+                .sort_values(
+                    by="nar",
+                    key=lambda col: col.map(lambda x: (str(x).count(" "), str(x))),
+                    ignore_index=True,
+                )
+            ),
+            figure_data=self._prep_df(weighted_pct, "nar")
+            .set_index("nar")["weighted"]
+            .iloc[::-1],
+            sparkline_data=multi_join(sparkline_data, on="nar")
+            .to_pandas()
+            .sort_values(by="nar", key=self.sort_aggregates),
+            indirect=None,
+        )
 
     def get_sesonal_adjusted_12_mth_change(
         self,
         period: str | None = None,
         max_nace_level: int | None = None,
         nace_filter: list[str] | None = None,
-        ) -> ReturnData:
-        """
-        Beregner 12-måneders kalenderjusterte endringer og tilhørende vektede bidrag.
+    ) -> ReturnData:
+        """Beregner 12-måneders kalenderjusterte endringer og tilhørende vektede bidrag.
 
         Utfører aggregering og prosentvis sammenligning over et 12-måneders vindu
         basert på kalenderjustert data. Dataen sammenstilles til rapporteringsvennlige
@@ -591,7 +610,6 @@ class DataManager:
             ReturnData: Objekt med tabelloverskrifter, datasett for visning og analyse,
             og vektede figurtall. Sparkline-data er ikke inkludert i denne varianten.
         """
-
         skip = self._prep_skip(period)
 
         header, weight = self.weight_source.n_month(1, skip=skip)
@@ -611,22 +629,32 @@ class DataManager:
             .drop("weight", "calendar")
         )
         table_data = multi_join(
-                    [weight, index_season, index_season_pct, weighted_pct], on="nar"
-                )
+            [weight, index_season, index_season_pct, weighted_pct], on="nar"
+        )
         if max_nace_level is not None:
-            
+
             numeric_mask = pl.col("nar").str.replace(".", "").str.contains(r"^\d+$")
 
             table_data = table_data.filter(
-                (numeric_mask & 
-                 (pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level)) |
-                (~numeric_mask)
+                (
+                    numeric_mask
+                    & (
+                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        <= max_nace_level
+                    )
+                )
+                | (~numeric_mask)
             )
-            
+
             weighted_pct = weighted_pct.filter(
-                (numeric_mask & 
-                 (pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level)) |
-                (~numeric_mask)
+                (
+                    numeric_mask
+                    & (
+                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        <= max_nace_level
+                    )
+                )
+                | (~numeric_mask)
             )
         if nace_filter:
             table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
@@ -635,12 +663,12 @@ class DataManager:
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
             res_data=(
-            self._prep_df(table_data, "nar")
+                self._prep_df(table_data, "nar")
                 .round(1)
                 .sort_values(
                     by="nar",
                     key=lambda col: col.map(lambda x: (str(x).count(" "), str(x))),
-                    ignore_index=True
+                    ignore_index=True,
                 )
             ),
             figure_data=self._prep_df(weighted_pct, "nar")
