@@ -145,14 +145,14 @@ class Period:
         """Sjekker om dette objektet er likt et annet basert på perioden."""
         if not isinstance(other, type(self)):
             return NotImplemented
-        return self._dt == other.period
+        return self._dt == other._dt.
 
     def __lt__(self, other: object) -> bool:
         """Sjekker om dette objektets periode er mindre enn et annet objekt sin periode."""
         if not isinstance(other, type(self)):
             return NotImplemented
 
-        return self._dt < other.period
+        return self._dt < other._dt.
 
     def _as_string(self) -> str:
         return self._dt.format("YYYY-MM")
