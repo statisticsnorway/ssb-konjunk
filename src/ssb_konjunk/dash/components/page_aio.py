@@ -131,8 +131,6 @@ class AnalyticsPageAIO(html.Div):  # html.Div will be the "parent" component
                 value = options[0]["id"]
             elif value not in [x["id"] for x in options]:
                 value = options[0]["id"]
-            else:
-                value = value
             return Dropdown(items=options, id=self.ids.dropdown(aio_id), value=value)
 
         @callback(

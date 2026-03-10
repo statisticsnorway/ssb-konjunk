@@ -12,17 +12,17 @@ class Period:
 
     def __init__(self, period: str) -> None:
         """A class to help transform the period to the rigth formats."""
-        self.period = self._period_to_datetime(period)
+        self._dt = self._period_to_datetime(period)
 
     @property
     def year(self) -> int:
         """Returnerer året til perioden som et heltall."""
-        return self.period.year
+        return self._dt.year
 
     @property
     def month(self) -> int:
         """Returnerer måneden til perioden som et heltall (1-12)."""
-        return self.period.month
+        return self._dt.month
 
     @classmethod
     def from_dt(cls, dt: pendulum.DateTime) -> Self:
@@ -56,8 +56,8 @@ class Period:
         Returns:
             str: Periodestreng, f.eks. '2026-03'.
         """
-        month = self.period.format("MM")
-        year = self.period.format("YYYY")
+        month = self._dt.format("MM")
+        year = self._dt.format("YYYY")
         return f"{year}-{month}"
 
     def as_string(self) -> str:
@@ -66,8 +66,8 @@ class Period:
         Returns:
             str: Streng, f.eks. 'Mar 2026'.
         """
-        month = self.period.format("MMM")
-        year = self.period.format("YYYY")
+        month = self._dt.format("MMM")
+        year = self._dt.format("YYYY")
         return f"{month} {year}"
 
     def set_period(
@@ -89,7 +89,7 @@ class Period:
             minute (int | None): Minutt (0-59).
             second (int | None): Sekund (0-59).
         """
-        self.period.set(
+        self._dt.set(
             year=year, month=month, day=day, hour=hour, minute=minute, second=second
         )
 
@@ -132,7 +132,7 @@ class Period:
             - Negativt tall vil i praksis legge til tilsvarende tid.
         """
         return Period.from_dt(
-            self.period.subtract(
+            self._dt.subtract(
                 years, months, weeks, days, hours, minutes, seconds, microseconds
             )
         )
@@ -145,19 +145,17 @@ class Period:
         """Sjekker om dette objektet er likt et annet basert på perioden."""
         if not isinstance(other, type(self)):
             return NotImplemented
-        return self.period == other.period
-
-        return self.period == other.period
+        return self._dt == other.period
 
     def __lt__(self, other: object) -> bool:
         """Sjekker om dette objektets periode er mindre enn et annet objekt sin periode."""
         if not isinstance(other, type(self)):
             return NotImplemented
 
-        return self.period < other.period
+        return self._dt < other.period
 
     def _as_string(self) -> str:
-        return self.period.format("YYYY-MM")
+        return self._dt.format("YYYY-MM")
 
     def __as_string_repr(self) -> str:
         return f"Period<{self.as_period()}, {self._as_string()}>"
