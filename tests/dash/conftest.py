@@ -5,7 +5,7 @@ import numpy as np
 @pytest.fixture
 def test_df():
     np.random.seed(0)
-    periods = pd.date_range("2024-01", "2024-12", freq="MS").strftime("%Y-%m")
+    periods = pd.date_range("2023-12", "2024-12", freq="MS").strftime("%Y-%m")
 
     nars = ["H", "49.1", "49.2", "K", "64"]
 

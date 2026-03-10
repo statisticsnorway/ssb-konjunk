@@ -22,15 +22,16 @@ def test_pad_single():
     assert DataManager.pad_single("49.1") == "      49.1"
 
 def test_calc_indirect(test_df):
-    assert DataManager.calc_indirect(test_df, 'jus') == pytest.approx(2429.38719, rel=1e-4)
+    assert DataManager.calc_indirect(test_df, 'jus') == pytest.approx(2644.08719, rel=1e-4)
     
 def test_to_percent(test_df):
     np.random.seed(0)
     data = DataManager(test_df)
     weight = data.weight_source.data.filter(pl.col('nar') == "K")['verdi']
-    chg_rate = pl.Series("chg_rate", np.random.uniform(-2, 2, 12))
+    chg_rate = pl.Series("chg_rate", np.random.uniform(-2, 2, 13))
+
     percent_change = data.to_percent(weight, chg_rate)
-    assert percent_change[0] == pytest.approx(0.091338, rel=1e-4)
+    assert percent_change[0] == pytest.approx(0.024927, rel=1e-4)
 
 def test_header_1(test_df):
     data = DataManager(test_df)
@@ -51,6 +52,20 @@ def test_sort_aggregates():
     test_series = pd.Series(['42.1', '40.2', '40', 'F', '40.1'])
     sorted_series = DataManager.sort_aggregates(test_series).tolist()
     assert sorted_series == [5, 3, 1, 0, 2]
+
+def test__normalize_weight():
+    test_table_data = pl.DataFrame({
+        "nar": ["K", "H"],
+        "weight": [24.236229, 18.370044],
+        "season": [87.518523, 97.889373],
+        "season1": [-16.4, -3.3],
+        "weighted": [-4.46, -1.24]
+    })
+    test_table_data, test_weighted = DataManager._normalize_weight(test_table_data)
+    
+    assert test_table_data["weight"].cast(pl.Float64).sum() == 100
+    assert test_weighted['weighted'].to_list() == test_table_data['weighted'].to_list()
+    
 
 def test_get_all_periods(test_df):
     data = DataManager(test_df)
@@ -93,27 +108,103 @@ def test_create_period_range(test_df):
 
 def test_get_sesonal_adjusted_3_mth_change(test_df):
     data = DataManager(test_df)
-    seasonal_3_mnt_change = data.get_sesonal_adjusted_3_mth_change()
-    print(seasonal_3_mnt_change.res_data['nar'])
+    seasonal_3_mnt_change_1 = data.get_sesonal_adjusted_3_mth_change(nace_filter=['H','K'])
+    seasonal_3_mnt_change_2 = data.get_sesonal_adjusted_3_mth_change(nace_filter=['H',"49.1", "49.2"])
+    
     expected_header_1 = ['', 'Vekt %', 'Indeks', '% Endring', '% Endring vektet']
     expected_header_2 = ['', 'Oct 2024 - Dec 2024', 'Oct 2024 - Dec 2024', 'Jul 2024 - Sep 2024 / Oct 2024 - Dec 2024', 'Jul 2024 - Sep 2024 / Oct 2024 - Dec 2024']
 
-    expected_res_data = pd.DataFrame({
+    expected_res_data_1 = pd.DataFrame({
     "nar": ['  H - Transport og lagring',
-            '  K - Finansierings- og forsikringsvirks',
+            '  K - Finansierings- og forsikringsvirks'],
+    "weight": [43.1, 56.9],
+    "season": [97.9, 87.5],
+    "season1": [-3.3, -16.4],
+    "weighted": [-1.4, -9.3]
+    })
+
+    expected_res_data_2 = pd.DataFrame({
+    "nar": ['  H - Transport og lagring',
             '        49.1 - Passasjertransport med je',
-            '        49.2 - Godstransport med jernban',
-            '    64 - Finansieringsvirksomhet'],
-    "weight": [21.6, 23.8, 22.6, 35.5, 26.3],
-    "season": [101.8, 104.4, 97.0, 101.4, 104.5],
-    "season1": [7.6, 7.6, -4.0, -2.6, 9.9],
-    "weighted": [3.1, 1.1, -0.8, -0.7, 3.4]
-})
+            '        49.2 - Godstransport med jernban'
+           ],
+    "weight": [20.7, 28.5, 50.8],
+    "season": [97.9, 98.6, 102.4],
+    "season1": [-3.3, -0.9, 1.0],
+    "weighted": [-0.7, -0.3, 0.5]
+    })
     
-    assert seasonal_3_mnt_change.header_1 == expected_header_1
-    assert seasonal_3_mnt_change.header_2 == expected_header_2
-    pd.testing.assert_frame_equal(seasonal_3_mnt_change.res_data, expected_res_data)
+    assert seasonal_3_mnt_change_1.header_1 == expected_header_1
+    assert seasonal_3_mnt_change_1.header_2 == expected_header_2
+    pd.testing.assert_frame_equal(seasonal_3_mnt_change_1.res_data, expected_res_data_1)
+    pd.testing.assert_frame_equal(seasonal_3_mnt_change_2.res_data, expected_res_data_2)
+
+def test_get_sesonal_adjusted_mth_change(test_df):
+    data = DataManager(test_df)
+    seasonal_mnt_change_1 = data.get_sesonal_adjusted_mth_change(nace_filter=['H','K'])
+    seasonal_mnt_change_2 = data.get_sesonal_adjusted_mth_change(nace_filter=['H',"49.1", "49.2"])
     
+    expected_header_1 = ['', 'Vekt %', 'Indeks', '% Endring', '% Endring vektet']
+    expected_header_2 = ['', 'Nov 2024 - Dec 2024', 'Nov 2024 - Dec 2024', 'Nov 2024 - Dec 2024', 'Nov 2024 - Dec 2024']
+
+    expected_res_data_1 = pd.DataFrame({
+    "nar": ['  H - Transport og lagring',
+            '  K - Finansierings- og forsikringsvirks'],
+    "weight": [49.5, 50.5],
+    "season": [92.6, 81.0],
+    "season1": [-13.2, -12.4],
+    "weighted": [-6.5, -6.3]
+    })
+
+    expected_res_data_2 = pd.DataFrame({
+    "nar": ['  H - Transport og lagring',
+            '        49.1 - Passasjertransport med je',
+            '        49.2 - Godstransport med jernban'
+           ],
+    "weight": [22.9, 40.4, 36.6],
+    "season": [92.6, 107.1, 86.5],
+    "season1": [-13.2, 3.5, -20.3],
+    "weighted": [-3.0, 1.4, -7.4]
+    })
+    
+    assert seasonal_mnt_change_1.header_1 == expected_header_1
+    assert seasonal_mnt_change_1.header_2 == expected_header_2
+    pd.testing.assert_frame_equal(seasonal_mnt_change_1.res_data, expected_res_data_1)
+    pd.testing.assert_frame_equal(seasonal_mnt_change_2.res_data, expected_res_data_2)
+
+
+def test_get_sesonal_adjusted_12_mth_change(test_df):
+    data = DataManager(test_df)
+    seasonal_12_mnt_change_1 = data.get_sesonal_adjusted_12_mth_change(nace_filter=['H','K'])
+    seasonal_12_mnt_change_2 = data.get_sesonal_adjusted_12_mth_change(nace_filter=['H',"49.1", "49.2"])
+    
+    expected_header_1 = ['', 'Vekt %', 'Indeks', '% Endring', '% Endring vektet']
+    expected_header_2 = ['', 'Nov 2024 - Dec 2024', 'Nov 2024 - Dec 2024', 'Dec 2023 - Dec 2024', 'Dec 2023 - Dec 2024']
+
+    expected_res_data_1 = pd.DataFrame({
+    "nar": ['  H - Transport og lagring',
+            '  K - Finansierings- og forsikringsvirks'],
+    "weight": [49.5, 50.5],
+    "calendar": [94.5, 82.7],
+    "calendar1": [-12.9, -19.5],
+    "weighted": [-6.4, -9.9]
+    })
+
+    expected_res_data_2 = pd.DataFrame({
+    "nar": ['  H - Transport og lagring',
+            '        49.1 - Passasjertransport med je',
+            '        49.2 - Godstransport med jernban'
+           ],
+    "weight": [22.9, 40.4, 36.6],
+    "calendar": [94.5, 90.8, 104.6],
+    "calendar1": [-12.9, 8.0, 1.5],
+    "weighted": [-3.0, 3.2, 0.6]
+    })
+    
+    assert seasonal_12_mnt_change_1.header_1 == expected_header_1
+    assert seasonal_12_mnt_change_1.header_2 == expected_header_2
+    pd.testing.assert_frame_equal(seasonal_12_mnt_change_1.res_data, expected_res_data_1)
+    pd.testing.assert_frame_equal(seasonal_12_mnt_change_2.res_data, expected_res_data_2)
 
     
 
