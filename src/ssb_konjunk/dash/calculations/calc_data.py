@@ -265,20 +265,14 @@ class DataManager:
                 "weight"
             )
         )
-        if "season1" in table_data.columns:
-            table_data = table_data.with_columns(
-                ((0.01 * pl.col("season1") * pl.col("weight")).round(2)).alias(
-                    "weighted"
-                )
-            )
-        elif "calendar1" in table_data.columns:
-            table_data = table_data.with_columns(
-                ((0.01 * pl.col("calendar1") * pl.col("weight")).round(2)).alias(
-                    "weighted"
-                )
-            )
-        else:
+        col = next((c for c in ["season1", "calendar1"] if c in table_data.columns), None)
+        if col is None:
             raise ValueError("Wrong column name in table_data")
+        
+        table_data = table_data.with_columns(
+            (0.01 * pl.col(col) * pl.col("weight")).round(2).alias("weighted")
+        )
+
         weighted_pct = table_data.select(["nar", "weighted"])
         return table_data, weighted_pct
 
@@ -446,17 +440,14 @@ class DataManager:
         table_data = multi_join(
             [weight, index_season, index_season_pct, weighted_pct], on="nar"
         )
-
         if max_nace_level is not None:
-
-            numeric_mask = pl.col("nar").str.replace(".", "").str.contains(r"^\d+$")
-
+            numeric_mask = pl.col("nar").str.replace(".", "", literal=True).str.contains(r"^\d+$")
             table_data = table_data.filter(
                 (
                     numeric_mask
                     & (
                         pl.col("nar").str.replace(".", "").str.len_chars()
-                        <= max_nace_level
+                        <= max_nace_level 
                     )
                 )
                 | (~numeric_mask)
@@ -474,7 +465,7 @@ class DataManager:
             )
         if nace_filter:
             table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
-            table_data, weighted_pct = self._normalize_weight(table_data)
+        table_data, weighted_pct = self._normalize_weight(table_data)
 
         return ReturnData(
             header_1=self.header_1,
@@ -484,7 +475,12 @@ class DataManager:
                 .round(1)
                 .sort_values(
                     by="nar",
-                    key=lambda col: col.map(lambda x: (str(x).count(" "), str(x))),
+                    key=lambda col: col.map(
+                        lambda x: (
+                            str(x).lstrip()[0].isdigit(),
+                            str(x).lstrip()
+                        )
+                    ),
                     ignore_index=True,
                 )
             ),
@@ -540,15 +536,13 @@ class DataManager:
             [weight, index_season, index_season_pct, weighted_pct], on="nar"
         )
         if max_nace_level is not None:
-
-            numeric_mask = pl.col("nar").str.replace(".", "").str.contains(r"^\d+$")
-
+            numeric_mask = pl.col("nar").str.replace(".", "", literal=True).str.contains(r"^\d+$")
             table_data = table_data.filter(
                 (
                     numeric_mask
                     & (
                         pl.col("nar").str.replace(".", "").str.len_chars()
-                        <= max_nace_level
+                        <= max_nace_level 
                     )
                 )
                 | (~numeric_mask)
@@ -564,10 +558,9 @@ class DataManager:
                 )
                 | (~numeric_mask)
             )
-
         if nace_filter:
             table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
-            table_data, weighted_pct = self._normalize_weight(table_data)
+        table_data, weighted_pct = self._normalize_weight(table_data)
         return ReturnData(
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
@@ -576,7 +569,12 @@ class DataManager:
                 .round(1)
                 .sort_values(
                     by="nar",
-                    key=lambda col: col.map(lambda x: (str(x).count(" "), str(x))),
+                    key=lambda col: col.map(
+                        lambda x: (
+                            str(x).lstrip()[0].isdigit(),
+                            str(x).lstrip()
+                        )
+                    ),
                     ignore_index=True,
                 )
             ),
@@ -611,7 +609,6 @@ class DataManager:
             og vektede figurtall. Sparkline-data er ikke inkludert i denne varianten.
         """
         skip = self._prep_skip(period)
-
         header, weight = self.weight_source.n_month(1, skip=skip)
         _, comparison_weight = self.weight_source.n_mean_rolling(1, skip=12)
         header_i, index_season = self.calendar_source.n_month(1, skip=skip)
@@ -632,15 +629,13 @@ class DataManager:
             [weight, index_season, index_season_pct, weighted_pct], on="nar"
         )
         if max_nace_level is not None:
-
-            numeric_mask = pl.col("nar").str.replace(".", "").str.contains(r"^\d+$")
-
+            numeric_mask = pl.col("nar").str.replace(".", "", literal=True).str.contains(r"^\d+$")
             table_data = table_data.filter(
                 (
                     numeric_mask
                     & (
                         pl.col("nar").str.replace(".", "").str.len_chars()
-                        <= max_nace_level
+                        <= max_nace_level 
                     )
                 )
                 | (~numeric_mask)
@@ -658,7 +653,7 @@ class DataManager:
             )
         if nace_filter:
             table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
-            table_data, weighted_pct = self._normalize_weight(table_data)
+        table_data, weighted_pct = self._normalize_weight(table_data)
         return ReturnData(
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
@@ -667,9 +662,15 @@ class DataManager:
                 .round(1)
                 .sort_values(
                     by="nar",
-                    key=lambda col: col.map(lambda x: (str(x).count(" "), str(x))),
+                    key=lambda col: col.map(
+                        lambda x: (
+                            str(x).lstrip()[0].isdigit(),
+                            str(x).lstrip()
+                        )
+                    ),
                     ignore_index=True,
                 )
+
             ),
             figure_data=self._prep_df(weighted_pct, "nar")
             .set_index("nar")["weighted"]

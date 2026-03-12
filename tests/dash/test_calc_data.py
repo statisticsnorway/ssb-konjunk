@@ -3,7 +3,7 @@ import pandas as pd
 import polars as pl
 import pytest
 
-from ssb_konjunk.dash.calculations.calc_data import DataManager
+from ssb_konjunk.dash.calculations.calc_data import DataManager, get_data_manager
 from ssb_konjunk.dash.calculations.period_utils import Period
 
 
@@ -73,10 +73,25 @@ def test__normalize_weight():
             "weighted": [-4.46, -1.24],
         }
     )
+    
     test_table_data, test_weighted = DataManager._normalize_weight(test_table_data)
-
+    
     assert test_table_data["weight"].cast(pl.Float64).sum() == 100
     assert test_weighted["weighted"].to_list() == test_table_data["weighted"].to_list()
+    
+    test_table_data_fail = pl.DataFrame(
+        {
+            "nar": ["K", "H"],
+            "weight": [24.236229, 18.370044],
+            "season": [87.518523, 97.889373],
+            "weighted": [-4.46, -1.24],
+        }
+    )
+    
+    
+    with pytest.raises(ValueError):
+            DataManager._normalize_weight(test_table_data_fail)
+    
 
 
 def test_get_all_periods(test_df):
@@ -131,6 +146,7 @@ def test_get_sesonal_adjusted_3_mth_change(test_df):
     seasonal_3_mnt_change_2 = data.get_sesonal_adjusted_3_mth_change(
         nace_filter=["H", "49.1", "49.2"]
     )
+    seasonal_3_mnt_change_3 = data.get_sesonal_adjusted_3_mth_change(max_nace_level=1)
 
     expected_header_1 = ["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"]
     expected_header_2 = [
@@ -167,11 +183,25 @@ def test_get_sesonal_adjusted_3_mth_change(test_df):
             "weighted": [-0.7, -0.3, 0.5],
         }
     )
+    expected_res_data_3 = pd.DataFrame(
+        {
+            "nar": [
+                "  H - Transport og lagring",
+                "  K - Finansierings- og forsikringsvirks",
+                "    64 - Finansieringsvirksomhet",
+            ],
+            "weight": [26.2, 34.6, 39.3],
+            "season": [97.9, 87.5, 99.5],
+            "season1": [-3.3, -16.4, -6.2],
+            "weighted": [-0.9, -5.7, -2.4],
+        }
+    )
 
     assert seasonal_3_mnt_change_1.header_1 == expected_header_1
     assert seasonal_3_mnt_change_1.header_2 == expected_header_2
     pd.testing.assert_frame_equal(seasonal_3_mnt_change_1.res_data, expected_res_data_1)
     pd.testing.assert_frame_equal(seasonal_3_mnt_change_2.res_data, expected_res_data_2)
+    pd.testing.assert_frame_equal(seasonal_3_mnt_change_3.res_data, expected_res_data_3)
 
 
 def test_get_sesonal_adjusted_mth_change(test_df):
@@ -180,6 +210,7 @@ def test_get_sesonal_adjusted_mth_change(test_df):
     seasonal_mnt_change_2 = data.get_sesonal_adjusted_mth_change(
         nace_filter=["H", "49.1", "49.2"]
     )
+    seasonal_mnt_change_3 = data.get_sesonal_adjusted_mth_change(max_nace_level=1)
 
     expected_header_1 = ["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"]
     expected_header_2 = [
@@ -216,11 +247,25 @@ def test_get_sesonal_adjusted_mth_change(test_df):
             "weighted": [-3.0, 1.4, -7.4],
         }
     )
+    expected_res_data_3 = pd.DataFrame(
+        {
+            "nar": [
+                "  H - Transport og lagring",
+                "  K - Finansierings- og forsikringsvirks",
+                "    64 - Finansieringsvirksomhet",
+            ],
+            "weight": [35.6, 36.4, 28.1],
+            "season": [92.6, 81.0, 102.1],
+            "season1": [-13.2, -12.4, -7.7],
+            "weighted": [-4.7, -4.5, -2.2],
+        }
+    )
 
     assert seasonal_mnt_change_1.header_1 == expected_header_1
     assert seasonal_mnt_change_1.header_2 == expected_header_2
     pd.testing.assert_frame_equal(seasonal_mnt_change_1.res_data, expected_res_data_1)
     pd.testing.assert_frame_equal(seasonal_mnt_change_2.res_data, expected_res_data_2)
+    pd.testing.assert_frame_equal(seasonal_mnt_change_3.res_data, expected_res_data_3)
 
 
 def test_get_sesonal_adjusted_12_mth_change(test_df):
@@ -230,6 +275,9 @@ def test_get_sesonal_adjusted_12_mth_change(test_df):
     )
     seasonal_12_mnt_change_2 = data.get_sesonal_adjusted_12_mth_change(
         nace_filter=["H", "49.1", "49.2"]
+    )
+    seasonal_12_mnt_change_3 = data.get_sesonal_adjusted_12_mth_change(
+        max_nace_level=1
     )
 
     expected_header_1 = ["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"]
@@ -268,6 +316,20 @@ def test_get_sesonal_adjusted_12_mth_change(test_df):
         }
     )
 
+    expected_res_data_3 = pd.DataFrame(
+        {
+            "nar": [
+                "  H - Transport og lagring",
+                "  K - Finansierings- og forsikringsvirks",
+                "    64 - Finansieringsvirksomhet",
+            ],
+            "weight": [35.6, 36.4, 28.1],
+            "calendar": [94.5, 82.7, 103.4],
+            "calendar1": [-12.9, -19.5, -10.8],
+            "weighted": [-4.6, -7.1, -3.0],
+        }
+    )
+
     assert seasonal_12_mnt_change_1.header_1 == expected_header_1
     assert seasonal_12_mnt_change_1.header_2 == expected_header_2
     pd.testing.assert_frame_equal(
@@ -276,3 +338,11 @@ def test_get_sesonal_adjusted_12_mth_change(test_df):
     pd.testing.assert_frame_equal(
         seasonal_12_mnt_change_2.res_data, expected_res_data_2
     )
+    pd.testing.assert_frame_equal(
+        seasonal_12_mnt_change_3.res_data, expected_res_data_3
+    )
+
+def test_data_manager(mocker, test_df):
+    mocker.patch("pandas.read_parquet", return_value=test_df)
+    class_object = get_data_manager("ignored.parquet")
+    assert isinstance(class_object, DataManager)
