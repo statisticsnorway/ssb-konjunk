@@ -3,7 +3,8 @@ import pandas as pd
 import polars as pl
 import pytest
 
-from ssb_konjunk.dash.calculations.calc_data import DataManager, get_data_manager
+from ssb_konjunk.dash.calculations.calc_data import DataManager
+from ssb_konjunk.dash.calculations.calc_data import get_data_manager
 from ssb_konjunk.dash.calculations.period_utils import Period
 
 
@@ -73,12 +74,12 @@ def test__normalize_weight():
             "weighted": [-4.46, -1.24],
         }
     )
-    
+
     test_table_data, test_weighted = DataManager._normalize_weight(test_table_data)
-    
+
     assert test_table_data["weight"].cast(pl.Float64).sum() == 100
     assert test_weighted["weighted"].to_list() == test_table_data["weighted"].to_list()
-    
+
     test_table_data_fail = pl.DataFrame(
         {
             "nar": ["K", "H"],
@@ -87,11 +88,9 @@ def test__normalize_weight():
             "weighted": [-4.46, -1.24],
         }
     )
-    
-    
+
     with pytest.raises(ValueError):
-            DataManager._normalize_weight(test_table_data_fail)
-    
+        DataManager._normalize_weight(test_table_data_fail)
 
 
 def test_get_all_periods(test_df):
@@ -276,9 +275,7 @@ def test_get_sesonal_adjusted_12_mth_change(test_df):
     seasonal_12_mnt_change_2 = data.get_sesonal_adjusted_12_mth_change(
         nace_filter=["H", "49.1", "49.2"]
     )
-    seasonal_12_mnt_change_3 = data.get_sesonal_adjusted_12_mth_change(
-        max_nace_level=1
-    )
+    seasonal_12_mnt_change_3 = data.get_sesonal_adjusted_12_mth_change(max_nace_level=1)
 
     expected_header_1 = ["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"]
     expected_header_2 = [
@@ -341,6 +338,7 @@ def test_get_sesonal_adjusted_12_mth_change(test_df):
     pd.testing.assert_frame_equal(
         seasonal_12_mnt_change_3.res_data, expected_res_data_3
     )
+
 
 def test_data_manager(mocker, test_df):
     mocker.patch("pandas.read_parquet", return_value=test_df)

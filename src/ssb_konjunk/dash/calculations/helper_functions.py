@@ -394,8 +394,9 @@ def rounded_average(df: pd.DataFrame, ordered_columns: list[str]) -> pd.Series:
     return res.round(1)
 
 
-
-def calc_change_rate(df: pd.DataFrame, ordered_columns: list[str], n: int = 1) -> pd.DataFrame:
+def calc_change_rate(
+    df: pd.DataFrame, ordered_columns: list[str], n: int = 1
+) -> pd.DataFrame:
     """Beregner prosentvis endring mellom kolonner over n perioder.
 
     Args:
@@ -407,6 +408,7 @@ def calc_change_rate(df: pd.DataFrame, ordered_columns: list[str], n: int = 1) -
         pd.DataFrame: Prosentvis endring per rad for hver kolonne (fra n. kolonne og fremover).
     """
     return _percent_change_columns(df, ordered_columns, step=n)
+
 
 def rolling_change_rate(df: pd.DataFrame, step: int = 1) -> pd.DataFrame:
     """Beregner rullende prosentvis endring mellom kolonner med gitt steg.
@@ -421,7 +423,9 @@ def rolling_change_rate(df: pd.DataFrame, step: int = 1) -> pd.DataFrame:
     return _percent_change_columns(df, list(df.columns), step=step)
 
 
-def _percent_change_columns(df: pd.DataFrame, columns: list[str], step: int = 1) -> pd.DataFrame:
+def _percent_change_columns(
+    df: pd.DataFrame, columns: list[str], step: int = 1
+) -> pd.DataFrame:
     """Beregner rullende prosentvis endring mellom kolonner med gitt steg.
 
     Args:
