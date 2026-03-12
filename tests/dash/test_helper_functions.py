@@ -3,7 +3,6 @@ from datetime import datetime
 import polars as pl
 
 from ssb_konjunk.dash.calculations import helper_functions
-from ssb_konjunk.dash.calculations.helper_functions import DataSource
 
 
 def test_monthdelta():
