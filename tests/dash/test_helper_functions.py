@@ -45,16 +45,3 @@ def test_multi_join():
     )
 
     assert result.equals(expected)
-
-
-def test_latest_date(test_df):
-    data = DataSource(
-        pl.from_pandas(test_df).with_columns(
-            pl.col("periode").str.strptime("%Y-%m", datatype=pl.Date, strict=False)
-        ),
-        "periode",
-        "verdi",
-        "nar",
-    )
-    # print(data.latest_date())
-    assert 1 == 0
