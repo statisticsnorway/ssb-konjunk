@@ -1,5 +1,6 @@
-from dash import html
 from ssb_dash_components import Header
+
+from dash import html
 
 
 def header(title: str) -> html.Div:

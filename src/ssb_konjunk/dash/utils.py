@@ -1,10 +1,15 @@
+import shutil
+import tempfile
 from functools import cache
+from pathlib import Path
 from typing import Any
 
+import ssb_konjunk
 from ssb_konjunk.dash.calculations.calc_data import DataManager
 from ssb_konjunk.dash.calculations.calc_data import get_data_manager
 
 _config = None
+
 
 def setup(config: type[Any]) -> None:
     """Setter global konfigurasjon for modulen.
@@ -12,8 +17,6 @@ def setup(config: type[Any]) -> None:
     Args:
         config (type[Config]): Klassen som inneholder konfigurasjonsinnstillinger.
     """
-def setup(config) -> None:
-
     global _config
     _config = config
 
@@ -64,11 +67,10 @@ def dropdown_getter(file: str | None = None) -> list[dict[str, str]]:
     ]
     return dropdown_data
 
-    
+
 @cache
 def get_assets_folder() -> str:
-    """
-    Lager en temp mappe som har assets fra pakken og assets lokalt.
+    """Lager en temp mappe som har assets fra pakken og assets lokalt.
 
     lokale assets overskriver pakke assets.
 
@@ -77,7 +79,7 @@ def get_assets_folder() -> str:
     """
     package_assets = Path(ssb_konjunk.__file__).parent / "dash" / "assets"
     local_assets = Path("dash/assets")
-    
+
     combined = Path(tempfile.mkdtemp(prefix="dash_assets_"))
 
     if package_assets.exists():
@@ -85,5 +87,5 @@ def get_assets_folder() -> str:
 
     if local_assets.exists():
         shutil.copytree(local_assets, combined, dirs_exist_ok=True)
-        
+
     return str(combined)

@@ -1,6 +1,7 @@
+from plotly.graph_objects import Figure
+
 from dash import dcc
 from dash import html
-from plotly.graph_objects import Figure
 
 from .card import Card
 from .indirect import indirect

@@ -1,9 +1,10 @@
+from ssb_dash_components import Dropdown
+
 from dash import Input
 from dash import Output
 from dash import callback
 from dash import dcc
 from dash import html
-from ssb_dash_components import Dropdown
 
 
 class FileSwitcher(html.Div):

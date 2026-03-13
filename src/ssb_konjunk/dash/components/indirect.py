@@ -1,5 +1,6 @@
-from dash import html
 from ssb_dash_components.Glossary import Glossary
+
+from dash import html
 
 
 def indirect(number: float | int) -> html.Div:

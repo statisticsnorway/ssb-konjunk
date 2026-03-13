@@ -4,12 +4,13 @@ from dataclasses import dataclass
 from typing import Any
 
 import pandas as pd
+from ssb_dash_components.Dropdown import Dropdown
+
 from dash import Input
 from dash import Output
 from dash import State
 from dash import callback
 from dash import html
-from ssb_dash_components.Dropdown import Dropdown
 
 from .figure import generate_fig
 from .file_switcher import FileSwitcher
@@ -37,7 +38,7 @@ class ReturnData:
 class Tables:
     """Dataclass to define how a table and graph should be constructed."""
 
-    getter_function: Callable[[str | None, int | None], ReturnData]
+    getter_function: Callable[[str | None, str | None], ReturnData]
     table_header: str
     figure_header: str
 
@@ -130,8 +131,6 @@ class AnalyticsPageAIO(html.Div):  # html.Div will be the "parent" component
                 value = options[0]["id"]
             elif value not in [x["id"] for x in options]:
                 value = options[0]["id"]
-            else:
-                value = value
             return Dropdown(items=options, id=self.ids.dropdown(aio_id), value=value)
 
         @callback(
