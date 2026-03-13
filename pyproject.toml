@@ -29,6 +29,7 @@ dependencies = [
 dash = [
     "dash>=4.0.0",
     "plotly>=6.5.2",
+    "polars>=1.39.0",
     "ssb-dash-components>=0.11.1",
 ]
 
