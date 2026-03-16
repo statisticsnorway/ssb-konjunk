@@ -3,8 +3,6 @@ from datetime import datetime
 import polars as pl
 
 from ssb_konjunk.dash.calculations import helper_functions
-from ssb_konjunk.dash.calculations.helper_functions import DataSource
-from ssb_konjunk.dash.calculations.calc_data import DataManager
 
 
 def test_monthdelta():
@@ -46,50 +44,62 @@ def test_multi_join():
     )
 
     assert result.equals(expected)
-    
+
+
 def test_DataSource_init(test_df_datasource):
-    
+
     assert test_df_datasource._date is not None
     assert test_df_datasource._col is not None
     assert test_df_datasource._group is not None
     assert test_df_datasource._avg is not None
     assert test_df_datasource._dt_out_format is not None
 
+
 def test_latest_date(test_df_datasource):
     test = test_df_datasource.latest_date()
     assert test == datetime(2024, 12, 1)
 
-def test_percent_change(test_df_datasource): 
-    df = pl.DataFrame({
-        "s1": [110, 200, 300],
-        "s2": [100, 150, 250],
-    })
-    
-    expected = pl.DataFrame({
-        "pct": [10.0, 33.333333, 20.0]
-    })
 
-    result  = df.select(
-        pct = test_df_datasource._percent_change(pl.col("s1"), pl.col("s2"))
+def test_percent_change(test_df_datasource):
+    df = pl.DataFrame(
+        {
+            "s1": [110, 200, 300],
+            "s2": [100, 150, 250],
+        }
     )
-    assert result.select(pl.all().round(6)).equals(
-        expected.select(pl.all().round(6))
+
+    expected = pl.DataFrame({"pct": [10.0, 33.333333, 20.0]})
+
+    result = df.select(
+        pct=test_df_datasource._percent_change(pl.col("s1"), pl.col("s2"))
     )
+    assert result.select(pl.all().round(6)).equals(expected.select(pl.all().round(6)))
+
 
 def test_create_date(test_df_datasource):
     expected = [
-            "Jan 2024", "Feb 2024", "Mar 2024", "Apr 2024",
-            "May 2024", "Jun 2024", "Jul 2024", "Aug 2024",
-            "Sep 2024", "Oct 2024", "Nov 2024", "Dec 2024"
+        "Jan 2024",
+        "Feb 2024",
+        "Mar 2024",
+        "Apr 2024",
+        "May 2024",
+        "Jun 2024",
+        "Jul 2024",
+        "Aug 2024",
+        "Sep 2024",
+        "Oct 2024",
+        "Nov 2024",
+        "Dec 2024",
     ]
     for i, exp in enumerate(expected, start=1):
         result = test_df_datasource._create_date(datetime(2024, i, 1))
         assert result == exp
- 
+
+
 def test_gen_header(test_df_datasource):
     header_1 = test_df_datasource._gen_header(1)
     header_3 = test_df_datasource._gen_header(3)
     header_12 = test_df_datasource._gen_header(12)
-    assert header_1 == 'Nov 2024 - Dec 2024'
-    assert header_3 == 'Sep 2024 - Dec 2024'
-    assert header_12 == 'Dec 2023 - Dec 2024'
+    assert header_1 == "Nov 2024 - Dec 2024"
+    assert header_3 == "Sep 2024 - Dec 2024"
+    assert header_12 == "Dec 2023 - Dec 2024"

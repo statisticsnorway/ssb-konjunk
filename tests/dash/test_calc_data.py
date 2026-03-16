@@ -1,6 +1,6 @@
+import numpy as np
 import pandas as pd
 import polars as pl
-import numpy as np
 import pytest
 
 from ssb_konjunk.dash.calculations.calc_data import DataManager
