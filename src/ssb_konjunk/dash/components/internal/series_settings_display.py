@@ -1,73 +1,109 @@
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 
-from dash import ALL, html, Input, callback, Output, State, dcc, ctx
-from ssb_dash_components import Dropdown, DropdownMultiple
+from ssb_dash_components import Dropdown
+from ssb_dash_components import DropdownMultiple
 
+from dash import ALL
+from dash import Input
+from dash import Output
+from dash import State
+from dash import callback
+from dash import ctx
+from dash import dcc
+from dash import html
+
+from .data_source import GenVisData
 from .loading_test import DatasetConfig
-from .data_source import DataSource
 
 
 @dataclass
 class SeriesSetting:
-    """A simple class for adding typing to the ids. Easier to work with"""
+    """A simple class for adding typing to the ids. Easier to work with."""
+
     path: str
     dataset: str
     col: str
     groupby: list[str] = field(default_factory=list)
     aggregation: str | None = field(default=None)
 
-    def hash(self):
+    def hash(self) -> int:
+        """Returnerer hash av objektets attributter."""
         return hash(self.__dict__)
 
-    def dict(self):
+    def dict(self) -> int:
+        """Returnerer objektets attributter som en dict."""
         return self.__dict__
 
 
 class SeriesSettingsDisplay(html.Div):
+    """The class handles its own global state.
+
+    This is the state that is passed to components downstream.
     """
-    The class handles its own global state. 
-    This is the state that is passed to components downstream
-    """
+
     class ids:
-        store = lambda aio_id: {
-            "component": "SeriesDisplay",
-            "subcomponent": "store",
-            "aio_id": aio_id,
-        }
-        settings_store = lambda aio_id: {
-            "component": "SeriesDisplay",
-            "subcomponent": "settings-store",
-            "aio_id": aio_id,
-        }
-        settings_display = lambda aio_id: {
-            "component": "SeriesDisplay",
-            "subcomponent": "settings-display",
-            "aio_id": aio_id,
-        }
-        aggregation_settings = lambda aio_id, path, dataset, col: {
-            "component": "SeriesDisplay",
-            "subcomponent": "aggregation-settings",
-            "aio_id": aio_id,
-            "dataset": dataset,
-            "path": path,
-            "col": col,
-        }
-        groupby_settings = lambda aio_id, path, dataset, col: {
-            "component": "SeriesDisplay",
-            "subcomponent": "groupby-settings",
-            "aio_id": aio_id,
-            "dataset": dataset,
-            "path": path,
-            "col": col,
-        }
+        """Generates standardized IDs for the SeriesSettingsDisplay component."""
 
-    # Make the ids class a public class
-    ids = ids
+        @staticmethod
+        def store(aio_id: str) -> dict:
+            """ID for the main store of the SeriesDisplay."""
+            return {
+                "component": "SeriesDisplay",
+                "subcomponent": "store",
+                "aio_id": aio_id,
+            }
 
-    def __init__(self, datasets: dict[str, DatasetConfig], aio_id: None | str = None):
-        """
-        Expects the datasets.
+        @staticmethod
+        def settings_store(aio_id: str) -> dict:
+            """ID for the settings store of the SeriesDisplay."""
+            return {
+                "component": "SeriesDisplay",
+                "subcomponent": "settings-store",
+                "aio_id": aio_id,
+            }
+
+        @staticmethod
+        def settings_display(aio_id: str) -> dict:
+            """ID for the settings display component."""
+            return {
+                "component": "SeriesDisplay",
+                "subcomponent": "settings-display",
+                "aio_id": aio_id,
+            }
+
+        @staticmethod
+        def aggregation_settings(
+            aio_id: str, path: str, dataset: str, col: str
+        ) -> dict:
+            """ID for an aggregation settings component."""
+            return {
+                "component": "SeriesDisplay",
+                "subcomponent": "aggregation-settings",
+                "aio_id": aio_id,
+                "dataset": dataset,
+                "path": path,
+                "col": col,
+            }
+
+        @staticmethod
+        def groupby_settings(aio_id: str, path: str, dataset: str, col: str) -> dict:
+            """ID for a groupby settings component."""
+            return {
+                "component": "SeriesDisplay",
+                "subcomponent": "groupby-settings",
+                "aio_id": aio_id,
+                "dataset": dataset,
+                "path": path,
+                "col": col,
+            }
+
+    def __init__(
+        self, datasets: dict[str, DatasetConfig], aio_id: None | str = None
+    ) -> None:
+        """Expects the datasets.
+
         Can provide an aio_id if necessary.
         """
         if aio_id is None:
@@ -124,7 +160,7 @@ class SeriesSettingsDisplay(html.Div):
 
                 data_src = datasets.get(dataset)
                 if data_src:
-                    src = DataSource(path, data_src.index_col, data_src.index_pattern)
+                    src = GenVisData(path, data_src.index_col, data_src.index_pattern)
                     groupby_dropdown = None
                     if data_src.groupby_col:
                         groupbys = src.get_unique_groupby(data_src.groupby_col)
@@ -176,7 +212,12 @@ class SeriesSettingsDisplay(html.Div):
             State(self.ids.store(aio_id), "data"),
         )
         def update_groupby_settings(
-            values, ids, agg_ids, agg_settings, current_state, input_data
+            values: list[str],
+            ids: list[dict[str]],
+            agg_ids: list[dict[str]],
+            agg_settings: list[str] | None,
+            current_state: list[dict[str]],
+            input_data: dict[str, DatasetConfig],
         ):
             # Callback that handles the global state of the component
             curr_state: list[SeriesSetting] = []
@@ -185,7 +226,7 @@ class SeriesSettingsDisplay(html.Div):
             # files to the state
             for item in input_data:
                 for data in current_state:
-                    if isinstance(data, dict) != True:
+                    if not isinstance(data, dict):
                         continue
                     if (
                         (data["path"] == item["path"])
@@ -204,7 +245,7 @@ class SeriesSettingsDisplay(html.Div):
                 return [item.dict() for item in curr_state]
 
             triggered: dict | None = ctx.triggered_id
-            if (triggered is None) or isinstance(triggered, dict) != True:
+            if (triggered is None) or not isinstance(triggered, dict):
                 return [item.dict() for item in curr_state]
 
             path = triggered.get("path")
@@ -212,8 +253,8 @@ class SeriesSettingsDisplay(html.Div):
             col = triggered.get("col")
 
             # Handles groupby settings
-            for id, item in zip(ids, values):
-                if id == ctx.triggered_id:
+            for item_id, item in zip(ids, values, strict=True):
+                if item_id == ctx.triggered_id:
                     for idx, val in enumerate(curr_state):
                         if (
                             (val.col == col)
@@ -223,10 +264,10 @@ class SeriesSettingsDisplay(html.Div):
                             curr_state[idx].groupby = item
                             break
                     break
-            
+
             # Handles aggregation settings
-            for id, item in zip(agg_ids, agg_settings):
-                if id == ctx.triggered_id:
+            for item_id, item in zip(agg_ids, agg_settings, strict=True):
+                if item_id == ctx.triggered_id:
                     for idx, val in enumerate(curr_state):
                         if (
                             (val.col == col)

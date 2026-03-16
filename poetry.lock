@@ -4746,9 +4746,9 @@ test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more_it
 type = ["pytest-mypy"]
 
 [extras]
-dash = ["dash", "plotly", "ssb-dash-components"]
+dash = ["dash", "plotly", "polars", "ssb-dash-components"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "e635f14cde2f25411b394f08482c442ccd0833aed24fb119afb711dec591fe1a"
+content-hash = "caba2efb1b139eedbbb1f1594d4144d4723da3edfcc62202ec25d7ca79fb8221"

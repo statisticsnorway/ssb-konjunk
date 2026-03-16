@@ -1,16 +1,19 @@
-from typing import Literal
-from itertools import cycle
-
 import uuid
+from itertools import cycle
+from typing import Literal
 
 import plotly.graph_objects as go
-
-from dash import html, dcc, callback, Input, Output, State
-
 import polars as pl
+from helper_functions import GenVisData
+
+from dash import Input
+from dash import Output
+from dash import State
+from dash import callback
+from dash import dcc
+from dash import html
 
 from .loading_test import DatasetConfig
-from .data_source import DataSource
 
 GRAPH_COLORS = [
     "#1A9D49",
@@ -27,34 +30,46 @@ GRAPH_COLORS = [
 
 
 class GraphDisplay(html.Div):
-    """
-    The class handles its own global state.
-    This is the state that is passed to components downstream
+    """The class handles its own global state.
+
+    This is the state that is passed to components downstream.
     """
 
     class ids:
-        series_store = lambda aio_id: {
-            "component": "GraphDisplay",
-            "subcomponent": "series-store",
-            "aio_id": aio_id,
-        }
-        settings_store = lambda aio_id: {
-            "component": "GraphDisplay",
-            "subcomponent": "settings-store",
-            "aio_id": aio_id,
-        }
-        graph = lambda aio_id: {
-            "component": "GraphDisplay",
-            "subcomponent": "graph",
-            "aio_id": aio_id,
-        }
+        """Generates standardized IDs for the GraphDisplay component."""
 
-    # Make the ids class a public class
-    ids = ids
+        @staticmethod
+        def series_store(aio_id: str) -> dict:
+            """ID for the series store subcomponent."""
+            return {
+                "component": "GraphDisplay",
+                "subcomponent": "series-store",
+                "aio_id": aio_id,
+            }
 
-    def __init__(self, datasets: dict[str, DatasetConfig], aio_id: None | str = None):
-        """
-        Expects the datasets.
+        @staticmethod
+        def settings_store(aio_id: str) -> dict:
+            """ID for the settings store subcomponent."""
+            return {
+                "component": "GraphDisplay",
+                "subcomponent": "settings-store",
+                "aio_id": aio_id,
+            }
+
+        @staticmethod
+        def graph(aio_id: str) -> dict:
+            """ID for the graph subcomponent."""
+            return {
+                "component": "GraphDisplay",
+                "subcomponent": "graph",
+                "aio_id": aio_id,
+            }
+
+    def __init__(
+        self, datasets: dict[str, DatasetConfig], aio_id: None | str = None
+    ) -> None:
+        """Expects the datasets.
+
         Can provide an aio_id if necessary.
         """
         if aio_id is None:
@@ -80,9 +95,9 @@ class GraphDisplay(html.Div):
             State(self.ids.graph(aio_id), "figure"),
         )
         def change_graph(
-            series_data,
+            series_data: list[dict[str]],
             settings: dict[str, str | Literal["none", "discrete"]],
-            old_fig,
+            old_fig: dict[str],
         ):
             # Callback that updates the graph based on changed series settings or
             # graph settings
@@ -100,7 +115,7 @@ class GraphDisplay(html.Div):
             # Cycle for colors to alternative between allowed colors
             GRAPH_CYCLE = cycle(GRAPH_COLORS)
 
-            if series_data == None:
+            if series_data is None:
                 return fig
 
             for item in series_data:
@@ -112,7 +127,7 @@ class GraphDisplay(html.Div):
                 # Shortens filepaths for displaying
                 short_filename = "/".join(filename.split("/")[-2:])
                 dataset_config = datasets[dataset]
-                dataset = DataSource(
+                dataset = GenVisData(
                     filename, dataset_config.index_col, dataset_config.index_pattern
                 )
 
@@ -177,9 +192,9 @@ class GraphDisplay(html.Div):
                 selected_time_config["autorange"] = old_fig["layout"]["xaxis"][
                     "autorange"
                 ]
-            except:
+            except Exception:
                 pass
-            
+
             # Creates shortcuts for selecting timeframes
             fig.update_layout(
                 xaxis=dict(

@@ -1,70 +1,90 @@
 import uuid
 
-from dash import (
-    State,
-    html,
-    Input,
-    Output,
-    callback,
-    dcc,
-    ALL,
-    ctx,
-    clientside_callback,
-)
-from ssb_dash_components import Tabs, Checkbox, Input as SSBInput
+from ssb_dash_components import Checkbox
+from ssb_dash_components import Input as SSBInput
+from ssb_dash_components import Tabs
+
+from dash import ALL
+from dash import Input
+from dash import Output
+from dash import State
+from dash import callback
+from dash import clientside_callback
+from dash import ctx
+from dash import dcc
+from dash import html
 
 from .loading_test import DatasetConfig
 
 
 class TabSelector(html.Div):
-    """
-    The class handles its own global state. 
-    This is the state that is passed to components downstream
-    """
-    class ids:
-        tabs = lambda aio_id: {
-            "component": "TabSelector",
-            "subcomponent": "tabs",
-            "aio_id": aio_id,
-        }
-        checklist_container = lambda aio_id: {
-            "component": "TabSelector",
-            "subcomponent": "checklist-container",
-            "aio_id": aio_id,
-        }
-        checklist_item = lambda aio_id, path, random: {
-            "component": "TabSelector",
-            "subcomponent": "checklist_item",
-            "path": path,
-            "aio_id": aio_id,
-            "random": random,  # Denne må beholdes siden den brukes for søkefunksjonaliteten i Javascript
-        }
-        store = lambda aio_id: {
-            "component": "TabSelector",
-            "subcomponent": "store",
-            "aio_id": aio_id,
-        }
-        search = lambda aio_id: {
-            "component": "TabSelector",
-            "subcomponent": "input",
-            "aio_id": aio_id,
-        }
+    """The class handles its own global state.
 
-    # Make the ids class a public class
-    ids = ids
+    This is the state that is passed to components downstream.
+    """
+
+    class ids:
+        """Generates standardized IDs for the TabSelector component."""
+
+        @staticmethod
+        def tabs(aio_id: str) -> dict:
+            """ID for the tabs subcomponent."""
+            return {
+                "component": "TabSelector",
+                "subcomponent": "tabs",
+                "aio_id": aio_id,
+            }
+
+        @staticmethod
+        def checklist_container(aio_id: str) -> dict:
+            """ID for the checklist-container subcomponent."""
+            return {
+                "component": "TabSelector",
+                "subcomponent": "checklist-container",
+                "aio_id": aio_id,
+            }
+
+        @staticmethod
+        def checklist_item(aio_id: str, path: str, random: str) -> dict:
+            """ID for a checklist item, including path and random key for JS search."""
+            return {
+                "component": "TabSelector",
+                "subcomponent": "checklist_item",
+                "path": path,
+                "aio_id": aio_id,
+                "random": random,  # Required for JS search functionality
+            }
+
+        @staticmethod
+        def store(aio_id: str) -> dict:
+            """ID for the store subcomponent."""
+            return {
+                "component": "TabSelector",
+                "subcomponent": "store",
+                "aio_id": aio_id,
+            }
+
+        @staticmethod
+        def search(aio_id: str) -> dict:
+            """ID for the input/search subcomponent."""
+            return {
+                "component": "TabSelector",
+                "subcomponent": "input",
+                "aio_id": aio_id,
+            }
 
     def __init__(
         self,
         datasets: dict[str, DatasetConfig],
         aio_id: None | str = None,
         height: str = "300px",
-    ):
-        """
-        Expects the datasets.
+    ) -> None:
+        """Expects the datasets.
+
         Can provide an aio_id if necessary.
-        Height can be provided, but the default value works well for most screen sizes. 
+        Height can be provided, but the default value works well for most screen sizes.
         """
-        #TODO: Replace height with a more sensible setting.
+        # TODO: Replace height with a more sensible setting.
         if aio_id is None:
             aio_id = str(uuid.uuid4())
 
@@ -95,11 +115,11 @@ class TabSelector(html.Div):
         # Each checkbox has a random id. The callback uses a regex to search for that partial id
         # since object ids are complicated in dash.
         # The callback just hides items that does not match the search
-        # Errors are ignored but logged to the console.  
+        # Errors are ignored but logged to the console.
         clientside_callback(
             r"""
             function(searchVal, currState, labels, ids) {
-                if (searchVal) {                    
+                if (searchVal) {
                     for (let i = 0; i < currState.length; i++) {
                         let unique = ids[i].random;
                         try {
@@ -113,10 +133,10 @@ class TabSelector(html.Div):
                             // Code to handle the error
                             console.error("An error occurred: ", error.message);
                         }
-                        
+
                     }
                 }
-                
+
                 return window.dash_clientside.no_update;;
             }
             """,
@@ -132,7 +152,7 @@ class TabSelector(html.Div):
             Input(self.ids.tabs(aio_id), "active"),
             State(self.ids.store(aio_id), "data"),
         )
-        def update_tabs(selected, checked_files):
+        def update_tabs(selected: str, checked_files: list[dict[str]]):
             # Updates which tabs are displayed in the data selector.
             dataset_list = datasets.get(selected)
             children = []
@@ -159,7 +179,12 @@ class TabSelector(html.Div):
             State(self.ids.tabs(aio_id), "active"),
             prevent_initial_call=True,
         )
-        def update_checked(checked, ids, current_state, selected_tab):
+        def update_checked(
+            checked: list[dict[str]],
+            ids: list[dict],
+            current_state: list[dict],
+            selected_tab: str | None,
+        ):
             # Callback that updates a store that keeps track of which checkboxes are checked.
             # This persists the state when the tab selector is rerendered, but not between
             # refreshes
@@ -178,9 +203,9 @@ class TabSelector(html.Div):
             if isinstance(triggered, dict):
                 path = triggered.get("path")
                 if path:
-                    for val, id in zip(checked, ids):
-                        if (id is not None) and (id["path"] == path):
-                            if val == False:
+                    for val, item_id in zip(checked, ids, strict=True):
+                        if (item_id is not None) and (item_id["path"] == path):
+                            if not val:
                                 current_state = [
                                     item
                                     for item in current_state
