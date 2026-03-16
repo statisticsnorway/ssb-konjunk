@@ -73,9 +73,6 @@ class TabSelector(html.Div):
                 "aio_id": aio_id,
             }
 
-    # Make the ids class a public class
-    ids = ids
-
     def __init__(
         self,
         datasets: dict[str, DatasetConfig],

@@ -59,9 +59,6 @@ class GraphSettingsDisplay(html.Div):
                 "aio_id": aio_id,
             }
 
-    # Make the ids class a public class
-    ids = ids
-
     def __init__(self, aio_id: None | str = None) -> None:
         """Can provide an aio_id if necessary."""
         if aio_id is None:

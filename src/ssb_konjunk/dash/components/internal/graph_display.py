@@ -65,9 +65,6 @@ class GraphDisplay(html.Div):
                 "aio_id": aio_id,
             }
 
-    # Make the ids class a public class
-    ids = ids
-
     def __init__(
         self, datasets: dict[str, DatasetConfig], aio_id: None | str = None
     ) -> None:
