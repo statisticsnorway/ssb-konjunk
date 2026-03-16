@@ -36,16 +36,12 @@ def load_datasets(config_path: str) -> dict[str, DatasetConfig]:
     JSON-filen forventes å inneholde et objekt der hver nøkkel representerer
     et datasett, og verdien inneholder parameterne til `DatasetConfig`.
 
-    Parameters
-    ----------
-    config_path : str
-        Filsti til JSON-konfigurasjonen.
+    Args:
+        config_path (str): Filsti til JSON-konfigurasjonen.
 
     Returns:
-    -------
-    dict[str, DatasetConfig]
-        Ordbok der nøkkelen er datasettnavnet og verdien er en
-        `DatasetConfig`-instans.
+        dict[str, DatasetConfig]: Ordbok der nøkkelen er datasettnavnet og verdien
+        er en `DatasetConfig`-instans.
     """
     data: dict = json.load(open(config_path))
     datasets: dict[str, DatasetConfig] = {}
