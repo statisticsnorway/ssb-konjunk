@@ -147,7 +147,7 @@ class DataSource:
             **named_aggs: Navngitte aggregasjonsoperasjoner.
 
         Returns:
-            pl.DataFrame: Et eksplodert DataFrame med grupperte og aggregerte verdier.
+            pl.DataFrame: En DataFrame med grupperte og aggregerte verdier.
         """
         return (
             self.data.group_by_dynamic(

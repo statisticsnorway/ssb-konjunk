@@ -1,6 +1,6 @@
-import numpy as np
 import pandas as pd
 import polars as pl
+import numpy as np
 import pytest
 
 from ssb_konjunk.dash.calculations.calc_data import DataManager
@@ -64,7 +64,7 @@ def test_sort_aggregates():
     assert sorted_series == [5, 3, 1, 0, 2]
 
 
-def test__normalize_weight():
+def test_normalize_weight():
     test_table_data = pl.DataFrame(
         {
             "nar": ["K", "H"],
@@ -108,7 +108,7 @@ def test_format_aggregates(test_df):
     assert nace_data_formated == expected
 
 
-def test__prep_skip(test_df):
+def test_prep_skip(test_df):
     data = DataManager(test_df)
     prep_skip = data._prep_skip("2023-06")
     assert prep_skip == 18

@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
+import polars as pl
 import pytest
-
+from ssb_konjunk.dash.calculations.helper_functions import DataSource
 
 @pytest.fixture
 def test_df():
@@ -25,3 +26,15 @@ def test_df():
             )
 
     return pd.DataFrame(rows)
+
+@pytest.fixture
+def test_df_datasource(test_df):
+    polars_data = pl.from_pandas(test_df)
+    polars_data = polars_data.with_columns(
+            ujust=pl.col("ujust").cast(pl.Float64),
+            jus=pl.col("jus").cast(pl.Float64),
+            korr=pl.col("korr").cast(pl.Float64),
+            periode=pl.col("periode").str.strptime(pl.Date, "%Y-%m", strict=False),
+        )
+    return DataSource(polars_data, "periode", "jus", "nar")
+    
