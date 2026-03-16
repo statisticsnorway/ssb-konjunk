@@ -8,12 +8,13 @@ from .loading_test import AGG_TYPES
 
 class GenVisData:
     """Representerer en datakilde tilrettelagt for tidsbasert analyse og gruppering."""
+
     def __init__(self, filename: str, index_col: str, date_pattern: str) -> None:
         """Representerer en datakilde tilrettelagt for tidsbasert analyse og gruppering.
 
         Klassen leser et datasett fra en Parquet-fil og oppretter en standardisert
         datokolonne (`dt`) basert på en eksisterende kolonne. Den tilbyr metoder for:
-    
+
         - filtrering på datointervall
         - uthenting av unike datoer eller grupperingsverdier
         - filtrering av delmengder basert på grupper
@@ -30,7 +31,7 @@ class GenVisData:
         Args:
             lower: Nedre datogrense (inkludert).
             highest: Øvre datogrense (inkludert).
-    
+
         Returns:
             pl.DataFrame: Datasett filtrert til angitt datointervall.
         """
@@ -49,7 +50,7 @@ class GenVisData:
 
         Args:
             groupby_col: Navn på kolonnen.
-    
+
         Returns:
             list: Liste med unike verdier i kolonnen.
         """
@@ -61,7 +62,7 @@ class GenVisData:
         Args:
             groupby_col: Kolonnen det filtreres på.
             filter_val: Verdien kolonnen må være lik.
-    
+
         Returns:
             pl.DataFrame: Filtrert datasett.
         """
@@ -76,17 +77,17 @@ class GenVisData:
         agg_type: AGG_TYPES,
     ) -> pl.DataFrame:
         """Setter et basisår for en kolonne slik at nivået i basisåret blir 100.
-    
+
         Indeksfaktoren beregnes fra verdiene i det angitte året. Avhengig av
         metode og aggregering brukes enten gjennomsnitt eller sum.
-    
+
         Args:
             data: Datasettet som skal indekseres.
             year: Året som skal brukes som basisår.
             col: Kolonnen som skal indekseres.
             method: Metode for beregning av indeksfaktor.
             agg_type: Aggregeringstype brukt ved beregning av indeksfaktor.
-    
+
         Returns:
             pl.DataFrame: Datasettet der kolonnen er omregnet til en indeks
             med basisår = 100.
@@ -123,7 +124,7 @@ class GenVisData:
 
         Metoden beregner en indeks slik at verdinivået i basisåret blir 100.
         Hvis `group_col` er satt, beregnes indeksen separat for hver gruppe.
-    
+
         Args:
             data: Datasettet som skal indekseres.
             year: Året som skal brukes som basisår.
@@ -131,7 +132,7 @@ class GenVisData:
             group_col: Kolonne brukt til gruppering. Hvis None brukes hele datasettet.
             method: Metode for beregning av indeksfaktor.
             agg_mapping: Aggregeringstype eller mapping fra kolonnenavn til aggregeringstype.
-    
+
         Returns:
             pl.DataFrame: Datasettet med kolonnen omregnet til indeks med basisår = 100.
         """

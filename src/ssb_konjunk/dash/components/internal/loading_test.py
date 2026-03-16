@@ -17,6 +17,7 @@ class DatasetConfig:
     som representerer tidsindeks, samt hvordan data eventuelt skal grupperes
     og aggregeres.
     """
+
     glob_pattern: str
     index_col: str
     index_pattern: str

@@ -18,12 +18,13 @@ from .loading_test import DatasetConfig
 
 class SeriesSelector(html.Div):
     """The class handles its own global state.
-    
+
     This is the state that is passed to components downstream.
     """
 
     class ids:
         """Generates standardized IDs for the SeriesSelector component."""
+
         @staticmethod
         def store(aio_id: str) -> dict:
             """ID for the main store subcomponent."""
@@ -32,7 +33,7 @@ class SeriesSelector(html.Div):
                 "subcomponent": "store",
                 "aio_id": aio_id,
             }
-    
+
         @staticmethod
         def selected_store(aio_id: str) -> dict:
             """ID for the selected_store subcomponent."""
@@ -41,7 +42,7 @@ class SeriesSelector(html.Div):
                 "subcomponent": "selected_store",
                 "aio_id": aio_id,
             }
-    
+
         @staticmethod
         def selector_container(aio_id: str) -> dict:
             """ID for the selector-container subcomponent."""
@@ -50,7 +51,7 @@ class SeriesSelector(html.Div):
                 "subcomponent": "selector-container",
                 "aio_id": aio_id,
             }
-    
+
         @staticmethod
         def checkbox(aio_id: str, path: str, col: str, dataset: str) -> dict:
             """ID for a checkbox subcomponent, with dataset and column context."""
@@ -63,9 +64,11 @@ class SeriesSelector(html.Div):
                 "dataset": dataset,
             }
 
-    def __init__(self, datasets: dict[str, DatasetConfig], aio_id: None | str = None) -> None:
+    def __init__(
+        self, datasets: dict[str, DatasetConfig], aio_id: None | str = None
+    ) -> None:
         """Expects the datasets.
-        
+
         Can provide an aio_id if necessary.
         """
         if aio_id is None:

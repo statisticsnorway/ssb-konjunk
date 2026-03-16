@@ -16,12 +16,13 @@ from dash import html
 
 class GraphSettingsDisplay(html.Div):
     """The class handles its own global state.
-    
+
     This is the state that is passed to components downstream.
     """
 
     class ids:
         """Generates standardized IDs for the GraphSettingsDisplay component."""
+
         @staticmethod
         def settings_store(aio_id: str) -> dict:
             """ID for the settings store subcomponent."""
@@ -30,7 +31,7 @@ class GraphSettingsDisplay(html.Div):
                 "subcomponent": "settings-store",
                 "aio_id": aio_id,
             }
-    
+
         @staticmethod
         def frequency(aio_id: str) -> dict:
             """ID for the frequency subcomponent."""
@@ -39,7 +40,7 @@ class GraphSettingsDisplay(html.Div):
                 "subcomponent": "frequency",
                 "aio_id": aio_id,
             }
-    
+
         @staticmethod
         def convert_dropdown(aio_id: str) -> dict:
             """ID for the convert-dropdown subcomponent."""
@@ -48,7 +49,7 @@ class GraphSettingsDisplay(html.Div):
                 "subcomponent": "convert-dropdown",
                 "aio_id": aio_id,
             }
-    
+
         @staticmethod
         def base_year(aio_id: str) -> dict:
             """ID for the base-year subcomponent."""

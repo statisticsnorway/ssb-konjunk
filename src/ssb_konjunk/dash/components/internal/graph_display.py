@@ -31,12 +31,13 @@ GRAPH_COLORS = [
 
 class GraphDisplay(html.Div):
     """The class handles its own global state.
-    
+
     This is the state that is passed to components downstream.
     """
 
     class ids:
         """Generates standardized IDs for the GraphDisplay component."""
+
         @staticmethod
         def series_store(aio_id: str) -> dict:
             """ID for the series store subcomponent."""
@@ -63,12 +64,15 @@ class GraphDisplay(html.Div):
                 "subcomponent": "graph",
                 "aio_id": aio_id,
             }
+
     # Make the ids class a public class
     ids = ids
 
-    def __init__(self, datasets: dict[str, DatasetConfig], aio_id: None | str = None) -> None:
+    def __init__(
+        self, datasets: dict[str, DatasetConfig], aio_id: None | str = None
+    ) -> None:
         """Expects the datasets.
-        
+
         Can provide an aio_id if necessary.
         """
         if aio_id is None:
