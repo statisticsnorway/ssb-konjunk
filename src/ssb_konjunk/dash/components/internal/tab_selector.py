@@ -1,26 +1,27 @@
 import uuid
 
-from dash import (
-    State,
-    html,
-    Input,
-    Output,
-    callback,
-    dcc,
-    ALL,
-    ctx,
-    clientside_callback,
-)
-from ssb_dash_components import Tabs, Checkbox, Input as SSBInput
+from ssb_dash_components import Checkbox
+from ssb_dash_components import Input as SSBInput
+from ssb_dash_components import Tabs
+
+from dash import ALL
+from dash import Input
+from dash import Output
+from dash import State
+from dash import callback
+from dash import clientside_callback
+from dash import ctx
+from dash import dcc
+from dash import html
 
 from .loading_test import DatasetConfig
 
 
 class TabSelector(html.Div):
-    """
-    The class handles its own global state. 
+    """The class handles its own global state.
     This is the state that is passed to components downstream
     """
+
     class ids:
         tabs = lambda aio_id: {
             "component": "TabSelector",
@@ -59,12 +60,11 @@ class TabSelector(html.Div):
         aio_id: None | str = None,
         height: str = "300px",
     ):
-        """
-        Expects the datasets.
+        """Expects the datasets.
         Can provide an aio_id if necessary.
-        Height can be provided, but the default value works well for most screen sizes. 
+        Height can be provided, but the default value works well for most screen sizes.
         """
-        #TODO: Replace height with a more sensible setting.
+        # TODO: Replace height with a more sensible setting.
         if aio_id is None:
             aio_id = str(uuid.uuid4())
 
@@ -95,11 +95,11 @@ class TabSelector(html.Div):
         # Each checkbox has a random id. The callback uses a regex to search for that partial id
         # since object ids are complicated in dash.
         # The callback just hides items that does not match the search
-        # Errors are ignored but logged to the console.  
+        # Errors are ignored but logged to the console.
         clientside_callback(
             r"""
             function(searchVal, currState, labels, ids) {
-                if (searchVal) {                    
+                if (searchVal) {
                     for (let i = 0; i < currState.length; i++) {
                         let unique = ids[i].random;
                         try {
@@ -113,10 +113,10 @@ class TabSelector(html.Div):
                             // Code to handle the error
                             console.error("An error occurred: ", error.message);
                         }
-                        
+
                     }
                 }
-                
+
                 return window.dash_clientside.no_update;;
             }
             """,

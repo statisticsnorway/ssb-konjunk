@@ -4,7 +4,7 @@ This module provides a dash all-in-one component that are intended to replace
 some functions of myfame for generic visualizations.
 It will only work in SSBs-developer environments.
 
-The module expects the path to JSON-configuration file. 
+The module expects the path to JSON-configuration file.
 
 "dataset_1": {
         "glob_pattern": "glob/to/files/*.parquet",
@@ -35,23 +35,22 @@ Example:
 
 import uuid
 
-from dash import (
-    Input,
-    Output,
-    callback,
-    html,
-)
-
 from ssb_dash_components import Button
 
-from .internal.loading_test import load_datasets
-from .internal.tab_selector import TabSelector
-from .internal.series_selector import SeriesSelector
-from .internal.series_settings_display import SeriesSettingsDisplay
+from dash import Input
+from dash import Output
+from dash import callback
+from dash import html
+
 from .internal.graph_display import GraphDisplay
 from .internal.graph_settings_display import GraphSettingsDisplay
+from .internal.loading_test import load_datasets
+from .internal.series_selector import SeriesSelector
+from .internal.series_settings_display import SeriesSettingsDisplay
+from .internal.tab_selector import TabSelector
 
-class GenVis(html.Div): 
+
+class GenVis(html.Div):
 
     class ids:
         dropdown = lambda aio_id: {
@@ -70,8 +69,7 @@ class GenVis(html.Div):
 
     # Define the arguments of the All-in-One component
     def __init__(self, config_path: str, aio_id=None):
-        """
-        Returns a component that can be used as its own page or as a component in other layouts.
+        """Returns a component that can be used as its own page or as a component in other layouts.
 
         Args:
             config_path (str): Path to the config file.
@@ -100,7 +98,9 @@ class GenVis(html.Div):
                                     ],
                                 ),
                                 html.Div(
-                                    TabSelector(datasets, aio_id=aio_id, height="200px"),
+                                    TabSelector(
+                                        datasets, aio_id=aio_id, height="200px"
+                                    ),
                                 ),
                             ],
                         ),

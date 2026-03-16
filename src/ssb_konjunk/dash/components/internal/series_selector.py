@@ -1,17 +1,26 @@
 import uuid
 
-from dash import html, dcc, callback, Input, Output, ALL, ctx, State
-from ssb_dash_components import Accordion, Checkbox
-
 import polars as pl
+from ssb_dash_components import Accordion
+from ssb_dash_components import Checkbox
+
+from dash import ALL
+from dash import Input
+from dash import Output
+from dash import State
+from dash import callback
+from dash import ctx
+from dash import dcc
+from dash import html
 
 from .loading_test import DatasetConfig
 
+
 class SeriesSelector(html.Div):
-    """
-    The class handles its own global state. 
+    """The class handles its own global state.
     This is the state that is passed to components downstream
     """
+
     class ids:
         store = lambda aio_id: {
             "component": "SeriesSelector",
@@ -38,8 +47,7 @@ class SeriesSelector(html.Div):
         }
 
     def __init__(self, datasets: dict[str, DatasetConfig], aio_id: None | str = None):
-        """
-        Expects the datasets.
+        """Expects the datasets.
         Can provide an aio_id if necessary.
         """
         if aio_id is None:

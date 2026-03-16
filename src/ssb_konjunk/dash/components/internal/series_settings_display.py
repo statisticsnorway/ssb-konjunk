@@ -1,16 +1,27 @@
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 
-from dash import ALL, html, Input, callback, Output, State, dcc, ctx
-from ssb_dash_components import Dropdown, DropdownMultiple
+from ssb_dash_components import Dropdown
+from ssb_dash_components import DropdownMultiple
 
-from .loading_test import DatasetConfig
+from dash import ALL
+from dash import Input
+from dash import Output
+from dash import State
+from dash import callback
+from dash import ctx
+from dash import dcc
+from dash import html
+
 from .data_source import DataSource
+from .loading_test import DatasetConfig
 
 
 @dataclass
 class SeriesSetting:
     """A simple class for adding typing to the ids. Easier to work with"""
+
     path: str
     dataset: str
     col: str
@@ -25,10 +36,10 @@ class SeriesSetting:
 
 
 class SeriesSettingsDisplay(html.Div):
-    """
-    The class handles its own global state. 
+    """The class handles its own global state.
     This is the state that is passed to components downstream
     """
+
     class ids:
         store = lambda aio_id: {
             "component": "SeriesDisplay",
@@ -66,8 +77,7 @@ class SeriesSettingsDisplay(html.Div):
     ids = ids
 
     def __init__(self, datasets: dict[str, DatasetConfig], aio_id: None | str = None):
-        """
-        Expects the datasets.
+        """Expects the datasets.
         Can provide an aio_id if necessary.
         """
         if aio_id is None:
@@ -223,7 +233,7 @@ class SeriesSettingsDisplay(html.Div):
                             curr_state[idx].groupby = item
                             break
                     break
-            
+
             # Handles aggregation settings
             for id, item in zip(agg_ids, agg_settings):
                 if id == ctx.triggered_id:

@@ -1,16 +1,21 @@
-from typing import Literal
 import uuid
+from typing import Literal
 
-from dash import html, dcc, callback, Input, Output, State
+from ssb_dash_components import Dropdown
+from ssb_dash_components import Input as SSBInput
 
-from ssb_dash_components import Dropdown, Input as SSBInput
+from dash import Input
+from dash import Output
+from dash import callback
+from dash import dcc
+from dash import html
 
-#TODO: There is a literal defined here that should be made to a type so
+# TODO: There is a literal defined here that should be made to a type so
 # it can be used in other components that uses that same typing
 
+
 class GraphSettingsDisplay(html.Div):
-    """
-    The class handles its own global state.
+    """The class handles its own global state.
     This is the state that is passed to components downstream
     """
 
@@ -40,9 +45,7 @@ class GraphSettingsDisplay(html.Div):
     ids = ids
 
     def __init__(self, aio_id: None | str = None):
-        """
-        Can provide an aio_id if necessary.
-        """
+        """Can provide an aio_id if necessary."""
         if aio_id is None:
             aio_id = str(uuid.uuid4())
 

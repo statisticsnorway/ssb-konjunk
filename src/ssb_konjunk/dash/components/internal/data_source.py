@@ -1,8 +1,10 @@
-from typing import Literal
 from datetime import date
+from typing import Literal
+
 import polars as pl
 
 from .loading_test import AGG_TYPES
+
 
 class DataSource:
     def __init__(self, filename: str, index_col: str, date_pattern: str) -> None:

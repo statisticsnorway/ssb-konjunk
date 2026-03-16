@@ -1,16 +1,19 @@
-from typing import Literal
-from itertools import cycle
-
 import uuid
+from itertools import cycle
+from typing import Literal
 
 import plotly.graph_objects as go
-
-from dash import html, dcc, callback, Input, Output, State
-
 import polars as pl
 
-from .loading_test import DatasetConfig
+from dash import Input
+from dash import Output
+from dash import State
+from dash import callback
+from dash import dcc
+from dash import html
+
 from .data_source import DataSource
+from .loading_test import DatasetConfig
 
 GRAPH_COLORS = [
     "#1A9D49",
@@ -27,8 +30,7 @@ GRAPH_COLORS = [
 
 
 class GraphDisplay(html.Div):
-    """
-    The class handles its own global state.
+    """The class handles its own global state.
     This is the state that is passed to components downstream
     """
 
@@ -53,8 +55,7 @@ class GraphDisplay(html.Div):
     ids = ids
 
     def __init__(self, datasets: dict[str, DatasetConfig], aio_id: None | str = None):
-        """
-        Expects the datasets.
+        """Expects the datasets.
         Can provide an aio_id if necessary.
         """
         if aio_id is None:
@@ -179,7 +180,7 @@ class GraphDisplay(html.Div):
                 ]
             except:
                 pass
-            
+
             # Creates shortcuts for selecting timeframes
             fig.update_layout(
                 xaxis=dict(
