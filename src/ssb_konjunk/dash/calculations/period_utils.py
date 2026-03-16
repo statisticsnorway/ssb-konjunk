@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import total_ordering
 from typing import Self
 
@@ -10,17 +12,17 @@ class Period:
 
     def __init__(self, period: str) -> None:
         """A class to help transform the period to the rigth formats."""
-        self.period = self._period_to_datetime(period)
+        self._dt = self._period_to_datetime(period)
 
     @property
     def year(self) -> int:
         """Returnerer året til perioden som et heltall."""
-        return self.period.year
+        return self._dt.year
 
     @property
     def month(self) -> int:
         """Returnerer måneden til perioden som et heltall (1-12)."""
-        return self.period.month
+        return self._dt.month
 
     @classmethod
     def from_dt(cls, dt: pendulum.DateTime) -> Self:
@@ -54,8 +56,8 @@ class Period:
         Returns:
             str: Periodestreng, f.eks. '2026-03'.
         """
-        month = self.period.format("MM")
-        year = self.period.format("YYYY")
+        month = self._dt.format("MM")
+        year = self._dt.format("YYYY")
         return f"{year}-{month}"
 
     def as_string(self) -> str:
@@ -64,12 +66,12 @@ class Period:
         Returns:
             str: Streng, f.eks. 'Mar 2026'.
         """
-        month = self.period.format("MMM")
-        year = self.period.format("YYYY")
+        month = self._dt.format("MMM")
+        year = self._dt.format("YYYY")
         return f"{month} {year}"
 
     def set_period(
-        self,
+        self: Self,
         year: int | None = None,
         month: int | None = None,
         day: int | None = None,
@@ -87,7 +89,7 @@ class Period:
             minute (int | None): Minutt (0-59).
             second (int | None): Sekund (0-59).
         """
-        self.period.set(
+        self._dt.set(
             year=year, month=month, day=day, hour=hour, minute=minute, second=second
         )
 
@@ -97,48 +99,63 @@ class Period:
         Returns:
             pendulum.DateTime: Dato og tid som representerer perioden.
         """
-        return self.period
+        return self._dt
 
-        def _is_valid_operand(self: "Period", other: "Period"):
-            return hasattr(other, "period")
+    def subtract(
+        self: Self,
+        years: int = 0,
+        months: int = 0,
+        weeks: int = 0,
+        days: int = 0,
+        hours: int = 0,
+        minutes: int = 0,
+        seconds: float = 0,
+        microseconds: int = 0,
+    ) -> Period:
+        """Trekker fra angitte tidskomponenter fra denne perioden og returnerer en ny `Period`.
 
-        def subtract(
-            self: "Period",
-            years: int = 0,
-            months: int = 0,
-            weeks: int = 0,
-            days: int = 0,
-            hours: int = 0,
-            minutes: int = 0,
-            seconds: float = 0,
-            microseconds: int = 0,
-        ):
-            return Period.from_dt(
-                self.period.subtract(
-                    years, months, weeks, days, hours, minutes, seconds, microseconds
-                )
+        Parametere:
+            years (int): Antall år å trekke fra. Standard 0.
+            months (int): Antall måneder å trekke fra. Standard 0.
+            weeks (int): Antall uker å trekke fra. Standard 0.
+            days (int): Antall dager å trekke fra. Standard 0.
+            hours (int): Antall timer å trekke fra. Standard 0.
+            minutes (int): Antall minutter å trekke fra. Standard 0.
+            seconds (float): Antall sekunder å trekke fra (kan være flyttall). Standard 0.
+            microseconds (int): Antall mikrosekunder å trekke fra. Standard 0.
+
+        Returnerer:
+            Period: En ny periode der de oppgitte komponentene er trukket fra.
+
+        Merknader:
+            - Alle parametere er valgfrie; 0 betyr ingen endring for komponenten.
+            - Negativt tall vil i praksis legge til tilsvarende tid.
+        """
+        return Period.from_dt(
+            self._dt.subtract(
+                years, months, weeks, days, hours, minutes, seconds, microseconds
             )
+        )
 
     def __hash__(self) -> int:
         """Returnerer has verdien til objectet."""
         return hash(str(self))
 
-    def __eq__(self, other: "Period") -> bool:
+    def __eq__(self, other: object) -> bool:
         """Sjekker om dette objektet er likt et annet basert på perioden."""
-        if not self._is_valid_operand(other):
+        if not isinstance(other, type(self)):
             return NotImplemented
+        return self._dt == other._dt
 
-        return self.period == other.period
-
-    def __lt__(self, other: "Period") -> bool:
+    def __lt__(self, other: object) -> bool:
         """Sjekker om dette objektets periode er mindre enn et annet objekt sin periode."""
-        if not self._is_valid_operand(other):
+        if not isinstance(other, type(self)):
             return NotImplemented
 
-        return self.period < other.period
+        return self._dt < other._dt
 
     def _as_string(self) -> str:
-        return self.period.format("YYYY-MM")
+        return self._dt.format("YYYY-MM")
 
     def __as_string_repr(self) -> str:
         return f"Period<{self.as_period()}, {self._as_string()}>"
@@ -248,19 +265,6 @@ class AllPeriods:
         return f"AllPeriods<{[str(item) for item in self.periods]}>"
 
 
-def _pad_month(month: int) -> str:
-    """Funksjonen gjør om ett- og tosifrete ints til str med en null foran hvis input bare er ett siffer.
-
-    Args:
-        month: int, ett eller to siffer.
-
-    Returns:
-        str
-
-    """
-    return f"{month:02d}"
-
-
 def period_parser(year: int, month: int) -> str:
     """Lager en periodestreng i formatet 'YYYYMmm' fra år og måned.
 
@@ -271,8 +275,7 @@ def period_parser(year: int, month: int) -> str:
     Returns:
         str: Periodestreng, f.eks. '2026M03'.
     """
-    month = _pad_month(month)
-    return f"{year}M{month}"
+    return f"{year}M{month:02d}"
 
 
 def create_period_range_list(year: int, month: int, n_months: int) -> list[str]:

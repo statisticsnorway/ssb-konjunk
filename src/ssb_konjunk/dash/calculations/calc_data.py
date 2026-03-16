@@ -32,7 +32,7 @@ class DataManager:
 
     Hovedkomponenter:
     ------------------
-    - `self.raw_source`, `self.calendar_source`, `self.season_source`, `self.weigth_source`:
+    - `self.raw_source`, `self.calendar_source`, `self.season_source`, `self.weight_source`:
     Datastrukturer for ulike måter å representere eller justere tidsserier.
     - `get_table_X_v2(...)`: Metoder for å hente ulike tabellvarianter (1-7), hver tilpasset spesifikke analysetyper.
     - Statiske hjelpefunksjoner for sortering, prosentberegning og visuell formatering.
@@ -100,7 +100,7 @@ class DataManager:
             korr=pl.col("korr").cast(pl.Float64),
             periode=pl.col("periode").str.strptime(pl.Date, "%Y-%m", strict=False),
         )
-        self.weigth_source = DataSource(
+        self.weight_source = DataSource(
             polars_data, "periode", "verdi", "nar", internal_col="weight"
         )
         self.season_source = DataSource(
@@ -117,8 +117,8 @@ class DataManager:
     def pad_single(x: str) -> str:
         """Legger inn innrykk basert på nivå i hierarkisk kode.
 
-        Gitt en streng der nivåer er adskilt med bindestrek (f.eks. '1 - 1.1 - 1.1.1'),
-        returneres strengen med innrykk tilsvarende hierarkinivået.
+        Gitt en streng der nivåer er adskilt med bindestrek (f.eks. '42.1 - Bygging av veier og jernbane'),
+        returneres strengen med innrykk tilsvarende hierarkinivået på den første veriden.
 
         Args:
             x (str): En streng som representerer en hierarkisk kode.
@@ -150,8 +150,8 @@ class DataManager:
 
     @staticmethod
     def to_percent(
-        weights: pd.DataFrame | pd.Series, chg_rate: pd.Series
-    ) -> pd.DataFrame | pd.Series:
+        weights: pl.DataFrame | pl.Series, chg_rate: pl.Series
+    ) -> pl.DataFrame | pl.Series:
         """Omregner endring og vekt til prosentvis bidrag.
 
         Multipliserer vekt med endring og dividerer på 100 for å gi prosentandeler.
@@ -184,7 +184,7 @@ class DataManager:
         """
         return self.data["nar"].unique().tolist()  # pyright: ignore
 
-    def add_klass_codes(self, data: pd.DataFrame, on: str) -> pd.dataframe:
+    def add_klass_codes(self, data: pd.DataFrame, on: str) -> pd.DataFrame:
         """Legger til klassifikasjonsnavn til et datasett basert på en spesifisert kolonne.
 
         Slår opp koder fra `self.class_codes` og legger til fullstendige navn i en ny kolonne,
@@ -235,15 +235,48 @@ class DataManager:
                 else:
                     hierarchal_aggregates[key]
 
-        for key in sorted(map(int, hierarchal_aggregates.keys())):
-            main_aggregate.append(f"{key}")
+        for key_int in sorted(map(int, hierarchal_aggregates.keys())):
+            main_aggregate.append(f"{key_int}")
             main_aggregate.extend(
-                f"{key}.{sub}"
-                for sub in sorted(map(int, hierarchal_aggregates[str(key)]))
+                f"{key_int}.{sub}"
+                for sub in sorted(map(int, hierarchal_aggregates[str(key_int)]))
             )
 
         mapper = {item: idx for idx, item in enumerate(main_aggregate)}
         return index.map(mapper)
+
+    @staticmethod
+    def _normalize_weight(
+        table_data: pl.DataFrame,
+    ) -> tuple[pl.DataFrame, pl.DataFrame]:
+        """Normaliserer vektene til et datasett.
+
+        Sørger for at vektene som blir brukt summerer opp til 100, og at vektet endring stemmer.
+
+        Args:
+            table_data (pl.DataFrame): Et datasett med vekt data og prosentendringsdata.
+
+        Returns:
+            table_data (pl.DataFrame): Et datasett med normalisert vekt data og ny prosentendringsdata.
+            weighted_pct (pl.DataFrame): Samme datasett, men bare med vektet prosentendringsdata.
+        """
+        table_data = table_data.with_columns(
+            ((pl.col("weight") / table_data["weight"].sum() * 100).round(2)).alias(
+                "weight"
+            )
+        )
+        col = next(
+            (c for c in ["season1", "calendar1"] if c in table_data.columns), None
+        )
+        if col is None:
+            raise ValueError("Wrong column name in table_data")
+
+        table_data = table_data.with_columns(
+            (0.01 * pl.col(col) * pl.col("weight")).round(2).alias("weighted")
+        )
+
+        weighted_pct = table_data.select(["nar", "weighted"])
+        return table_data, weighted_pct
 
     def get_all_periods(self) -> list[str]:
         """Oppretter en liste over alle periodeobjekter som tekstform.
@@ -256,7 +289,7 @@ class DataManager:
         """
         return [item.as_period() for item in self.periods.create_period_range(12)]
 
-    def format_aggregates(self, data: pd.Series) -> pd.series:
+    def format_aggregates(self, data: pd.Series) -> pd.Series:
         """Formaterer hierarkiske aggregeringskoder med innrykk.
 
         Bruker `pad_single` for å legge til visuelt innrykk basert på hierarkinivå
@@ -276,13 +309,13 @@ class DataManager:
         Brukes for å definere "skip"-verdi, dvs. hvor langt bakover i tid man må hente data.
 
         Args:
-            period (str or None): Periode i tekstformat, f.eks. '2023M03'. Kan også være None.
+            period (str or None): Periode i tekstformat, f.eks. '2023-03'. Kan også være None.
 
         Returns:
             int: Antall måneder mellom siste dato og ønsket periode.
         """
         skip = 0
-        latest = self.weigth_source.latest_date()
+        latest = self.weight_source.latest_date()
         if (period is not None) and (latest is not None) and (period != "None"):
             skip = monthdelta(latest, parse_period(period))
         return skip
@@ -361,7 +394,10 @@ class DataManager:
         return all_periods
 
     def get_sesonal_adjusted_3_mth_change(
-        self, period: str | None = None, max_nace_level: int | None = None
+        self,
+        period: str | None = None,
+        max_nace_level: int | None = None,
+        nace_filter: list[str] | None = None,
     ) -> ReturnData:
         """Henter sesongjusterte 3-måneders endringer og beregner vektede bidrag.
 
@@ -374,15 +410,15 @@ class DataManager:
                 brukes siste tilgjengelige periode.
             max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn).
                 Brukes til å filtrere detaljeringsnivå i resultatene.
+            nace_filter: (list[str] or None): Filter for hvilke nacer du ønsker å ha med i tabellen.
 
         Returns:
             ReturnData: Et objekt som inneholder overskrifter, formaterte resultatdata,
             figursøyledata og sparkline-serier for de valgte periodene.
         """
         skip = self._prep_skip(period)
-
-        header, weight = self.weigth_source.n_mean_rolling(3, skip=skip)
-        _, comparison_weight = self.weigth_source.n_mean_rolling(3, skip=3)
+        header, weight = self.weight_source.n_mean_rolling(3, skip=skip)
+        _, comparison_weight = self.weight_source.n_mean_rolling(3, skip=3)
         header_i, index_season = self.season_source.n_mean_rolling(3, skip=skip)
 
         header_i_pct, index_season_pct = (
@@ -406,17 +442,49 @@ class DataManager:
         table_data = multi_join(
             [weight, index_season, index_season_pct, weighted_pct], on="nar"
         )
-        if max_nace_level:
+        if max_nace_level is not None:
+            numeric_mask = (
+                pl.col("nar").str.replace(".", "", literal=True).str.contains(r"^\d+$")
+            )
             table_data = table_data.filter(
-                pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level
+                (
+                    numeric_mask
+                    & (
+                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        <= max_nace_level
+                    )
+                )
+                | (~numeric_mask)
             )
+
             weighted_pct = weighted_pct.filter(
-                pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level
+                (
+                    numeric_mask
+                    & (
+                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        <= max_nace_level
+                    )
+                )
+                | (~numeric_mask)
             )
+        if nace_filter:
+            table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
+        table_data, weighted_pct = self._normalize_weight(table_data)
+
         return ReturnData(
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
-            res_data=self._prep_df(table_data, "nar").round(1),
+            res_data=(
+                self._prep_df(table_data, "nar")
+                .round(1)
+                .sort_values(
+                    by="nar",
+                    key=lambda col: col.map(
+                        lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                    ),
+                    ignore_index=True,
+                )
+            ),
             figure_data=self._prep_df(weighted_pct, "nar")
             .set_index("nar")["weighted"]
             .iloc[::-1],
@@ -427,7 +495,10 @@ class DataManager:
         )
 
     def get_sesonal_adjusted_mth_change(
-        self, period: str | None = None, max_nace_level: int | None = None
+        self,
+        period: str | None = None,
+        max_nace_level: int | None = None,
+        nace_filter: list[str] | None = None,
     ) -> ReturnData:
         """Beregner månedlig sesongjustert endring og vektet bidrag for valgt periode.
 
@@ -437,14 +508,15 @@ class DataManager:
         Args:
             period (str or None): Valgfri referanseperiode, som '2023M03'. Hvis None, brukes siste tilgjengelige.
             max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn). Brukes for å filtrere detaljeringsnivå.
+            nace_filter: (list[str] or None): Filter for hvilke nacer du ønsker å ha med i tabellen.
 
         Returns:
             ReturnData: Et objekt med kolonneoverskrifter, formaterte tabeller, figursøyledata
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
-        header, weight = self.weigth_source.n_month(1, skip=skip)
-        _, comparison_weight = self.weigth_source.n_month(1, skip=1)
+        header, weight = self.weight_source.n_month(1, skip=skip)
+        _, comparison_weight = self.weight_source.n_mean_rolling(1, skip=1)
         header_i, index_season = self.season_source.n_month(1, skip=skip)
         header_i_pct, index_season_pct = self.season_source.n_month_percent(
             1, skip=skip
@@ -464,18 +536,48 @@ class DataManager:
         table_data = multi_join(
             [weight, index_season, index_season_pct, weighted_pct], on="nar"
         )
-        if max_nace_level:
-            table_data = table_data.filter(
-                pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level
+        if max_nace_level is not None:
+            numeric_mask = (
+                pl.col("nar").str.replace(".", "", literal=True).str.contains(r"^\d+$")
             )
-            weighted_pct = weighted_pct.filter(
-                pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level
+            table_data = table_data.filter(
+                (
+                    numeric_mask
+                    & (
+                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        <= max_nace_level
+                    )
+                )
+                | (~numeric_mask)
             )
 
+            weighted_pct = weighted_pct.filter(
+                (
+                    numeric_mask
+                    & (
+                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        <= max_nace_level
+                    )
+                )
+                | (~numeric_mask)
+            )
+        if nace_filter:
+            table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
+        table_data, weighted_pct = self._normalize_weight(table_data)
         return ReturnData(
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
-            res_data=self._prep_df(table_data, "nar"),
+            res_data=(
+                self._prep_df(table_data, "nar")
+                .round(1)
+                .sort_values(
+                    by="nar",
+                    key=lambda col: col.map(
+                        lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                    ),
+                    ignore_index=True,
+                )
+            ),
             figure_data=self._prep_df(weighted_pct, "nar")
             .set_index("nar")["weighted"]
             .iloc[::-1],
@@ -486,7 +588,10 @@ class DataManager:
         )
 
     def get_sesonal_adjusted_12_mth_change(
-        self, period: str | None = None, max_nace_level: int | None = None
+        self,
+        period: str | None = None,
+        max_nace_level: int | None = None,
+        nace_filter: list[str] | None = None,
     ) -> ReturnData:
         """Beregner 12-måneders kalenderjusterte endringer og tilhørende vektede bidrag.
 
@@ -497,15 +602,15 @@ class DataManager:
         Args:
             period (str or None): Valgfri referanseperiode, som '2023M03'. Hvis None, brukes siste tilgjengelige periode.
             max_nace_level (int or None): Maksimalt antall tegn i NACE-koder som brukes til å filtrere detaljeringsnivå i resultatene.
+            nace_filter: (list[str] or None): Filter for hvilke nacer du ønsker å ha med i tabellen.
 
         Returns:
             ReturnData: Objekt med tabelloverskrifter, datasett for visning og analyse,
             og vektede figurtall. Sparkline-data er ikke inkludert i denne varianten.
         """
         skip = self._prep_skip(period)
-
-        header, weight = self.weigth_source.n_month(1, skip=skip)
-        _, comparison_weight = self.weigth_source.n_month(1, skip=12)
+        header, weight = self.weight_source.n_month(1, skip=skip)
+        _, comparison_weight = self.weight_source.n_mean_rolling(1, skip=12)
         header_i, index_season = self.calendar_source.n_month(1, skip=skip)
         header_i_pct, index_season_pct = self.calendar_source.n_percent_rolling(
             13, skip=skip
@@ -523,18 +628,48 @@ class DataManager:
         table_data = multi_join(
             [weight, index_season, index_season_pct, weighted_pct], on="nar"
         )
-        if max_nace_level:
-            table_data = table_data.filter(
-                pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level
+        if max_nace_level is not None:
+            numeric_mask = (
+                pl.col("nar").str.replace(".", "", literal=True).str.contains(r"^\d+$")
             )
-            weighted_pct = weighted_pct.filter(
-                pl.col("nar").str.replace(".", "").str.len_chars() <= max_nace_level
+            table_data = table_data.filter(
+                (
+                    numeric_mask
+                    & (
+                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        <= max_nace_level
+                    )
+                )
+                | (~numeric_mask)
             )
 
+            weighted_pct = weighted_pct.filter(
+                (
+                    numeric_mask
+                    & (
+                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        <= max_nace_level
+                    )
+                )
+                | (~numeric_mask)
+            )
+        if nace_filter:
+            table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
+        table_data, weighted_pct = self._normalize_weight(table_data)
         return ReturnData(
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
-            res_data=self._prep_df(table_data, "nar").round(1),
+            res_data=(
+                self._prep_df(table_data, "nar")
+                .round(1)
+                .sort_values(
+                    by="nar",
+                    key=lambda col: col.map(
+                        lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                    ),
+                    ignore_index=True,
+                )
+            ),
             figure_data=self._prep_df(weighted_pct, "nar")
             .set_index("nar")["weighted"]
             .iloc[::-1],

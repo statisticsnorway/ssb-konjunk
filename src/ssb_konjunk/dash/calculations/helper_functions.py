@@ -92,6 +92,7 @@ class DataSource:
             eller None dersom verdien ikke er en gyldig datetime.
         """
         latest = self.data.get_column(self._date).last()
+        print(latest)
         if isinstance(latest, datetime):
             return latest
         elif isinstance(latest, date):  # <- use date directly
@@ -111,7 +112,7 @@ class DataSource:
         """
         return ((series_1 - series_2) / series_2) * 100
 
-    def _create_date(self, date: datetime) -> str:
+    def _create_date(self, date: date) -> str:
         """Formaterer en datetime til en str med definert utdataformat.
 
         Args:
@@ -133,8 +134,8 @@ class DataSource:
             str: En str som representerer datoperioden (eks. "Jan 2023 - Mar 2023").
         """
         dates = self.data.get_column(self._date).unique().sort()
-        latest: datetime = dates[-1 - (n * skip)]
-        oldest: datetime = dates[-1 - ((n * skip) + n)]
+        latest: date = dates[-1 - (n * skip)]
+        oldest: date = dates[-1 - ((n * skip) + n)]
         return f"{self._create_date(oldest)} - {self._create_date(latest)}"
 
     def _base(self, n: int, *agg: pl.Expr, **named_aggs: pl.Expr):
@@ -146,7 +147,7 @@ class DataSource:
             **named_aggs: Navngitte aggregasjonsoperasjoner.
 
         Returns:
-            pl.DataFrame: Et eksplodert DataFrame med grupperte og aggregerte verdier.
+            pl.DataFrame: En DataFrame med grupperte og aggregerte verdier.
         """
         return (
             self.data.group_by_dynamic(
@@ -211,7 +212,7 @@ class DataSource:
             },
         )
 
-    def n_percent_rolling(self, n: int, skip: int = 0) -> pl.DataFrame:
+    def n_percent_rolling(self, n: int, skip: int = 0) -> tuple[str, pl.DataFrame]:
         """Beregner rullerende prosentvis endring over en periode og returnerer med datoperiode-header.
 
         Denne metoden bruker en rullerende tidsvinduanalyse for å beregne prosentvis endring
@@ -230,8 +231,8 @@ class DataSource:
         def _gen_header(n: int, skip: int = 0):
             """Lager overskrift for hver perioden."""
             dates = self.data.get_column(self._date).unique().sort()
-            latest: datetime = dates[-1 - (skip)]
-            oldest: datetime = dates[-1 - ((skip) + n - 1)]
+            latest: date = dates[-1 - (skip)]
+            oldest: date = dates[-1 - ((skip) + n - 1)]
             return f"{self._create_date(oldest)} - {self._create_date(latest)}"
 
         def map_test(x: pl.DataFrame):
@@ -264,7 +265,7 @@ class DataSource:
             .explode(self._avg)
         )
 
-    def n_mean_rolling(self, n: int, skip: int = 0) -> pl.DataFrame:
+    def n_mean_rolling(self, n: int, skip: int = 0) -> tuple[str, pl.DataFrame]:
         """Beregner et rullerende gjennomsnitt for hver gruppe i datasettet og returnerer med datoperiode-header.
 
         Denne metoden beregner gjennomsnittet av verdiene innenfor et rullerende vindu på `n` måneder.
@@ -283,8 +284,8 @@ class DataSource:
         def _gen_header(n: int, skip: int = 0):
             """Lager overskrift for hver perioden."""
             dates = self.data.get_column(self._date).unique().sort()
-            latest: datetime = dates[-1 - (skip)]
-            oldest: datetime = dates[-1 - ((skip) + n - 1)]
+            latest: date = dates[-1 - (skip)]
+            oldest: date = dates[-1 - ((skip) + n - 1)]
             return f"{self._create_date(oldest)} - {self._create_date(latest)}"
 
         def map_test(x: pl.DataFrame):
@@ -395,7 +396,7 @@ def rounded_average(df: pd.DataFrame, ordered_columns: list[str]) -> pd.Series:
 
 def calc_change_rate(
     df: pd.DataFrame, ordered_columns: list[str], n: int = 1
-) -> pd.dateframe:
+) -> pd.DataFrame:
     """Beregner prosentvis endring mellom kolonner over n perioder.
 
     Args:
@@ -406,17 +407,10 @@ def calc_change_rate(
     Returns:
         pd.DataFrame: Prosentvis endring per rad for hver kolonne (fra n. kolonne og fremover).
     """
-    results = []
-    for i in range(n, len(ordered_columns), 1):
-        col_present = ordered_columns[i]
-        previous_period = ordered_columns[i - n]
-        chg_rate = (df[col_present] - df[previous_period]) * 100 / df[previous_period]
-        results.append(chg_rate)
-
-    return pd.concat(results, axis="columns", keys=ordered_columns[n:])
+    return _percent_change_columns(df, ordered_columns, step=n)
 
 
-def rolling_change_rate(df: pd.DataFrame, step: int = 1) -> pd.dateframe:
+def rolling_change_rate(df: pd.DataFrame, step: int = 1) -> pd.DataFrame:
     """Beregner rullende prosentvis endring mellom kolonner med gitt steg.
 
     Args:
@@ -426,11 +420,26 @@ def rolling_change_rate(df: pd.DataFrame, step: int = 1) -> pd.dateframe:
     Returns:
         pd.DataFrame: Prosentvis endring per rad, med kolonner fra `step` og fremover.
     """
+    return _percent_change_columns(df, list(df.columns), step=step)
+
+
+def _percent_change_columns(
+    df: pd.DataFrame, columns: list[str], step: int = 1
+) -> pd.DataFrame:
+    """Beregner rullende prosentvis endring mellom kolonner med gitt steg.
+
+    Args:
+        df (pd.DataFrame): DataFrame med kolonner som representerer perioder.
+        columns (list[str]): Liste med kolonnenavn i rekkefølge.
+        step (int, optional): Antall kolonner å hoppe over for å beregne endring. Defaults to 1.
+
+    Returns:
+        pd.DataFrame: Prosentvis endring per rad, med kolonner fra `step` og fremover.
+    """
     results = []
-    for i in range(step, len(df.columns), step):
-        col_present = df.columns[i]
-        previous_period = df.columns[i - step]
+    for i in range(step, len(columns), step):
+        col_present = columns[i]
+        previous_period = columns[i - step]
         chg_rate = (df[col_present] - df[previous_period]) * 100 / df[previous_period]
         results.append(chg_rate)
-
-    return pd.concat(results, axis="columns", keys=df.columns[step:])
+    return pd.concat(results, axis="columns", keys=columns[step:])
