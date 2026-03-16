@@ -52,8 +52,10 @@ from .internal.tab_selector import TabSelector
 
 class GenVis(html.Div):
     """Returns a component that can be used as its own page or as a component in other layouts."""
+
     class ids:
         """Generates standardized IDs for the GenVis component."""
+
         @staticmethod
         def dropdown(aio_id: str) -> dict:
             """ID for the dropdown subcomponent."""
@@ -76,7 +78,7 @@ class GenVis(html.Div):
     ids = ids
 
     # Define the arguments of the All-in-One component
-    def __init__(self, config_path: str, aio_id:str | None = None) -> None:
+    def __init__(self, config_path: str, aio_id: str | None = None) -> None:
         """Returns a component that can be used as its own page or as a component in other layouts.
 
         Args:
