@@ -156,6 +156,7 @@ def precommit(session: Session) -> None:
 
 @session(python=python_versions)
 def mypy(session: Session) -> None:
+    session.run("poetry", "--version", external=True)
     """Type-check using mypy."""
     args = session.posargs or ["src", "tests"]
     session.install(".")
