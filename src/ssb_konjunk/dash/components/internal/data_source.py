@@ -56,7 +56,7 @@ class GenVisData:
         """
         return self.data.get_column(groupby_col).unique().to_list()
 
-    def subset_group(self, groupby_col: str, filter_val) -> pl.DataFrame:
+    def subset_group(self, groupby_col: str, filter_val: str) -> pl.DataFrame:
         """Returnerer et delsett av datasettet filtrert på en kolonneverdi.
 
         Args:

@@ -19,13 +19,12 @@ from .loading_test import DatasetConfig
 
 class TabSelector(html.Div):
     """The class handles its own global state.
-
+    
     This is the state that is passed to components downstream.
     """
 
     class ids:
         """Generates standardized IDs for the TabSelector component."""
-
         @staticmethod
         def tabs(aio_id: str) -> dict:
             """ID for the tabs subcomponent."""
@@ -34,7 +33,7 @@ class TabSelector(html.Div):
                 "subcomponent": "tabs",
                 "aio_id": aio_id,
             }
-
+    
         @staticmethod
         def checklist_container(aio_id: str) -> dict:
             """ID for the checklist-container subcomponent."""
@@ -43,7 +42,7 @@ class TabSelector(html.Div):
                 "subcomponent": "checklist-container",
                 "aio_id": aio_id,
             }
-
+    
         @staticmethod
         def checklist_item(aio_id: str, path: str, random: str) -> dict:
             """ID for a checklist item, including path and random key for JS search."""
@@ -54,7 +53,7 @@ class TabSelector(html.Div):
                 "aio_id": aio_id,
                 "random": random,  # Required for JS search functionality
             }
-
+    
         @staticmethod
         def store(aio_id: str) -> dict:
             """ID for the store subcomponent."""
@@ -63,7 +62,7 @@ class TabSelector(html.Div):
                 "subcomponent": "store",
                 "aio_id": aio_id,
             }
-
+    
         @staticmethod
         def search(aio_id: str) -> dict:
             """ID for the input/search subcomponent."""
@@ -71,7 +70,7 @@ class TabSelector(html.Div):
                 "component": "TabSelector",
                 "subcomponent": "input",
                 "aio_id": aio_id,
-            }
+        }
 
     # Make the ids class a public class
     ids = ids
@@ -83,7 +82,7 @@ class TabSelector(html.Div):
         height: str = "300px",
     ) -> None:
         """Expects the datasets.
-
+        
         Can provide an aio_id if necessary.
         Height can be provided, but the default value works well for most screen sizes.
         """
@@ -155,7 +154,7 @@ class TabSelector(html.Div):
             Input(self.ids.tabs(aio_id), "active"),
             State(self.ids.store(aio_id), "data"),
         )
-        def update_tabs(selected: str, checked_files: list[list[str]]):
+        def update_tabs(selected: str, checked_files: list[dict[str]]):
             # Updates which tabs are displayed in the data selector.
             dataset_list = datasets.get(selected)
             children = []
@@ -183,10 +182,10 @@ class TabSelector(html.Div):
             prevent_initial_call=True,
         )
         def update_checked(
-            checked: list[list[str]],
+            checked: list[dict[str]],
             ids: list[dict],
             current_state: list[dict],
-            selected_tab: str | None,
+            selected_tab: str | None
         ):
             # Callback that updates a store that keeps track of which checkboxes are checked.
             # This persists the state when the tab selector is rerendered, but not between

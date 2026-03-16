@@ -31,7 +31,7 @@ class SeriesSetting:
     def hash(self) -> int:
         """Returnerer hash av objektets attributter."""
         return hash(self.__dict__)
-
+    
     def dict(self) -> int:
         """Returnerer objektets attributter som en dict."""
         return self.__dict__
@@ -39,13 +39,13 @@ class SeriesSetting:
 
 class SeriesSettingsDisplay(html.Div):
     """The class handles its own global state.
-
+    
     This is the state that is passed to components downstream.
     """
 
     class ids:
         """Generates standardized IDs for the SeriesSettingsDisplay component."""
-
+        
         @staticmethod
         def store(aio_id: str) -> dict:
             """ID for the main store of the SeriesDisplay."""
@@ -63,7 +63,6 @@ class SeriesSettingsDisplay(html.Div):
                 "subcomponent": "settings-store",
                 "aio_id": aio_id,
             }
-
         @staticmethod
         def settings_display(aio_id: str) -> dict:
             """ID for the settings display component."""
@@ -72,11 +71,8 @@ class SeriesSettingsDisplay(html.Div):
                 "subcomponent": "settings-display",
                 "aio_id": aio_id,
             }
-
         @staticmethod
-        def aggregation_settings(
-            aio_id: str, path: str, dataset: str, col: str
-        ) -> dict:
+        def aggregation_settings(aio_id: str, path: str, dataset: str, col: str) -> dict:
             """ID for an aggregation settings component."""
             return {
                 "component": "SeriesDisplay",
@@ -86,7 +82,6 @@ class SeriesSettingsDisplay(html.Div):
                 "path": path,
                 "col": col,
             }
-
         @staticmethod
         def groupby_settings(aio_id: str, path: str, dataset: str, col: str) -> dict:
             """ID for a groupby settings component."""
@@ -102,11 +97,9 @@ class SeriesSettingsDisplay(html.Div):
     # Make the ids class a public class
     ids = ids
 
-    def __init__(
-        self, datasets: dict[str, DatasetConfig], aio_id: None | str = None
-    ) -> None:
+    def __init__(self, datasets: dict[str, DatasetConfig], aio_id: None | str = None) -> None:
         """Expects the datasets.
-
+        
         Can provide an aio_id if necessary.
         """
         if aio_id is None:
@@ -215,7 +208,12 @@ class SeriesSettingsDisplay(html.Div):
             State(self.ids.store(aio_id), "data"),
         )
         def update_groupby_settings(
-            values, ids, agg_ids, agg_settings, current_state, input_data
+            values: list[str],
+            ids: list[dict[str]],
+            agg_ids: list[dict[str]],
+            agg_settings: list[str] | None,
+            current_state: list[dict[str]],
+            input_data: dict[str, DatasetConfig]
         ):
             # Callback that handles the global state of the component
             curr_state: list[SeriesSetting] = []

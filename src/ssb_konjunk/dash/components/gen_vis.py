@@ -52,10 +52,8 @@ from .internal.tab_selector import TabSelector
 
 class GenVis(html.Div):
     """Returns a component that can be used as its own page or as a component in other layouts."""
-
     class ids:
         """Generates standardized IDs for the GenVis component."""
-
         @staticmethod
         def dropdown(aio_id: str) -> dict:
             """ID for the dropdown subcomponent."""
@@ -78,7 +76,7 @@ class GenVis(html.Div):
     ids = ids
 
     # Define the arguments of the All-in-One component
-    def __init__(self, config_path: str, aio_id=None) -> None:
+    def __init__(self, config_path: str, aio_id:str | None = None) -> None:
         """Returns a component that can be used as its own page or as a component in other layouts.
 
         Args:
@@ -161,7 +159,7 @@ class GenVis(html.Div):
             Output(SeriesSelector.ids.store(aio_id), "data"),
             Input(TabSelector.ids.store(aio_id), "data"),
         )
-        def update_selected(selected):
+        def update_selected(selected: list[dict[str]]):
             """Move data from the file selector to the series selector."""
             return selected
 
@@ -169,7 +167,7 @@ class GenVis(html.Div):
             Output(SeriesSettingsDisplay.ids.store(aio_id), "data"),
             Input(SeriesSelector.ids.selected_store(aio_id), "data"),
         )
-        def update_display(selected):
+        def update_display(selected: list[dict[str]]):
             """Move data from the series selcetor to series settings display."""
             return selected
 
@@ -177,7 +175,7 @@ class GenVis(html.Div):
             Output(GraphDisplay.ids.series_store(aio_id), "data"),
             Input(SeriesSettingsDisplay.ids.settings_store(aio_id), "data"),
         )
-        def update_graph_series(selected):
+        def update_graph_series(selected: list[dict[str]]):
             """Moves series settings to the graph display."""
             return selected
 
@@ -185,6 +183,6 @@ class GenVis(html.Div):
             Output(GraphDisplay.ids.settings_store(aio_id), "data"),
             Input(GraphSettingsDisplay.ids.settings_store(aio_id), "data"),
         )
-        def update_graph_settings(settings):
+        def update_graph_settings(settings: list[dict[str]]):
             """Move general graph settings to the graph display."""
             return settings
