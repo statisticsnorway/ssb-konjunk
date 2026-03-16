@@ -93,24 +93,3 @@ def test_gen_header(test_df_datasource):
     assert header_1 == 'Nov 2024 - Dec 2024'
     assert header_3 == 'Sep 2024 - Dec 2024'
     assert header_12 == 'Dec 2023 - Dec 2024'
-
-def test_base(test_df_datasource):
-    print(test_df_datasource.data.filter(pl.col("nar") == "H"))
-    out = test_df_datasource._base(
-        1,
-        pl.col("avg").mean().alias("avg_mean")
-    )
-
-    print(out)
-    assert 1 == 0
-
-
-def test_base_w_header(test_df_datasource):
-    #FINN UT DENNE SEINERE
-    assert 1 == 1
-
-def test_n_month(test_df_datasource):
-    print(test_df_datasource.data.filter(pl.col("nar") == "H"))
-    test = test_df_datasource.n_month(4)
-    print(test)
-    assert 1 == 1
