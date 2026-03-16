@@ -16,35 +16,52 @@ from dash import html
 
 class GraphSettingsDisplay(html.Div):
     """The class handles its own global state.
-    This is the state that is passed to components downstream
+    
+    This is the state that is passed to components downstream.
     """
 
     class ids:
-        settings_store = lambda aio_id: {
-            "component": "GraphSettingsDisplay",
-            "subcomponent": "settings-store",
-            "aio_id": aio_id,
-        }
-        frequency = lambda aio_id: {
-            "component": "GraphSettingsDisplay",
-            "subcomponent": "frequency",
-            "aio_id": aio_id,
-        }
-        convert_dropdown = lambda aio_id: {
-            "component": "GraphSettingsDisplay",
-            "subcomponent": "convert-dropdown",
-            "aio_id": aio_id,
-        }
-        base_year = lambda aio_id: {
-            "component": "GraphSettingsDisplay",
-            "subcomponent": "base-year",
-            "aio_id": aio_id,
-        }
+        """Generates standardized IDs for the GraphSettingsDisplay component."""
+        @staticmethod
+        def settings_store(aio_id: str) -> dict:
+            """ID for the settings store subcomponent."""
+            return {
+                "component": "GraphSettingsDisplay",
+                "subcomponent": "settings-store",
+                "aio_id": aio_id,
+            }
+    
+        @staticmethod
+        def frequency(aio_id: str) -> dict:
+            """ID for the frequency subcomponent."""
+            return {
+                "component": "GraphSettingsDisplay",
+                "subcomponent": "frequency",
+                "aio_id": aio_id,
+            }
+    
+        @staticmethod
+        def convert_dropdown(aio_id: str) -> dict:
+            """ID for the convert-dropdown subcomponent."""
+            return {
+                "component": "GraphSettingsDisplay",
+                "subcomponent": "convert-dropdown",
+                "aio_id": aio_id,
+            }
+    
+        @staticmethod
+        def base_year(aio_id: str) -> dict:
+            """ID for the base-year subcomponent."""
+            return {
+                "component": "GraphSettingsDisplay",
+                "subcomponent": "base-year",
+                "aio_id": aio_id,
+            }
 
     # Make the ids class a public class
     ids = ids
 
-    def __init__(self, aio_id: None | str = None):
+    def __init__(self, aio_id: None | str = None) -> None:
         """Can provide an aio_id if necessary."""
         if aio_id is None:
             aio_id = str(uuid.uuid4())

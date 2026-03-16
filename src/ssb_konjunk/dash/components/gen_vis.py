@@ -51,24 +51,32 @@ from .internal.tab_selector import TabSelector
 
 
 class GenVis(html.Div):
-
+    """Returns a component that can be used as its own page or as a component in other layouts."""
     class ids:
-        dropdown = lambda aio_id: {
-            "component": "MarkdownWithColorAIO",
-            "subcomponent": "dropdown",
-            "aio_id": aio_id,
-        }
-        markdown = lambda aio_id: {
-            "component": "MarkdownWithColorAIO",
-            "subcomponent": "markdown",
-            "aio_id": aio_id,
-        }
+        """Generates standardized IDs for the GenVis component."""
+        @staticmethod
+        def dropdown(aio_id: str) -> dict:
+            """ID for the dropdown subcomponent."""
+            return {
+                "component": "MarkdownWithColorAIO",
+                "subcomponent": "dropdown",
+                "aio_id": aio_id,
+            }
+
+        @staticmethod
+        def markdown(aio_id: str) -> dict:
+            """ID for the markdown subcomponent."""
+            return {
+                "component": "MarkdownWithColorAIO",
+                "subcomponent": "markdown",
+                "aio_id": aio_id,
+            }
 
     # Make the ids class a public class
     ids = ids
 
     # Define the arguments of the All-in-One component
-    def __init__(self, config_path: str, aio_id=None):
+    def __init__(self, config_path: str, aio_id=None) -> None:
         """Returns a component that can be used as its own page or as a component in other layouts.
 
         Args:
@@ -152,7 +160,7 @@ class GenVis(html.Div):
             Input(TabSelector.ids.store(aio_id), "data"),
         )
         def update_selected(selected):
-            """Move data from the file selector to the series selector"""
+            """Move data from the file selector to the series selector."""
             return selected
 
         @callback(
@@ -160,7 +168,7 @@ class GenVis(html.Div):
             Input(SeriesSelector.ids.selected_store(aio_id), "data"),
         )
         def update_display(selected):
-            """Move data from the series selcetor to series settings display"""
+            """Move data from the series selcetor to series settings display."""
             return selected
 
         @callback(
@@ -168,7 +176,7 @@ class GenVis(html.Div):
             Input(SeriesSettingsDisplay.ids.settings_store(aio_id), "data"),
         )
         def update_graph_series(selected):
-            """Moves series settings to the graph display"""
+            """Moves series settings to the graph display."""
             return selected
 
         @callback(
@@ -176,5 +184,5 @@ class GenVis(html.Div):
             Input(GraphSettingsDisplay.ids.settings_store(aio_id), "data"),
         )
         def update_graph_settings(settings):
-            """Move general graph settings to the graph display"""
+            """Move general graph settings to the graph display."""
             return settings

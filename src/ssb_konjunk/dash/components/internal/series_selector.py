@@ -18,36 +18,54 @@ from .loading_test import DatasetConfig
 
 class SeriesSelector(html.Div):
     """The class handles its own global state.
-    This is the state that is passed to components downstream
+    
+    This is the state that is passed to components downstream.
     """
 
     class ids:
-        store = lambda aio_id: {
-            "component": "SeriesSelector",
-            "subcomponent": "store",
-            "aio_id": aio_id,
-        }
-        selected_store = lambda aio_id: {
-            "component": "SeriesSelector",
-            "subcomponent": "selected_store",
-            "aio_id": aio_id,
-        }
-        selector_container = lambda aio_id: {
-            "component": "SeriesSelector",
-            "subcomponent": "selector-container",
-            "aio_id": aio_id,
-        }
-        checkbox = lambda aio_id, path, col, dataset: {
-            "component": "SeriesSelector",
-            "subcomponent": "checkbox",
-            "path": path,
-            "aio_id": aio_id,
-            "col": col,
-            "dataset": dataset,
-        }
+        """Generates standardized IDs for the SeriesSelector component."""
+        @staticmethod
+        def store(aio_id: str) -> dict:
+            """ID for the main store subcomponent."""
+            return {
+                "component": "SeriesSelector",
+                "subcomponent": "store",
+                "aio_id": aio_id,
+            }
+    
+        @staticmethod
+        def selected_store(aio_id: str) -> dict:
+            """ID for the selected_store subcomponent."""
+            return {
+                "component": "SeriesSelector",
+                "subcomponent": "selected_store",
+                "aio_id": aio_id,
+            }
+    
+        @staticmethod
+        def selector_container(aio_id: str) -> dict:
+            """ID for the selector-container subcomponent."""
+            return {
+                "component": "SeriesSelector",
+                "subcomponent": "selector-container",
+                "aio_id": aio_id,
+            }
+    
+        @staticmethod
+        def checkbox(aio_id: str, path: str, col: str, dataset: str) -> dict:
+            """ID for a checkbox subcomponent, with dataset and column context."""
+            return {
+                "component": "SeriesSelector",
+                "subcomponent": "checkbox",
+                "path": path,
+                "aio_id": aio_id,
+                "col": col,
+                "dataset": dataset,
+            }
 
-    def __init__(self, datasets: dict[str, DatasetConfig], aio_id: None | str = None):
+    def __init__(self, datasets: dict[str, DatasetConfig], aio_id: None | str = None) -> None:
         """Expects the datasets.
+        
         Can provide an aio_id if necessary.
         """
         if aio_id is None:
@@ -142,9 +160,9 @@ class SeriesSelector(html.Div):
                 if dataset is None:
                     return current_state
 
-                for id, item in zip(ids, checked):
-                    if ctx.triggered_id == id:
-                        if item != True:
+                for item_id, item in zip(ids, checked, strict=True):
+                    if ctx.triggered_id == item_id:
+                        if not item:
                             current_state = [
                                 i
                                 for i in current_state
