@@ -4,7 +4,7 @@ from typing import Literal
 
 import plotly.graph_objects as go
 import polars as pl
-from helper_functions import GenVisData
+from .data_source import GenVisData
 
 from dash import Input
 from dash import Output
