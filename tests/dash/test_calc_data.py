@@ -189,10 +189,10 @@ def test_get_sesonal_adjusted_3_mth_change(test_df):
                 "  K - Finansierings- og forsikringsvirks",
                 "    64 - Finansieringsvirksomhet",
             ],
-            "weight": [26.2, 34.6, 39.3],
+            "weight": [18.4, 24.2, 27.5],
             "season": [97.9, 87.5, 99.5],
             "season1": [-3.3, -16.4, -6.2],
-            "weighted": [-0.9, -5.7, -2.4],
+            "weighted": [-1.2, -4.5, -1.4],
         }
     )
 
@@ -253,10 +253,10 @@ def test_get_sesonal_adjusted_mth_change(test_df):
                 "  K - Finansierings- og forsikringsvirks",
                 "    64 - Finansieringsvirksomhet",
             ],
-            "weight": [35.6, 36.4, 28.1],
+            "weight": [27.5, 28.1, 21.7],
             "season": [92.6, 81.0, 102.1],
             "season1": [-13.2, -12.4, -7.7],
-            "weighted": [-4.7, -4.5, -2.2],
+            "weighted": [-2.0, -2.1, -1.0],
         }
     )
 
@@ -320,10 +320,10 @@ def test_get_sesonal_adjusted_12_mth_change(test_df):
                 "  K - Finansierings- og forsikringsvirks",
                 "    64 - Finansieringsvirksomhet",
             ],
-            "weight": [35.6, 36.4, 28.1],
+            "weight": [27.5, 28.1, 21.7],
             "calendar": [94.5, 82.7, 103.4],
             "calendar1": [-12.9, -19.5, -10.8],
-            "weighted": [-4.6, -7.1, -3.0],
+            "weighted": [-4.1, -2.5, -2.0],
         }
     )
 

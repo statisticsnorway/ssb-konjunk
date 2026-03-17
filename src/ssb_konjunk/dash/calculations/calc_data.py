@@ -469,7 +469,7 @@ class DataManager:
             )
         if nace_filter:
             table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
-        table_data, weighted_pct = self._normalize_weight(table_data)
+            table_data, weighted_pct = self._normalize_weight(table_data)
 
         return ReturnData(
             header_1=self.header_1,
@@ -563,7 +563,7 @@ class DataManager:
             )
         if nace_filter:
             table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
-        table_data, weighted_pct = self._normalize_weight(table_data)
+            table_data, weighted_pct = self._normalize_weight(table_data)
         return ReturnData(
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
@@ -655,7 +655,7 @@ class DataManager:
             )
         if nace_filter:
             table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
-        table_data, weighted_pct = self._normalize_weight(table_data)
+            table_data, weighted_pct = self._normalize_weight(table_data)
         return ReturnData(
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
