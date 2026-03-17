@@ -4,7 +4,6 @@ from typing import Literal
 
 import plotly.graph_objects as go
 import polars as pl
-from .data_source import GenVisData
 
 from dash import Input
 from dash import Output
@@ -13,6 +12,7 @@ from dash import callback
 from dash import dcc
 from dash import html
 
+from .data_source import GenVisData
 from .loading_test import DatasetConfig
 
 GRAPH_COLORS = [
