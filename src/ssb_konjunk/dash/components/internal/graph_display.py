@@ -14,6 +14,7 @@ from dash import html
 
 from .data_source import GenVisData
 from .loading_test import DatasetConfig
+from .series_setting_display import SeriesSetting
 
 GRAPH_COLORS = [
     "#1A9D49",
@@ -95,9 +96,9 @@ class GraphDisplay(html.Div):
             State(self.ids.graph(aio_id), "figure"),
         )
         def change_graph(
-            series_data: list[dict[str]],
+            series_data: list[SeriesSetting],
             settings: dict[str, str | Literal["none", "discrete"]],
-            old_fig: dict[str],
+            old_fig: dict,
         ):
             # Callback that updates the graph based on changed series settings or
             # graph settings

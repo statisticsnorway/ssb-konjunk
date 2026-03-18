@@ -125,7 +125,9 @@ class SeriesSettingsDisplay(html.Div):
             Input(self.ids.store(aio_id), "data"),
             State(self.ids.settings_store(aio_id), "data"),
         )
-        def update_display(data: list[dict[str, str]], current_state: list[dict]):
+        def update_display(
+            data: list[dict[str, str]], current_state: list[SeriesSetting]
+        ):
             # Updates series settings based on which series are checked
             curr_state = [SeriesSetting(**item) for item in current_state]
 
@@ -212,11 +214,11 @@ class SeriesSettingsDisplay(html.Div):
             State(self.ids.store(aio_id), "data"),
         )
         def update_groupby_settings(
-            values: list[str],
-            ids: list[dict[str]],
-            agg_ids: list[dict[str]],
-            agg_settings: list[str] | None,
-            current_state: list[dict[str]],
+            values: list[list[str]],
+            ids: list[dict[str, str]],
+            agg_ids: list[dict[str, str]],
+            agg_settings: list[str | None] | None,
+            current_state: list[SeriesSetting],
             input_data: dict[str, DatasetConfig],
         ):
             # Callback that handles the global state of the component

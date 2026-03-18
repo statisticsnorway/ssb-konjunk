@@ -46,7 +46,7 @@ from .internal.graph_display import GraphDisplay
 from .internal.graph_settings_display import GraphSettingsDisplay
 from .internal.loading_test import load_datasets
 from .internal.series_selector import SeriesSelector
-from .internal.series_settings_display import SeriesSettingsDisplay
+from .internal.series_settings_display import SeriesSettingsDisplay, SeriesSetting
 from .internal.tab_selector import TabSelector
 
 
@@ -161,7 +161,7 @@ class GenVis(html.Div):
             Output(SeriesSelector.ids.store(aio_id), "data"),
             Input(TabSelector.ids.store(aio_id), "data"),
         )
-        def update_selected(selected: list[dict[str]]):
+        def update_selected(selected: list[dict[str, str]]):
             """Move data from the file selector to the series selector."""
             return selected
 
@@ -169,7 +169,7 @@ class GenVis(html.Div):
             Output(SeriesSettingsDisplay.ids.store(aio_id), "data"),
             Input(SeriesSelector.ids.selected_store(aio_id), "data"),
         )
-        def update_display(selected: list[dict[str]]):
+        def update_display(selected: list[dict[str, str]]):
             """Move data from the series selcetor to series settings display."""
             return selected
 
@@ -177,7 +177,7 @@ class GenVis(html.Div):
             Output(GraphDisplay.ids.series_store(aio_id), "data"),
             Input(SeriesSettingsDisplay.ids.settings_store(aio_id), "data"),
         )
-        def update_graph_series(selected: list[dict[str]]):
+        def update_graph_series(selected: list[dict[SeriesSetting]]):
             """Moves series settings to the graph display."""
             return selected
 
@@ -185,6 +185,6 @@ class GenVis(html.Div):
             Output(GraphDisplay.ids.settings_store(aio_id), "data"),
             Input(GraphSettingsDisplay.ids.settings_store(aio_id), "data"),
         )
-        def update_graph_settings(settings: list[dict[str]]):
+        def update_graph_settings(settings: dict[str, str]]):
             """Move general graph settings to the graph display."""
             return settings

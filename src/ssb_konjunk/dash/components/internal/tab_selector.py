@@ -180,9 +180,9 @@ class TabSelector(html.Div):
             prevent_initial_call=True,
         )
         def update_checked(
-            checked: list[dict[str]],
-            ids: list[dict],
-            current_state: list[dict],
+            checked: list[bool],
+            ids: list[dict[str, str]],
+            current_state: list[dict[str, str]],
             selected_tab: str | None,
         ):
             # Callback that updates a store that keeps track of which checkboxes are checked.

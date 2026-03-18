@@ -1,4 +1,4 @@
-from collections import defaultdict
+ from collections import defaultdict
 from functools import cache
 
 import pandas as pd
@@ -45,7 +45,7 @@ class DataManager:
 
     Eksempel:
     ---------
-        instans = Næringsanalyse(dataframe)
+        instans = Næringsanalyse(dat<e)
         tabell = instans.get_table_1_v2(period="2024M12")
         vis(tabell.res_data)
 

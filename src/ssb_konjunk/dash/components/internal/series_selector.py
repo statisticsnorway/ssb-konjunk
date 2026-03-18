@@ -125,7 +125,7 @@ class SeriesSelector(html.Div):
             State(self.ids.store(aio_id), "data"),
         )
         def update_checked(
-            checked: list[str],
+            checked: list[bool],
             ids: list[dict[str, str]],
             current_state: list[dict[str, str]],
             files: list[dict[str, str]],
