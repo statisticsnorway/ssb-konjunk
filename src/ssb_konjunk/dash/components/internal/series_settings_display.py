@@ -258,7 +258,7 @@ class SeriesSettingsDisplay(html.Div):
             col = triggered.get("col")
 
             # Handles groupby settings
-            for item_id, item in zip(ids, values, strict=True):
+            for item_id, item in zip(ids, values, strict=True):  # type: ignore[assignment]
                 if item_id == ctx.triggered_id:
                     for idx, val in enumerate(curr_state):
                         if (
@@ -266,12 +266,12 @@ class SeriesSettingsDisplay(html.Div):
                             and (val.dataset == dataset)
                             and (val.path == path)
                         ):
-                            curr_state[idx].groupby = item
+                            curr_state[idx].groupby = item  # type: ignore[assignment]
                             break
                     break
 
             # Handles aggregation settings
-            for item_id, item in zip(agg_ids, agg_settings, strict=True):
+            for item_id, item in zip(agg_ids, agg_settings, strict=True):  # type: ignore[assignment]
                 if item_id == ctx.triggered_id:
                     for idx, val in enumerate(curr_state):
                         if (
@@ -279,7 +279,7 @@ class SeriesSettingsDisplay(html.Div):
                             and (val.dataset == dataset)
                             and (val.path == path)
                         ):
-                            curr_state[idx].aggregation = item
+                            curr_state[idx].aggregation = item  # type: ignore[assignment]
                             break
 
             return [item.dict() for item in curr_state]
