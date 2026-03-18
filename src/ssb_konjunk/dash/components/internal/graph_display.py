@@ -103,9 +103,7 @@ class GraphDisplay(html.Div):
             # Callback that updates the graph based on changed series settings or
             # graph settings
             base_year: str | None = settings.get("base_year")
-            convert_method: Literal["none", "discrete"] = settings.get(
-                "convert"
-            )  # pyright: ignore
+            convert_method: Literal["none", "discrete"] = settings.get("convert", "none")  # type: ignore
             fig = go.Figure()
             fig.update_layout(
                 template="simple_white",

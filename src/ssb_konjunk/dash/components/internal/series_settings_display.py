@@ -33,7 +33,7 @@ class SeriesSetting:
         """Returnerer hash av objektets attributter."""
         return hash(self.__dict__)
 
-    def dict(self) -> int:
+    def dict(self) -> dict:
         """Returnerer objektets attributter som en dict."""
         return self.__dict__
 
@@ -129,7 +129,7 @@ class SeriesSettingsDisplay(html.Div):
             State(self.ids.settings_store(aio_id), "data"),
         )
         def update_display(
-            data: list[dict[str, str]], current_state: list[SeriesSetting]
+            data: list[dict[str, str]], current_state: list[dict[str, Any]]
         ):
             # Updates series settings based on which series are checked
             curr_state = [SeriesSetting(**item) for item in current_state]
@@ -220,9 +220,9 @@ class SeriesSettingsDisplay(html.Div):
             values: list[list[str]],
             ids: list[dict[str, str]],
             agg_ids: list[dict[str, str]],
-            agg_settings: list[str | None] | None,
-            current_state: list[SeriesSetting],
-            input_data: dict[str, DatasetConfig],
+            agg_settings: list[str | None],
+            current_state: list[dict[str, Any]],
+            input_data: list[dict[str, Any]],
         ):
             # Callback that handles the global state of the component
             curr_state: list[SeriesSetting] = []

@@ -153,7 +153,7 @@ class TabSelector(html.Div):
             Input(self.ids.tabs(aio_id), "active"),
             State(self.ids.store(aio_id), "data"),
         )
-        def update_tabs(selected: str, checked_files: list[dict[str]]):
+        def update_tabs(selected: str, checked_files: list[dict[str, str]]):
             # Updates which tabs are displayed in the data selector.
             dataset_list = datasets.get(selected)
             children = []
