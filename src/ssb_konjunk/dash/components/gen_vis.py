@@ -46,7 +46,8 @@ from .internal.graph_display import GraphDisplay
 from .internal.graph_settings_display import GraphSettingsDisplay
 from .internal.loading_test import load_datasets
 from .internal.series_selector import SeriesSelector
-from .internal.series_settings_display import SeriesSettingsDisplay, SeriesSetting
+from .internal.series_settings_display import SeriesSetting
+from .internal.series_settings_display import SeriesSettingsDisplay
 from .internal.tab_selector import TabSelector
 
 
@@ -185,6 +186,6 @@ class GenVis(html.Div):
             Output(GraphDisplay.ids.settings_store(aio_id), "data"),
             Input(GraphSettingsDisplay.ids.settings_store(aio_id), "data"),
         )
-        def update_graph_settings(settings: dict[str, str]]):
+        def update_graph_settings(settings: dict[str, str]):
             """Move general graph settings to the graph display."""
             return settings
