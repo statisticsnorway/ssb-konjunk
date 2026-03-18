@@ -1,6 +1,7 @@
 import uuid
 from dataclasses import dataclass
 from dataclasses import field
+from typing import Any
 
 from ssb_dash_components import Dropdown
 from ssb_dash_components import DropdownMultiple
@@ -75,7 +76,7 @@ class SeriesSettingsDisplay(html.Div):
 
         @staticmethod
         def aggregation_settings(
-            aio_id: str, path: str, dataset: str, col: str
+            aio_id: str, path: str | Any, dataset: str | Any, col: str | Any
         ) -> dict:
             """ID for an aggregation settings component."""
             return {
@@ -88,7 +89,9 @@ class SeriesSettingsDisplay(html.Div):
             }
 
         @staticmethod
-        def groupby_settings(aio_id: str, path: str, dataset: str, col: str) -> dict:
+        def groupby_settings(
+            aio_id: str, path: str | Any, dataset: str | Any, col: str | Any
+        ) -> dict:
             """ID for a groupby settings component."""
             return {
                 "component": "SeriesDisplay",

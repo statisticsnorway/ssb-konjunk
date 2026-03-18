@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 from ssb_dash_components import Checkbox
 from ssb_dash_components import Input as SSBInput
@@ -45,7 +46,7 @@ class TabSelector(html.Div):
             }
 
         @staticmethod
-        def checklist_item(aio_id: str, path: str, random: str) -> dict:
+        def checklist_item(aio_id: str, path: str | Any, random: str | Any) -> dict:
             """ID for a checklist item, including path and random key for JS search."""
             return {
                 "component": "TabSelector",

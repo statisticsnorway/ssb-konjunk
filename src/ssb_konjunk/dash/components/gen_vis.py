@@ -75,9 +75,6 @@ class GenVis(html.Div):
                 "aio_id": aio_id,
             }
 
-    # Make the ids class a public class
-    ids = ids
-
     # Define the arguments of the All-in-One component
     def __init__(self, config_path: str, aio_id: str | None = None) -> None:
         """Returns a component that can be used as its own page or as a component in other layouts.
@@ -178,7 +175,7 @@ class GenVis(html.Div):
             Output(GraphDisplay.ids.series_store(aio_id), "data"),
             Input(SeriesSettingsDisplay.ids.settings_store(aio_id), "data"),
         )
-        def update_graph_series(selected: list[dict[SeriesSetting]]):
+        def update_graph_series(selected: list[SeriesSetting]):
             """Moves series settings to the graph display."""
             return selected
 
