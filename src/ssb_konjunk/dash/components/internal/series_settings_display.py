@@ -1,6 +1,7 @@
 import uuid
 from dataclasses import dataclass
 from dataclasses import field
+from typing import Any
 
 from ssb_dash_components import Dropdown
 from ssb_dash_components import DropdownMultiple
@@ -32,7 +33,7 @@ class SeriesSetting:
         """Returnerer hash av objektets attributter."""
         return hash(self.__dict__)
 
-    def dict(self) -> int:
+    def dict(self) -> dict:
         """Returnerer objektets attributter som en dict."""
         return self.__dict__
 
@@ -75,7 +76,7 @@ class SeriesSettingsDisplay(html.Div):
 
         @staticmethod
         def aggregation_settings(
-            aio_id: str, path: str, dataset: str, col: str
+            aio_id: str, path: str | Any, dataset: str | Any, col: str | Any
         ) -> dict:
             """ID for an aggregation settings component."""
             return {
@@ -88,7 +89,9 @@ class SeriesSettingsDisplay(html.Div):
             }
 
         @staticmethod
-        def groupby_settings(aio_id: str, path: str, dataset: str, col: str) -> dict:
+        def groupby_settings(
+            aio_id: str, path: str | Any, dataset: str | Any, col: str | Any
+        ) -> dict:
             """ID for a groupby settings component."""
             return {
                 "component": "SeriesDisplay",
@@ -125,7 +128,9 @@ class SeriesSettingsDisplay(html.Div):
             Input(self.ids.store(aio_id), "data"),
             State(self.ids.settings_store(aio_id), "data"),
         )
-        def update_display(data: list[dict[str, str]], current_state: list[dict]):
+        def update_display(
+            data: list[dict[str, str]], current_state: list[dict[str, Any]]
+        ):
             # Updates series settings based on which series are checked
             curr_state = [SeriesSetting(**item) for item in current_state]
 
@@ -212,12 +217,12 @@ class SeriesSettingsDisplay(html.Div):
             State(self.ids.store(aio_id), "data"),
         )
         def update_groupby_settings(
-            values: list[str],
-            ids: list[dict[str]],
-            agg_ids: list[dict[str]],
-            agg_settings: list[str] | None,
-            current_state: list[dict[str]],
-            input_data: dict[str, DatasetConfig],
+            values: list[list[str]],
+            ids: list[dict[str, str]],
+            agg_ids: list[dict[str, str]],
+            agg_settings: list[str | None],
+            current_state: list[dict[str, Any]],
+            input_data: list[dict[str, Any]],
         ):
             # Callback that handles the global state of the component
             curr_state: list[SeriesSetting] = []
@@ -253,7 +258,7 @@ class SeriesSettingsDisplay(html.Div):
             col = triggered.get("col")
 
             # Handles groupby settings
-            for item_id, item in zip(ids, values, strict=True):
+            for item_id, item in zip(ids, values, strict=True):  # type: ignore[assignment]
                 if item_id == ctx.triggered_id:
                     for idx, val in enumerate(curr_state):
                         if (
@@ -261,12 +266,12 @@ class SeriesSettingsDisplay(html.Div):
                             and (val.dataset == dataset)
                             and (val.path == path)
                         ):
-                            curr_state[idx].groupby = item
+                            curr_state[idx].groupby = item  # type: ignore[assignment]
                             break
                     break
 
             # Handles aggregation settings
-            for item_id, item in zip(agg_ids, agg_settings, strict=True):
+            for item_id, item in zip(agg_ids, agg_settings, strict=True):  # type: ignore[assignment]
                 if item_id == ctx.triggered_id:
                     for idx, val in enumerate(curr_state):
                         if (
@@ -274,7 +279,7 @@ class SeriesSettingsDisplay(html.Div):
                             and (val.dataset == dataset)
                             and (val.path == path)
                         ):
-                            curr_state[idx].aggregation = item
+                            curr_state[idx].aggregation = item  # type: ignore[assignment]
                             break
 
             return [item.dict() for item in curr_state]

@@ -22,7 +22,7 @@ class DatasetConfig:
     index_col: str
     index_pattern: str
     groupby_col: str | None = field(default=None)
-    agg_type: AGG_TYPES | None = field(default=None)
+    agg_type: Literal["SUMMED", "AVERAGE"] = "SUMMED"
     agg_type_by_col: dict[str, AGG_TYPES] | None = field(default=None)
 
     def get_entries(self) -> list:

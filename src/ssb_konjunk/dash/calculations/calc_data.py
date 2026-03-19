@@ -46,7 +46,7 @@ class DataManager:
     Eksempel:
     ---------
         instans = Næringsanalyse(dataframe)
-        tabell = instans.get_table_1_v2(period="2024M12")
+        tabell = instans.get_table_1(period="2024-12")
         vis(tabell.res_data)
 
     """

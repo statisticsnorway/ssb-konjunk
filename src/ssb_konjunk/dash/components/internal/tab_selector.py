@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 from ssb_dash_components import Checkbox
 from ssb_dash_components import Input as SSBInput
@@ -45,7 +46,7 @@ class TabSelector(html.Div):
             }
 
         @staticmethod
-        def checklist_item(aio_id: str, path: str, random: str) -> dict:
+        def checklist_item(aio_id: str, path: str | Any, random: str | Any) -> dict:
             """ID for a checklist item, including path and random key for JS search."""
             return {
                 "component": "TabSelector",
@@ -152,7 +153,7 @@ class TabSelector(html.Div):
             Input(self.ids.tabs(aio_id), "active"),
             State(self.ids.store(aio_id), "data"),
         )
-        def update_tabs(selected: str, checked_files: list[dict[str]]):
+        def update_tabs(selected: str, checked_files: list[dict[str, str]]):
             # Updates which tabs are displayed in the data selector.
             dataset_list = datasets.get(selected)
             children = []
@@ -180,9 +181,9 @@ class TabSelector(html.Div):
             prevent_initial_call=True,
         )
         def update_checked(
-            checked: list[dict[str]],
-            ids: list[dict],
-            current_state: list[dict],
+            checked: list[bool],
+            ids: list[dict[str, str]],
+            current_state: list[dict[str, str]],
             selected_tab: str | None,
         ):
             # Callback that updates a store that keeps track of which checkboxes are checked.

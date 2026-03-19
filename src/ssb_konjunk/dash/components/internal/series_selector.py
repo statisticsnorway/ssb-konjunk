@@ -1,4 +1,5 @@
 import uuid
+from typing import Any
 
 import polars as pl
 from ssb_dash_components import Accordion
@@ -53,7 +54,9 @@ class SeriesSelector(html.Div):
             }
 
         @staticmethod
-        def checkbox(aio_id: str, path: str, col: str, dataset: str) -> dict:
+        def checkbox(
+            aio_id: str, path: str | Any, col: str | Any, dataset: str | Any
+        ) -> dict:
             """ID for a checkbox subcomponent, with dataset and column context."""
             return {
                 "component": "SeriesSelector",
@@ -125,7 +128,7 @@ class SeriesSelector(html.Div):
             State(self.ids.store(aio_id), "data"),
         )
         def update_checked(
-            checked: list[str],
+            checked: list[bool],
             ids: list[dict[str, str]],
             current_state: list[dict[str, str]],
             files: list[dict[str, str]],
