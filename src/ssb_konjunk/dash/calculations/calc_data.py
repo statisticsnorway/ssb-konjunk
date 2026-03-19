@@ -46,7 +46,7 @@ class DataManager:
     Eksempel:
     ---------
         instans = Næringsanalyse(dataframe)
-        tabell = instans.get_table_1(period="2024-12")
+        tabell = instans.get_table_1_v2(period="2024M12")
         vis(tabell.res_data)
 
     """
@@ -675,6 +675,230 @@ class DataManager:
             .iloc[::-1],
             sparkline_data=None,
             indirect=None,
+        )
+
+    def get_table_1(self, period: str | None = None) -> ReturnData:
+        """Genererer samleskjema med månedlige nivåer, endringer og vektet bidrag.
+
+        Samler sesongjusterte nivådata for de tre siste månedene og prosentvise endringer
+        for de siste fem. Deretter beregnes vektet bidrag for nåværende periode og alt
+        settes sammen til et tabellvennlig datasett med riktige overskrifter.
+
+        Args:
+            period (str or None): Valgfri referanseperiode (f.eks. '2023M03'). Hvis None, brukes siste tilgjengelige periode.
+
+        Returns:
+            ReturnData: Et objekt som inneholder overskrifter, samlet tabell for visning,
+            figurtall for vektet bidrag, og tom sparkline-data.
+        """
+        skip = self._prep_skip(period)
+        df_data = []
+        headers = []
+
+        for i in range(2, -1, -1):
+            header, data = self.season_source.n_month(1, i + skip)
+            df_data.append(data)
+            headers.append(header)
+
+        for i in range(4, -1, -1):
+            header, data = self.season_source.n_month_percent(1, i + skip)
+            df_data.append(data)
+            headers.append(header)
+
+        header, weight = self.weight_source.n_month(1, skip=skip)
+        _, index_season_pct = self.season_source.n_month_percent(1, skip=skip)
+        index_season_pct = index_season_pct.with_columns(
+            season=pl.col("season").round(1)
+        )
+        weighted_pct = (
+            index_season_pct.join(weight, on="nar")
+            .with_columns(
+                weighted=(pl.col("season") * (pl.col("weight") / 100)).round(2)
+            )
+            .drop("weight", "season")
+        )
+        return ReturnData(
+            header_1=[
+                "",
+                "",
+                "",
+                "",
+                "% Endring",
+                "% Endring",
+                "% Endring",
+                "% Endring",
+                "% Endring",
+            ],
+            header_2=["", *headers],
+            res_data=self._prep_df(multi_join(df_data, on="nar"), sort_by="nar")
+            .round(1)
+            .sort_values(
+                by="nar",
+                key=lambda col: col.map(
+                    lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                ),
+                ignore_index=True,
+            ),
+            figure_data=self._prep_df(weighted_pct, sort_by="nar")
+            .set_index("nar")["weighted"]
+            .iloc[::-1],
+            sparkline_data=None,
+            indirect=None,
+        )
+
+    def get_table_2(self, period: str | None = None) -> ReturnData:
+        """Genererer en tabell med rullerende 3-måneders gjennomsnitt og endringer med vektet bidrag.
+
+        Samler data for de tre siste 3-månedersperiodene med sesongjusterte verdier og
+        prosentvise endringer, og kombinerer disse i én tabell. I tillegg beregnes
+        vektede bidrag for nåværende periode basert på vekttall og endring.
+
+        Args:
+            period (str or None): Valgfri referanseperiode, som '2023M03'. Hvis None, brukes siste tilgjengelige.
+
+        Returns:
+            ReturnData: Et objekt som inneholder overskrifter, samlet tabell,
+            figurtall for vektet bidrag, og tomt sparkline-datafelt.
+        """
+        skip = self._prep_skip(period)
+
+        df_data = []
+        headers = []
+
+        df_data_percent = []
+        headers_percent = []
+
+        for i in range(2, -1, -1):
+            header, data = self.season_source.n_mean_rolling(3, (i * 3) + skip)
+            df_data.append(data)
+            headers.append(header)
+
+            header, data = self.season_source.n_month_rolling_percent_compare(
+                3, (i * 3) + skip, (i * 3) + skip + 3
+            )
+
+            df_data_percent.append(data)
+            headers_percent.append(header)
+
+        # TODO
+        # Fix graph data
+
+        header, weight = self.weight_source.n_month(3, skip=skip)
+        _, index_season_pct = self.season_source.n_month_percent(3, skip=skip)
+        index_season_pct = index_season_pct.with_columns(
+            season=pl.col("season").round(1)
+        )
+        weighted_pct = (
+            index_season_pct.join(weight, on="nar")
+            .with_columns(
+                weighted=(pl.col("season") * (pl.col("weight") / 100)).round(2)
+            )
+            .drop("weight", "season")
+        )
+
+        return ReturnData(
+            header_1=["", "", "", "", "% Endring", "% Endring", "% Endring"],
+            header_2=["", *headers, *headers_percent],
+            res_data=self._prep_df(
+                multi_join([*df_data, *df_data_percent], on="nar"), sort_by="nar"
+            )
+            .round(1)
+            .sort_values(
+                by="nar",
+                key=lambda col: col.map(
+                    lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                ),
+                ignore_index=True,
+            ),
+            figure_data=self._prep_df(weighted_pct, "nar")
+            .set_index("nar")["weighted"]
+            .iloc[::-1],
+            sparkline_data=None,
+            indirect=0,
+        )
+
+    def get_table_3(self, period: str | None = None) -> ReturnData:
+        """Genererer tabell med 12-måneders nivåer og endringer over to påfølgende perioder.
+
+        Samler inn tre datasett:
+        - Verdier fra forrige 12-månedersperiode,
+        - Verdier fra nåværende 12-månedersperiode,
+        - Prosentvise endringer mellom dem.
+
+        Vekter og beregner samtidig et totalbidrag for hver næringskode.
+        Resultatet struktureres for presentasjon i tabell og søylediagram.
+
+        Args:
+            period (str or None): Valgfri referanseperiode (som '2023M03'). Hvis None, brukes siste tilgjengelige.
+
+        Returns:
+            ReturnData: Objekt med tabelloverskrifter, aggregerte verdier og endringer,
+            samt vektede tall for figuranalyse. Sparkline-data er ikke inkludert.
+        """
+        skip = self._prep_skip(period)
+
+        prev, prev_headers = [], []
+        curr, curr_headers = [], []
+        percent, percent_headers = [], []
+        for i in range(2, -1, -1):
+            header, data = self.calendar_source.n_percent_rolling(13, skip + i)
+            percent.append(data)
+            percent_headers.append(header)
+
+            header, data = self.calendar_source.n_month(1, skip + 12 + i)
+            prev.append(data)
+            prev_headers.append(header)
+
+            header, data = self.calendar_source.n_month(1, skip + i)
+            curr.append(data)
+            curr_headers.append(header)
+
+        header, weight = self.weight_source.n_month(12, skip=skip)
+
+        _, index_season_pct = self.calendar_source.n_percent_rolling(13, skip=skip * 12)
+        index_season_pct = index_season_pct.with_columns(
+            calendar=pl.col("calendar").round(1)
+        )
+
+        weighted_pct = (
+            index_season_pct.join(weight, on="nar")
+            .with_columns(
+                weighted=(pl.col("calendar") * (pl.col("weight") / 100)).round(2)
+            )
+            .drop("weight", "calendar")
+        )
+        df = multi_join([*prev, *curr, *percent], on="nar")
+        # TODO
+        # Fiks data for graf
+
+        return ReturnData(
+            header_1=[
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "% Endring",
+                "% Endring",
+                "% Endring",
+            ],
+            header_2=["", *prev_headers, *curr_headers, *percent_headers],
+            res_data=self._prep_df(df, sort_by="nar")
+            .round(1)
+            .sort_values(
+                by="nar",
+                key=lambda col: col.map(
+                    lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                ),
+                ignore_index=True,
+            ),
+            figure_data=self._prep_df(weighted_pct, "nar")
+            .set_index("nar")["weighted"]
+            .iloc[::-1],
+            sparkline_data=None,
+            indirect=0,
         )
 
 
