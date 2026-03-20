@@ -901,6 +901,188 @@ class DataManager:
             indirect=0,
         )
 
+    def get_table_4(self, period: str | None = None) -> ReturnData:
+        """Genererer tabell med 3-måneders glidende gjennomsnitt og årlig endring.
+
+        Henter og sammenstiller data fra nåværende og forrige år for tre påfølgende
+        3-månedersperioder. Beregner også prosentvise endringer mellom tilsvarende
+        perioder, og klargjør datasettet for visning.
+
+        Args:
+            period (str or None): Referanseperiode (f.eks. '2023M03'). Hvis None, brukes siste tilgjengelige.
+
+        Returns:
+            ReturnData: Objekt som inneholder overskrifter, sammensatt tabell med
+            glidende gjennomsnitt og prosentendringer. Inkluderer ikke figurtall eller sparkline-data.
+        """
+        skip = self._prep_skip(period)
+
+        avg_data, avg_data_header = [], []
+        avg_data_prev, avg_data_header_prev = [], []
+        percent, percent_header = [], []
+
+        for i in range(2, -1, -1):
+
+            header, data = self.calendar_source.n_mean_rolling(3, (i * 3) + skip)
+            avg_data.append(data)
+            avg_data_header.append(header)
+
+            header, data = self.calendar_source.n_mean_rolling(3, (i * 3) + skip + 12)
+
+            avg_data_prev.append(data)
+            avg_data_header_prev.append(header)
+
+            header, data = self.calendar_source.n_month_rolling_percent_compare(
+                3, (i * 3) + skip, (i * 3) + skip + 12
+            )
+
+            percent.append(data)
+            percent_header.append(header)
+
+        _head_1 = "3 måneders gjennomsnitt"
+        _head_2 = "% Endring"
+        return ReturnData(
+            header_1=[
+                "",
+                *[_head_1] * 6,
+                *[_head_2] * 3,
+            ],
+            header_2=["", *avg_data_header_prev, *avg_data_header, *percent_header],
+            res_data=self._prep_df(
+                multi_join([*avg_data_prev, *avg_data, *percent], on="nar"),
+                sort_by="nar",
+            )
+            .round(1)
+            .sort_values(
+                by="nar",
+                key=lambda col: col.map(
+                    lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                ),
+                ignore_index=True,
+            ),
+            figure_data=None,
+            sparkline_data=None,
+            indirect=0,
+        )
+
+    def get_table_5(self, period: str | None = None) -> ReturnData:
+        """Oppretter tabell med rådata som 3-måneders gjennomsnitt og årlige endringer.
+
+        Kombinerer tre hovedkomponenter:
+        - Gjennomsnitt fra nåværende og forrige år for to 3-månedersperioder,
+        - Prosentvise endringer sammenlignet med samme periode året før,
+        - Årlig utvikling målt som enkeltmånedsgjennomsnitt og endringer.
+
+        Resultatet struktureres med passende overskrifter for tabellfremstilling.
+
+        Args:
+            period (str or None): Valgfri referanseperiode (f.eks. '2023M03'). Hvis None, brukes siste tilgjengelige periode.
+
+        Returns:
+            ReturnData: Objekt som inneholder kolonneoverskrifter og samlet datasett for visning.
+            Figur- og sparkline-data er ikke inkludert i denne tabellvarianten.
+        """
+        skip = self._prep_skip(period)
+        df_data, headers = [], []
+        df_data_prev, headers_prev = [], []
+        df_data_last, headers_last = [], []
+
+        for i in range(1, -1, -1):
+            header, data = self.raw_source.n_mean_rolling(2, (i * 3) + skip)
+            df_data.append(data)
+            headers.append(header)
+
+            header, data = self.raw_source.n_mean_rolling(2, skip + 12 + i * 3)
+            df_data_prev.append(data)
+            headers_prev.append(header)
+
+        for i in range(1, -1, -1):
+            header, data = self.raw_source.n_month_rolling_percent_compare(3, i, 12 + i)
+            df_data_last.append(data)
+            headers_last.append(header)
+
+        for i in range(1, -1, -1):
+            header, data = self.raw_source.n_mean_rolling(1, i * 12)
+            df_data_last.append(data)
+            headers_last.append(header)
+
+        header, data = self.raw_source.n_month_rolling_percent_compare(1, 0, 12)
+        df_data_last.append(data)
+        headers_last.append(header)
+
+        _head_1 = "3 måneders gjennomsnitt"
+        return ReturnData(
+            header_1=[
+                "",
+                *[_head_1] * 6,
+                "",
+                "",
+                "% Endring",
+            ],
+            header_2=["", *headers_prev, *headers, *headers_last],
+            res_data=self._prep_df(
+                multi_join([*df_data_prev, *df_data, *df_data_last], on="nar"),
+                sort_by="nar",
+            )
+            .round(1)
+            .sort_values(
+                by="nar",
+                key=lambda col: col.map(
+                    lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                ),
+                ignore_index=True,
+            ),
+            figure_data=None,
+            sparkline_data=None,
+            indirect=0,
+        )
+
+    def get_table_6(
+        self,
+        period: str | None = None,
+    ) -> ReturnData:
+        """Genererer tabell med vektserier for tre 12-månedersperioder.
+
+        Henter vektdata fra tre påfølgende 12-månedersintervaller og kombinerer dem
+        til en sammenlignbar tabell. Brukes til å vise hvordan vektene har utviklet
+        seg over tid for ulike næringskoder.
+
+        Args:
+            period (str or None): Referanseperiode i format som '2023M03'. Hvis None, brukes siste tilgjengelige periode.
+
+        Returns:
+            ReturnData: Et objekt som inneholder overskrifter, formaterte vektdata for tabellvisning,
+            og figurtall for den siste perioden. Sparkline-data er ikke inkludert.
+        """
+        skip = self._prep_skip(period)
+        df_data = []
+        headers = []
+
+        for i in range(2, -1, -1):
+            header, data = self.weight_source.n_month(12, i + skip)
+            df_data.append(data)
+            headers.append(header)
+
+        return ReturnData(
+            header_1=[],
+            header_2=["", *headers],
+            res_data=self._prep_df(
+                multi_join(df_data, on="nar"), sort_by="nar"
+            ).sort_values(
+                by="nar",
+                key=lambda col: col.map(
+                    lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                ),
+                ignore_index=True,
+            ),
+            figure_data=self._prep_df(df_data[-1], sort_by="nar")
+            .set_index("nar")["weight"]
+            .iloc[::-1]
+            .round(2),
+            sparkline_data=None,
+            indirect=0,
+        )
+
 
 @cache
 def get_data_manager(path: str) -> DataManager:

@@ -462,5 +462,141 @@ def test_get_table_3(data):
     pd.testing.assert_frame_equal(get_table_3.res_data, expected_res_data)
 
 
+def test_get_table_4(data):
+    get_table_4 = data.get_table_4()
+    expected_header_1 = [
+        "",
+        "3 måneders gjennomsnitt",
+        "3 måneders gjennomsnitt",
+        "3 måneders gjennomsnitt",
+        "3 måneders gjennomsnitt",
+        "3 måneders gjennomsnitt",
+        "3 måneders gjennomsnitt",
+        "% Endring",
+        "% Endring",
+        "% Endring",
+    ]
+    expected_header_2 = [
+        "",
+        "Apr 2023 - Jun 2023",
+        "Jul 2023 - Sep 2023",
+        "Oct 2023 - Dec 2023",
+        "Apr 2024 - Jun 2024",
+        "Jul 2024 - Sep 2024",
+        "Oct 2024 - Dec 2024",
+        "Apr 2023 - Jun 2023 / Apr 2024 - Jun 2024",
+        "Jul 2023 - Sep 2023 / Jul 2024 - Sep 2024",
+        "Oct 2023 - Dec 2023 / Oct 2024 - Dec 2024",
+    ]
+
+    expected_res_data = pd.DataFrame(
+        {
+            "nar": [
+                "  H - Transport og lagring",
+                "  K - Finansierings- og forsikringsvirks",
+                "        49.1 - Passasjertransport med je",
+                "        49.2 - Godstransport med jernban",
+                "    64 - Finansieringsvirksomhet",
+            ],
+            "calendar": [90.9, 94.1, 114.1, 107.4, 99.5],
+            "calendar0": [101.5, 98.1, 88.1, 108.8, 87.0],
+            "calendar1": [93.4, 96.9, 101.8, 103.2, 95.7],
+            "calendar2": [102.5, 105.8, 110.0, 103.6, 100.1],
+            "calendar3": [96.6, 102.5, 101.8, 103.8, 101.0],
+            "calendar4": [107.6, 97.0, 104.3, 98.1, 93.7],
+            "calendar5": [12.7, 12.5, -3.6, -3.5, 0.5],
+            "calendar6": [-4.8, 4.4, 15.6, -4.6, 16.1],
+            "calendar7": [15.2, 0.2, 2.5, -4.9, -2.1],
+        }
+    )
+
+    assert get_table_4.header_1 == expected_header_1
+    assert get_table_4.header_2 == expected_header_2
+    pd.testing.assert_frame_equal(get_table_4.res_data, expected_res_data)
+
+
+def test_get_table_5(data):
+    get_table_5 = data.get_table_5()
+    expected_header_1 = [
+        "",
+        "3 måneders gjennomsnitt",
+        "3 måneders gjennomsnitt",
+        "3 måneders gjennomsnitt",
+        "3 måneders gjennomsnitt",
+        "3 måneders gjennomsnitt",
+        "3 måneders gjennomsnitt",
+        "",
+        "",
+        "% Endring",
+    ]
+    expected_header_2 = [
+        "",
+        "Aug 2023 - Sep 2023",
+        "Nov 2023 - Dec 2023",
+        "Aug 2024 - Sep 2024",
+        "Nov 2024 - Dec 2024",
+        "Sep 2023 - Nov 2023 / Sep 2024 - Nov 2024",
+        "Oct 2023 - Dec 2023 / Oct 2024 - Dec 2024",
+        "Dec 2023 - Dec 2023",
+        "Dec 2024 - Dec 2024",
+        "Dec 2023 - Dec 2023 / Dec 2024 - Dec 2024",
+    ]
+
+    expected_res_data = pd.DataFrame(
+        {
+            "nar": [
+                "  H - Transport og lagring",
+                "  K - Finansierings- og forsikringsvirks",
+                "        49.1 - Passasjertransport med je",
+                "        49.2 - Godstransport med jernban",
+                "    64 - Finansieringsvirksomhet",
+            ],
+            "raw": [96.8, 105.9, 95.9, 81.9, 100.8],
+            "raw0": [111.3, 106.3, 105.2, 88.5, 88.5],
+            "raw1": [104.4, 100.9, 107.0, 112.6, 97.7],
+            "raw2": [85.0, 99.3, 106.1, 105.0, 90.3],
+            "raw3": [-3.3, -10.0, 5.6, 30.7, 8.5],
+            "raw4": [-14.9, -9.4, -0.1, 25.1, 4.7],
+            "raw5": [109.4, 104.9, 116.1, 93.1, 86.5],
+            "raw6": [86.0, 91.4, 93.3, 118.0, 89.9],
+            "raw7": [-21.4, -12.9, -19.6, 26.8, 4.0],
+        }
+    )
+
+    assert get_table_5.header_1 == expected_header_1
+    assert get_table_5.header_2 == expected_header_2
+    pd.testing.assert_frame_equal(get_table_5.res_data, expected_res_data)
+
+
+def test_get_table_6(data):
+    get_table_6 = data.get_table_6()
+    expected_header_1 = []
+    expected_header_2 = [
+        "",
+        "Dec 2021 - Dec 2022",
+        "Dec 2022 - Dec 2023",
+        "Dec 2023 - Dec 2024",
+    ]
+
+    expected_res_data = pd.DataFrame(
+        {
+            "nar": [
+                "  H - Transport og lagring",
+                "  K - Finansierings- og forsikringsvirks",
+                "        49.1 - Passasjertransport med je",
+                "        49.2 - Godstransport med jernban",
+                "    64 - Finansieringsvirksomhet",
+            ],
+            "weight": [29.3, 32.3, 21.6, 30.1, 32.5],
+            "weight0": [23.5, 34.2, 28.2, 28.0, 26.7],
+            "weight1": [35.5, 29.9, 32.2, 27.7, 33.7],
+        }
+    )
+
+    assert get_table_6.header_1 == expected_header_1
+    assert get_table_6.header_2 == expected_header_2
+    pd.testing.assert_frame_equal(get_table_6.res_data, expected_res_data)
+
+
 def test_data_manager(data):
     assert isinstance(data, DataManager)
