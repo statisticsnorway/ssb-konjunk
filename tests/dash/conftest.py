@@ -3,13 +3,14 @@ import pandas as pd
 import polars as pl
 import pytest
 
+from ssb_konjunk.dash.calculations.calc_data import DataManager
 from ssb_konjunk.dash.calculations.helper_functions import DataSource
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def test_df():
     np.random.seed(0)
-    periods = pd.date_range("2023-12", "2024-12", freq="MS").strftime("%Y-%m")
+    periods = pd.date_range("2021-11", "2024-12", freq="MS").strftime("%Y-%m")
 
     nars = ["H", "49.1", "49.2", "K", "64"]
 
@@ -28,6 +29,11 @@ def test_df():
             )
 
     return pd.DataFrame(rows)
+
+
+@pytest.fixture(scope="module")
+def data(test_df):
+    return DataManager(test_df)
 
 
 @pytest.fixture
