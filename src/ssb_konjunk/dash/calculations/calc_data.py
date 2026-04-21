@@ -248,6 +248,7 @@ class DataManager:
     @staticmethod
     def _normalize_weight(
         table_data: pl.DataFrame,
+        includes_parent_aggregate: bool,
     ) -> tuple[pl.DataFrame, pl.DataFrame]:
         """Normaliserer vektene til et datasett.
 
@@ -260,11 +261,18 @@ class DataManager:
             table_data (pl.DataFrame): Et datasett med normalisert vekt data og ny prosentendringsdata.
             weighted_pct (pl.DataFrame): Samme datasett, men bare med vektet prosentendringsdata.
         """
-        table_data = table_data.with_columns(
-            ((pl.col("weight") / table_data["weight"].sum() * 100).round(2)).alias(
-                "weight"
+        if includes_parent_aggregate:
+            table_data = table_data.with_columns(
+                (pl.col("weight") / pl.col("weight").max() * 100)
+                .round(2)
+                .alias("weight")
             )
-        )
+        else:
+            table_data = table_data.with_columns(
+                ((pl.col("weight") / table_data["weight"].sum() * 100).round(2)).alias(
+                    "weight"
+                )
+            )
         col = next(
             (c for c in ["season1", "calendar1"] if c in table_data.columns), None
         )
@@ -398,6 +406,7 @@ class DataManager:
         period: str | None = None,
         max_nace_level: int | None = None,
         nace_filter: list[str] | None = None,
+        includes_parent_aggregate: bool = True,
     ) -> ReturnData:
         """Henter sesongjusterte 3-måneders endringer og beregner vektede bidrag.
 
@@ -469,7 +478,9 @@ class DataManager:
             )
         if nace_filter:
             table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
-            table_data, weighted_pct = self._normalize_weight(table_data)
+            table_data, weighted_pct = self._normalize_weight(
+                table_data, includes_parent_aggregate=includes_parent_aggregate
+            )
 
         return ReturnData(
             header_1=self.header_1,
@@ -480,10 +491,14 @@ class DataManager:
                 .sort_values(
                     by="nar",
                     key=lambda col: col.map(
-                        lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                        lambda x: (
+                            str(x).lstrip()[0].isdigit(),
+                            -len(str(x).split("-", 1)[0]),
+                            str(x),
+                        )
                     ),
-                    ignore_index=True,
                 )
+                .reset_index(drop=True)
             ),
             figure_data=self._prep_df(weighted_pct, "nar")
             .set_index("nar")["weighted"]
@@ -499,6 +514,7 @@ class DataManager:
         period: str | None = None,
         max_nace_level: int | None = None,
         nace_filter: list[str] | None = None,
+        includes_parent_aggregate: bool = True,
     ) -> ReturnData:
         """Beregner månedlig sesongjustert endring og vektet bidrag for valgt periode.
 
@@ -563,7 +579,10 @@ class DataManager:
             )
         if nace_filter:
             table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
-            table_data, weighted_pct = self._normalize_weight(table_data)
+            table_data, weighted_pct = self._normalize_weight(
+                table_data, includes_parent_aggregate=includes_parent_aggregate
+            )
+
         return ReturnData(
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
@@ -573,10 +592,14 @@ class DataManager:
                 .sort_values(
                     by="nar",
                     key=lambda col: col.map(
-                        lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                        lambda x: (
+                            str(x).lstrip()[0].isdigit(),
+                            -len(str(x).split("-", 1)[0]),
+                            str(x),
+                        )
                     ),
-                    ignore_index=True,
                 )
+                .reset_index(drop=True)
             ),
             figure_data=self._prep_df(weighted_pct, "nar")
             .set_index("nar")["weighted"]
@@ -592,6 +615,7 @@ class DataManager:
         period: str | None = None,
         max_nace_level: int | None = None,
         nace_filter: list[str] | None = None,
+        includes_parent_aggregate: bool = True,
     ) -> ReturnData:
         """Beregner 12-måneders kalenderjusterte endringer og tilhørende vektede bidrag.
 
@@ -655,7 +679,10 @@ class DataManager:
             )
         if nace_filter:
             table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
-            table_data, weighted_pct = self._normalize_weight(table_data)
+            table_data, weighted_pct = self._normalize_weight(
+                table_data, includes_parent_aggregate=includes_parent_aggregate
+            )
+
         return ReturnData(
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
@@ -665,10 +692,14 @@ class DataManager:
                 .sort_values(
                     by="nar",
                     key=lambda col: col.map(
-                        lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                        lambda x: (
+                            str(x).lstrip()[0].isdigit(),
+                            -len(str(x).split("-", 1)[0]),
+                            str(x),
+                        )
                     ),
-                    ignore_index=True,
                 )
+                .reset_index(drop=True)
             ),
             figure_data=self._prep_df(weighted_pct, "nar")
             .set_index("nar")["weighted"]
@@ -735,10 +766,14 @@ class DataManager:
             .sort_values(
                 by="nar",
                 key=lambda col: col.map(
-                    lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                    lambda x: (
+                        str(x).lstrip()[0].isdigit(),
+                        -len(str(x).split("-", 1)[0]),
+                        str(x),
+                    )
                 ),
-                ignore_index=True,
-            ),
+            )
+            .reset_index(drop=True),
             figure_data=self._prep_df(weighted_pct, sort_by="nar")
             .set_index("nar")["weighted"]
             .iloc[::-1],
@@ -806,10 +841,14 @@ class DataManager:
             .sort_values(
                 by="nar",
                 key=lambda col: col.map(
-                    lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                    lambda x: (
+                        str(x).lstrip()[0].isdigit(),
+                        -len(str(x).split("-", 1)[0]),
+                        str(x),
+                    )
                 ),
-                ignore_index=True,
-            ),
+            )
+            .reset_index(drop=True),
             figure_data=self._prep_df(weighted_pct, "nar")
             .set_index("nar")["weighted"]
             .iloc[::-1],
@@ -890,10 +929,14 @@ class DataManager:
             .sort_values(
                 by="nar",
                 key=lambda col: col.map(
-                    lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                    lambda x: (
+                        str(x).lstrip()[0].isdigit(),
+                        -len(str(x).split("-", 1)[0]),
+                        str(x),
+                    )
                 ),
-                ignore_index=True,
-            ),
+            )
+            .reset_index(drop=True),
             figure_data=self._prep_df(weighted_pct, "nar")
             .set_index("nar")["weighted"]
             .iloc[::-1],
@@ -956,10 +999,14 @@ class DataManager:
             .sort_values(
                 by="nar",
                 key=lambda col: col.map(
-                    lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
+                    lambda x: (
+                        str(x).lstrip()[0].isdigit(),
+                        -len(str(x).split("-", 1)[0]),
+                        str(x),
+                    )
                 ),
-                ignore_index=True,
-            ),
+            )
+            .reset_index(drop=True),
             figure_data=None,
             sparkline_data=None,
             indirect=0,
@@ -1031,7 +1078,8 @@ class DataManager:
                     lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
                 ),
                 ignore_index=True,
-            ),
+            )
+            .reset_index(drop=True),
             figure_data=None,
             sparkline_data=None,
             indirect=0,
@@ -1066,15 +1114,15 @@ class DataManager:
         return ReturnData(
             header_1=[],
             header_2=["", *headers],
-            res_data=self._prep_df(
-                multi_join(df_data, on="nar"), sort_by="nar"
-            ).sort_values(
+            res_data=self._prep_df(multi_join(df_data, on="nar"), sort_by="nar")
+            .sort_values(
                 by="nar",
                 key=lambda col: col.map(
                     lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
                 ),
                 ignore_index=True,
-            ),
+            )
+            .reset_index(drop=True),
             figure_data=self._prep_df(df_data[-1], sort_by="nar")
             .set_index("nar")["weight"]
             .iloc[::-1]

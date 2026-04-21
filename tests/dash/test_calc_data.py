@@ -60,17 +60,19 @@ def test_sort_aggregates():
 def test_normalize_weight():
     test_table_data = pl.DataFrame(
         {
-            "nar": ["K", "H"],
-            "weight": [24.236229, 18.370044],
-            "season": [87.518523, 97.889373],
-            "season1": [-16.4, -3.3],
-            "weighted": [-4.46, -1.24],
+            "nar": ["K", "H", "HTNXK"],
+            "weight": [24.23, 18.37, 42.60],
+            "season": [87.518523, 97.889373, 103.823473],
+            "season1": [-16.4, -3.3, 14.5],
+            "weighted": [-4.46, -1.24, 23.5],
         }
     )
 
-    test_table_data, test_weighted = DataManager._normalize_weight(test_table_data)
+    test_table_data, test_weighted = DataManager._normalize_weight(
+        test_table_data, includes_parent_aggregate=True
+    )
 
-    assert test_table_data["weight"].cast(pl.Float64).sum() == 100
+    assert test_table_data["weight"].cast(pl.Float64).sum() == 200
     assert test_weighted["weighted"].to_list() == test_table_data["weighted"].to_list()
 
     test_table_data_fail = pl.DataFrame(
@@ -83,7 +85,9 @@ def test_normalize_weight():
     )
 
     with pytest.raises(ValueError):
-        DataManager._normalize_weight(test_table_data_fail)
+        DataManager._normalize_weight(
+            test_table_data_fail, includes_parent_aggregate=True
+        )
 
 
 def test_get_all_periods(data):
@@ -127,10 +131,10 @@ def test_create_period_range(data):
 
 def test_get_sesonal_adjusted_3_mth_change(data):
     seasonal_3_mnt_change_1 = data.get_sesonal_adjusted_3_mth_change(
-        nace_filter=["H", "K"]
+        nace_filter=["H", "K"], includes_parent_aggregate=False
     )
     seasonal_3_mnt_change_2 = data.get_sesonal_adjusted_3_mth_change(
-        nace_filter=["H", "49.1", "49.2"]
+        nace_filter=["H", "49.1", "49.2"], includes_parent_aggregate=False
     )
     seasonal_3_mnt_change_3 = data.get_sesonal_adjusted_3_mth_change(max_nace_level=1)
 
@@ -191,9 +195,11 @@ def test_get_sesonal_adjusted_3_mth_change(data):
 
 
 def test_get_sesonal_adjusted_mth_change(data):
-    seasonal_mnt_change_1 = data.get_sesonal_adjusted_mth_change(nace_filter=["H", "K"])
+    seasonal_mnt_change_1 = data.get_sesonal_adjusted_mth_change(
+        nace_filter=["H", "K"], includes_parent_aggregate=False
+    )
     seasonal_mnt_change_2 = data.get_sesonal_adjusted_mth_change(
-        nace_filter=["H", "49.1", "49.2"]
+        nace_filter=["H", "49.1", "49.2"], includes_parent_aggregate=False
     )
     seasonal_mnt_change_3 = data.get_sesonal_adjusted_mth_change(max_nace_level=1)
 
@@ -255,10 +261,10 @@ def test_get_sesonal_adjusted_mth_change(data):
 
 def test_get_sesonal_adjusted_12_mth_change(data):
     seasonal_12_mnt_change_1 = data.get_sesonal_adjusted_12_mth_change(
-        nace_filter=["H", "K"]
+        nace_filter=["H", "K"], includes_parent_aggregate=False
     )
     seasonal_12_mnt_change_2 = data.get_sesonal_adjusted_12_mth_change(
-        nace_filter=["H", "49.1", "49.2"]
+        nace_filter=["H", "49.1", "49.2"], includes_parent_aggregate=False
     )
     seasonal_12_mnt_change_3 = data.get_sesonal_adjusted_12_mth_change(max_nace_level=1)
 
@@ -404,7 +410,8 @@ def test_get_table_2(data):
             "season4": [14.2, -3.8, 9.7, 4.0, 19.2],
         }
     )
-
+    print(get_table_2.res_data)
+    print(expected_res_data)
     assert get_table_2.header_1 == expected_header_1
     assert get_table_2.header_2 == expected_header_2
     pd.testing.assert_frame_equal(get_table_2.res_data, expected_res_data)
