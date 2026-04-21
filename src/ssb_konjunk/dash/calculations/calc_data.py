@@ -256,6 +256,7 @@ class DataManager:
 
         Args:
             table_data (pl.DataFrame): Et datasett med vekt data og prosentendringsdata.
+            includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
 
         Returns:
             table_data (pl.DataFrame): Et datasett med normalisert vekt data og ny prosentendringsdata.
@@ -420,6 +421,7 @@ class DataManager:
             max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn).
                 Brukes til å filtrere detaljeringsnivå i resultatene.
             nace_filter: (list[str] or None): Filter for hvilke nacer du ønsker å ha med i tabellen.
+            includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
 
         Returns:
             ReturnData: Et objekt som inneholder overskrifter, formaterte resultatdata,
@@ -525,6 +527,7 @@ class DataManager:
             period (str or None): Valgfri referanseperiode, som '2023M03'. Hvis None, brukes siste tilgjengelige.
             max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn). Brukes for å filtrere detaljeringsnivå.
             nace_filter: (list[str] or None): Filter for hvilke nacer du ønsker å ha med i tabellen.
+            includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
 
         Returns:
             ReturnData: Et objekt med kolonneoverskrifter, formaterte tabeller, figursøyledata
@@ -627,6 +630,7 @@ class DataManager:
             period (str or None): Valgfri referanseperiode, som '2023M03'. Hvis None, brukes siste tilgjengelige periode.
             max_nace_level (int or None): Maksimalt antall tegn i NACE-koder som brukes til å filtrere detaljeringsnivå i resultatene.
             nace_filter: (list[str] or None): Filter for hvilke nacer du ønsker å ha med i tabellen.
+            includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
 
         Returns:
             ReturnData: Objekt med tabelloverskrifter, datasett for visning og analyse,
