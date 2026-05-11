@@ -9,16 +9,18 @@ from ssb_konjunk.dash.calculations.calc_data import DataManager
 from ssb_konjunk.dash.calculations.calc_data import get_data_manager
 
 _config = None
+_get_data_manager = None
 
-
-def setup(config: type[Any]) -> None:
+def setup(config: type[Any], data_manager_class: Any = get_data_manager) -> None:
     """Setter global konfigurasjon for modulen.
 
     Args:
         config (type[Config]): Klassen som inneholder konfigurasjonsinnstillinger.
     """
     global _config
+    global _get_data_manager
     _config = config
+    _get_data_manager = data_manager_class
 
 
 @cache
@@ -39,11 +41,15 @@ def get_data(file: str | None = None) -> DataManager:
         raise RuntimeError(
             "Package not configured. Call setup(config) in start_dash first."
         )
+    if _get_data_manager is None:
+        raise RuntimeError(
+            "Package not configured. Call setup(config) in start_dash first."
+        )
 
     if file == "old":
-        return get_data_manager(_config.select_file(1))
+        return _get_data_manager(_config.select_file(1))
     else:
-        return get_data_manager(_config.data_path())
+        return _get_data_manager(_config.data_path())
 
 
 @cache
