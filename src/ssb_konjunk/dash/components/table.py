@@ -9,6 +9,7 @@ from .figure import generate_sparkline
 def generate_custom_table(
     title: str,
     dataframe: pd.DataFrame,
+    groupby_col: str,
     header_1: list[str] | None = None,
     header_2: list[str] | None = None,
     sparkline_data: pd.DataFrame | None = None,
@@ -52,10 +53,15 @@ def generate_custom_table(
             cells.append(html.Td(val, style=style))
 
         if sparkline_data is not None:
-            nar = row_data["nar"].split(" - ")[0].strip()
-            sparkline_filtered = sparkline_data[sparkline_data["nar"] == nar]
-            sparkline_filtered = sparkline_filtered.drop("nar", axis=1)
-            sparkline_filtered = sparkline_filtered.values[0].tolist()
+            
+            nar = row_data[groupby_col].split(" - ")[0].strip()
+            sparkline_filtered = sparkline_data[sparkline_data[groupby_col] == nar]
+            sparkline_filtered = sparkline_filtered.drop(groupby_col, axis=1)
+            try:
+                sparkline_filtered = sparkline_filtered.values[0].tolist()
+            except IndexError:
+                print(f"No sparkline data for {nar}. Data: {row_data}")
+                sparkline_filtered = []
             cells.append(
                 html.Td(
                     dcc.Graph(

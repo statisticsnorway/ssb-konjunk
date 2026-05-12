@@ -511,6 +511,7 @@ class DataManager:
             .to_pandas()
             .sort_values(by=self.nace_col, key=self.sort_aggregates),
             indirect=None,
+            groupby_col=self.nace_col
         )
 
     def get_sesonal_adjusted_mth_change(
@@ -613,6 +614,7 @@ class DataManager:
             .to_pandas()
             .sort_values(by=self.nace_col, key=self.sort_aggregates),
             indirect=None,
+            groupby_col=self.nace_col
         )
 
     def get_sesonal_adjusted_12_mth_change(
@@ -712,6 +714,7 @@ class DataManager:
             .iloc[::-1],
             sparkline_data=None,
             indirect=None,
+            groupby_col=self.nace_col
         )
 
     def get_table_1(self, period: str | None = None) -> ReturnData:
@@ -785,6 +788,7 @@ class DataManager:
             .iloc[::-1],
             sparkline_data=None,
             indirect=None,
+            groupby_col=self.nace_col
         )
 
     def get_table_2(self, period: str | None = None) -> ReturnData:
@@ -860,6 +864,7 @@ class DataManager:
             .iloc[::-1],
             sparkline_data=None,
             indirect=0,
+            groupby_col=self.nace_col
         )
 
     def get_table_3(self, period: str | None = None) -> ReturnData:
@@ -948,6 +953,7 @@ class DataManager:
             .iloc[::-1],
             sparkline_data=None,
             indirect=0,
+            groupby_col=self.nace_col
         )
 
     def get_table_4(self, period: str | None = None) -> ReturnData:
@@ -1016,6 +1022,7 @@ class DataManager:
             figure_data=None,
             sparkline_data=None,
             indirect=0,
+            groupby_col=self.nace_col
         )
 
     def get_table_5(self, period: str | None = None) -> ReturnData:
@@ -1089,6 +1096,7 @@ class DataManager:
             figure_data=None,
             sparkline_data=None,
             indirect=0,
+            groupby_col=self.nace_col
         )
 
     def get_table_6(
@@ -1135,6 +1143,7 @@ class DataManager:
             .round(2),
             sparkline_data=None,
             indirect=0,
+            groupby_col=self.nace_col
         )
 
 
