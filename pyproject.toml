@@ -1,6 +1,6 @@
 [project]
 name = "ssb-konjunk"
-version = "2.1.14"
+version = "2.1.15"
 description = "SSB Konjunk 422"
 authors = [
     {name = "Johanne Saxegaard", email = "jox@ssb.no"},
@@ -36,6 +36,7 @@ dependencies = [
     "pyasn1 (>=0.6.3,<0.7.0)",
     "cryptography (>=47.0.0,<48.0.0)",
     "pygments (>=2.20.0,<3.0.0)",
+    "pathlib (>=1.0.1,<2.0.0)",
 ]
 
 [project.optional-dependencies]

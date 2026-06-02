@@ -1,5 +1,6 @@
 import uuid
 from itertools import cycle
+from typing import Any
 from typing import Literal
 
 import plotly.graph_objects as go
@@ -14,7 +15,6 @@ from dash import html
 
 from .data_source import GenVisData
 from .loading_test import DatasetConfig
-from .series_settings_display import SeriesSetting
 
 GRAPH_COLORS = [
     "#1A9D49",
@@ -96,7 +96,7 @@ class GraphDisplay(html.Div):
             State(self.ids.graph(aio_id), "figure"),
         )
         def change_graph(
-            series_data: list[SeriesSetting],
+            series_data: list[dict[str, Any]],
             settings: dict[str, str | Literal["none", "discrete"]],
             old_fig: dict,
         ):
