@@ -9,6 +9,7 @@ import warnings
 
 import pandas as pd
 from gcsfs import GCSFileSystem
+from pathlib import Path
 
 from ssb_konjunk import timestamp
 
@@ -314,7 +315,8 @@ def write_ssb_file(
         if file_path.endswith("_"):
             file_path = file_path[:-1]
         file_path = f"{file_path}_v{version_number}.{filetype}"
-
+        # creates the filepath if it dopes not exist
+        Path(file_path).parent.mkdir(parents=True, exist_ok=True)
         _save_df(df, file_path, filetype, seperator, encoding)
 
 
