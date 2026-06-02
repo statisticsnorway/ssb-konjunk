@@ -96,7 +96,7 @@ class GraphDisplay(html.Div):
             State(self.ids.graph(aio_id), "figure"),
         )
         def change_graph(
-            series_data: list[SeriesSetting],
+            series_data: list[dict[str, Any]],
             settings: dict[str, str | Literal["none", "discrete"]],
             old_fig: dict,
         ):
