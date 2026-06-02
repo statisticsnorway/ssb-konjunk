@@ -1,6 +1,6 @@
 import uuid
 from itertools import cycle
-from typing import Literal
+from typing import Literal, Any, Literal
 
 import plotly.graph_objects as go
 import polars as pl
@@ -14,6 +14,7 @@ from dash import html
 
 from .data_source import GenVisData
 from .loading_test import DatasetConfig
+from .series_settings_display import SeriesSetting
 
 GRAPH_COLORS = [
     "#1A9D49",
