@@ -14,7 +14,6 @@ from dash import html
 
 from .data_source import GenVisData
 from .loading_test import DatasetConfig
-from .series_settings_display import SeriesSetting
 
 GRAPH_COLORS = [
     "#1A9D49",

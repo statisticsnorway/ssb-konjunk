@@ -6,10 +6,10 @@ Follows the the standardization for versioning and names.
 import glob
 import re
 import warnings
+from pathlib import Path
 
 import pandas as pd
 from gcsfs import GCSFileSystem
-from pathlib import Path
 
 from ssb_konjunk import timestamp
 
