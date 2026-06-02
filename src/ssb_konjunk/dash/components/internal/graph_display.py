@@ -1,6 +1,7 @@
 import uuid
 from itertools import cycle
-from typing import Any, Literal
+from typing import Any
+from typing import Literal
 
 import plotly.graph_objects as go
 import polars as pl
