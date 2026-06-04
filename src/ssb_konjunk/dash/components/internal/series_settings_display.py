@@ -266,7 +266,7 @@ class SeriesSettingsDisplay(html.Div):
             ids: list[dict] | None,
             aggregation: str | None,
         ):
-            state = {}
+            state: dict[str, Any] = {}
 
             if (ids is None) or (groupbys is None):  # or (aggregation is None):
                 return state
