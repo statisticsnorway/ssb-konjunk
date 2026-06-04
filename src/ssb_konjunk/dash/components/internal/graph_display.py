@@ -96,12 +96,17 @@ class GraphDisplay(html.Div):
             State(self.ids.graph(aio_id), "figure"),
         )
         def change_graph(
+<<<<<<< HEAD
             series_data: list[dict[str, Any]],
+=======
+            series_data: list[dict],
+>>>>>>> d9d2ba9 (refactor)
             settings: dict[str, str | Literal["none", "discrete"]],
             old_fig: dict,
         ):
             # Callback that updates the graph based on changed series settings or
             # graph settings
+            print("series_data", series_data)
             base_year: str | None = settings.get("base_year")
             convert_method: Literal["none", "discrete"] = settings.get("convert", "none")  # type: ignore
             fig = go.Figure()
@@ -123,6 +128,9 @@ class GraphDisplay(html.Div):
                 filename = item["path"]
                 # Aggregation settings are optional
                 convert_function = item.get("aggregation", None)
+                if convert_function == "":
+                    convert_function = None
+
                 # Shortens filepaths for displaying
                 short_filename = "/".join(filename.split("/")[-2:])
                 dataset_config = datasets[dataset]
@@ -131,7 +139,7 @@ class GraphDisplay(html.Div):
                 )
 
                 data = dataset.data
-
+                groupby_settings: dict[str, list[str]] = item.get("groupby_settings", {})
                 if (base_year is not None) and (convert_method != "none"):
                     agg_type = dataset_config.agg_type
                     if agg_type is None:
@@ -143,30 +151,31 @@ class GraphDisplay(html.Div):
                         data,
                         base_year.split("-")[0],
                         col,
-                        dataset_config.groupby_col,
+                        list(groupby_settings.keys()),
                         convert_method,
                         agg_type,
                     )
-
-                if (dataset_config.groupby_col) and ("groupby" in item):
-                    for selected_val in item["groupby"]:
-                        subset = data.filter(
-                            pl.col(dataset_config.groupby_col) == selected_val
-                        )
-                        if convert_function is not None:
-                            if convert_function == "pct":
-                                subset = subset.with_columns(pl.col(col).pct_change())
-
-                        # Add a line to the plot
-                        fig.add_trace(
-                            go.Scatter(
-                                x=subset[dataset_config.index_col],
-                                y=subset[col],
-                                name=f"{short_filename} - {col} - {selected_val}",
-                                line=dict(color=next(GRAPH_CYCLE)),
-                                mode="lines",
+                print(groupby_settings)
+                if groupby_settings:
+                    for col, selected_vals in groupby_settings.items():
+                        for selected_val in selected_vals:
+                            subset = data.filter(
+                                pl.col(col) == selected_val
                             )
-                        )
+                            if convert_function is not None:
+                                if convert_function == "pct":
+                                    subset = subset.with_columns(pl.col(col).pct_change())
+                            print(subset)
+                            # Add a line to the plot
+                            fig.add_trace(
+                                go.Scatter(
+                                    x=subset[dataset_config.index_col],
+                                    y=subset[col],
+                                    name=f"{short_filename} - {col} - {selected_val}",
+                                    line=dict(color=next(GRAPH_CYCLE)),
+                                    mode="lines",
+                                )
+                            )
 
                 else:
                     if (convert_function is not None) and ("id" in convert_function):

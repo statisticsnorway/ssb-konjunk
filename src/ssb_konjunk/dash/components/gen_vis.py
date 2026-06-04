@@ -10,7 +10,7 @@ The module expects the path to JSON-configuration file.
         "glob_pattern": "glob/to/files/*.parquet",
         "index_col": "period", // The columns that contains the periods.
         "index_pattern": "%Y-%m", // The pattern of the period column. See: https://strftime.org/
-        "groupby_col": "nar" // OPTIONAL: Columns that are supposed to be subset
+        "groupby_col": "nar" // OPTIONAL: Columns that are supposed to be subset can also be a list of strings
         "agg_type": "AVERAGE" // OPTIONAL: For now, only "AVERAGE" is allowed.
     },
 "dataset_2": ...
@@ -41,6 +41,8 @@ from dash import Input
 from dash import Output
 from dash import callback
 from dash import html
+from dash import dcc
+from ssb_konjunk.dash.components.internal.model import GlobalState
 
 from .internal.graph_display import GraphDisplay
 from .internal.graph_settings_display import GraphSettingsDisplay
@@ -56,25 +58,11 @@ class GenVis(html.Div):
 
     class ids:
         """Generates standardized IDs for the GenVis component."""
-
-        @staticmethod
-        def dropdown(aio_id: str) -> dict:
-            """ID for the dropdown subcomponent."""
-            return {
-                "component": "MarkdownWithColorAIO",
-                "subcomponent": "dropdown",
-                "aio_id": aio_id,
-            }
-
-        @staticmethod
-        def markdown(aio_id: str) -> dict:
-            """ID for the markdown subcomponent."""
-            return {
-                "component": "MarkdownWithColorAIO",
-                "subcomponent": "markdown",
-                "aio_id": aio_id,
-            }
-
+        #@staticmethod
+        #def global_store(aio_id: str):
+        #    return {
+        #        "aio_id": aio_id
+        #    }
     # Define the arguments of the All-in-One component
     def __init__(self, config_path: str, aio_id: str | None = None) -> None:
         """Returns a component that can be used as its own page or as a component in other layouts.
@@ -93,6 +81,7 @@ class GenVis(html.Div):
 
         super().__init__(
             [
+                #dcc.Store(id=self.ids.global_store(aio_id), data=GlobalState().to_dict(), storage_type='session'),
                 html.Div(
                     [
                         html.Div(

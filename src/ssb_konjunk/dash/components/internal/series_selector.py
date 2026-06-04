@@ -6,6 +6,7 @@ from ssb_dash_components import Accordion
 from ssb_dash_components import Checkbox
 
 from dash import ALL
+from dash import MATCH
 from dash import Input
 from dash import Output
 from dash import State
@@ -14,7 +15,13 @@ from dash import ctx
 from dash import dcc
 from dash import html
 
+from pydantic import BaseModel
+
 from .loading_test import DatasetConfig
+
+
+class CurrentState(BaseModel):
+    pass
 
 
 class SeriesSelector(html.Div):
@@ -67,6 +74,20 @@ class SeriesSelector(html.Div):
                 "dataset": dataset,
             }
 
+        @staticmethod
+        def checkbox_store(
+            aio_id: str, path: str | Any, col: str | Any, dataset: str | Any
+        ) -> dict:
+            """ID for a checkbox subcomponent, with dataset and column context."""
+            return {
+                "component": "SeriesSelector",
+                "subcomponent": "checkbox_store",
+                "path": path,
+                "aio_id": aio_id,
+                "col": col,
+                "dataset": dataset,
+            }
+
     def __init__(
         self, datasets: dict[str, DatasetConfig], aio_id: None | str = None
     ) -> None:
@@ -104,83 +125,86 @@ class SeriesSelector(html.Div):
                 cols: list[Checkbox] = []
                 for col, col_type in schema.items():
                     if col_type.is_numeric():
+                        checkbox_val = any(
+                            (i.get("path") == path)
+                            and (i.get("col") == col)
+                            and (i.get("dataset") == dataset)
+                            for i in current_state
+                        )
+
+                        # If only one series we automatically toogle this series
+                        if (
+                            len(
+                                [val for (_, val) in schema.items() if val.is_numeric()]
+                            )
+                            == 1
+                        ):
+                            checkbox_val = True
+
+                        check_box_id = self.ids.checkbox(aio_id, path, col, dataset)
+                        if checkbox_val:
+                            store_val = check_box_id
+                        else:
+                            store_val = None
                         box = Checkbox(
                             label=col,
                             name=col,
-                            value=any(
-                                (i.get("path") == path)
-                                and (i.get("col") == col)
-                                and (i.get("dataset") == dataset)
-                                for i in current_state
-                            ),
-                            id=self.ids.checkbox(aio_id, path, col, dataset),
+                            value=checkbox_val,
+                            id=check_box_id,
                         )
                         cols.append(box)
-
+                        cols.append(
+                            dcc.Store(
+                                id=self.ids.checkbox_store(aio_id, path, col, dataset),
+                                data=store_val,  # pyright: ignore
+                            )
+                        )
                 children.append(Accordion(header=path, children=cols))
             return children
 
         @callback(
-            Output(self.ids.selected_store(aio_id), "data"),
-            Input(self.ids.checkbox(aio_id, ALL, ALL, ALL), "value"),
-            Input(self.ids.checkbox(aio_id, ALL, ALL, ALL), "id"),
-            State(self.ids.selected_store(aio_id), "data"),
+            # Output(self.ids.selected_store(aio_id), "data"),
+            Output(self.ids.checkbox_store(aio_id, MATCH, MATCH, MATCH), "data"),
+            Input(self.ids.checkbox(aio_id, MATCH, MATCH, MATCH), "value"),
+            Input(self.ids.checkbox(aio_id, MATCH, MATCH, MATCH), "id"),
+            # State(self.ids.selected_store(aio_id), "data"),
+            State(self.ids.checkbox_store(aio_id, MATCH, MATCH, MATCH), "data"),
             State(self.ids.store(aio_id), "data"),
         )
         def update_checked(
-            checked: list[bool],
-            ids: list[dict[str, str]],
-            current_state: list[dict[str, str]],
+            checked: bool,
+            ids: dict[str, str],
+            current_state: dict[str, str] | None,
             files: list[dict[str, str]],
         ):
             # Reacts to inputs in settings and stores them in a store so the user
             # doesn't lose settings when they add another series.
-            triggered = ctx.triggered_id
-
-            # We need to drop files that have been removed up stream
-            # This ensures that when a user unselects a file it is removed from the view and
-            # all hidden states
-            active_files = {file["path"] for file in files}
-            active_state = {file["path"] for file in current_state}
-            files_to_keep = active_state.intersection(active_files)
-            current_state = [
-                file for file in current_state if file["path"] in files_to_keep
-            ]
-
-            # A callback is triggered when checkboxes are first rendered
-            # This is not an interaction and the following code makes sure
-            # we ignore that callback
-            if any(".id" in key for key in ctx.triggered_prop_ids.keys()):
+            # print(checked, ids, current_state, files)
+            triggered: None | dict = ctx.triggered_id
+            
+            if not isinstance(triggered, dict):
                 return current_state
 
-            if isinstance(triggered, dict):
-                col: str | None = triggered.get("col")
-                path: str | None = triggered.get("path")
-                dataset: str | None = triggered.get("dataset")
-                if col is None:
-                    return current_state
+            if ids["dataset"] != triggered["dataset"]:
+                return current_state
 
-                if path is None:
-                    return current_state
+            if ids["path"] != triggered["path"]:
+                return current_state
 
-                if dataset is None:
-                    return current_state
+            if ids["col"] != triggered["col"]:
+                return current_state
 
-                for item_id, item in zip(ids, checked, strict=True):
-                    if ctx.triggered_id == item_id:
-                        if not item:
-                            current_state = [
-                                i
-                                for i in current_state
-                                if (i.get("path") != path)
-                                or (i.get("col") != col)
-                                or (i.get("dataset") != dataset)
-                            ]
-                            break
-                        else:
-                            current_state.append(
-                                {"path": path, "col": col, "dataset": dataset}
-                            )
-                            break
+            if ids["aio_id"] != triggered["aio_id"]:
+                return current_state
 
-            return current_state
+            if checked:
+                return ids
+            else:
+                return None
+
+        @callback(
+            Output(self.ids.selected_store(aio_id), "data"),
+            Input(self.ids.checkbox_store(aio_id, ALL, ALL, ALL), "data"),
+        )
+        def handle_update_selected_store(ids: list):
+            return [item for item in ids if item is not None]

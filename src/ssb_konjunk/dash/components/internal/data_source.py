@@ -116,7 +116,7 @@ class GenVisData:
         data: pl.DataFrame,
         year: str,
         col: str,
-        group_col: str | None,
+        group_col: str | list | None,
         method: Literal["discrete", "none"],
         agg_mapping: AGG_TYPES | dict[str, AGG_TYPES],
     ) -> pl.DataFrame:
@@ -144,7 +144,8 @@ class GenVisData:
             raise ValueError("")
 
         if group_col is not None:
-            return data.group_by(group_col).map_groups(
+            cols = group_col if isinstance(group_col, list) else [group_col]
+            return data.group_by(*cols).map_groups(
                 lambda x: self._set_base_year(x, year, col, method, agg_type)
             )
         else:
