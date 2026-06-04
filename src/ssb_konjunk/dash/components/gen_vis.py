@@ -41,8 +41,6 @@ from dash import Input
 from dash import Output
 from dash import callback
 from dash import html
-from dash import dcc
-from ssb_konjunk.dash.components.internal.model import GlobalState
 
 from .internal.graph_display import GraphDisplay
 from .internal.graph_settings_display import GraphSettingsDisplay
@@ -56,14 +54,6 @@ from .internal.tab_selector import TabSelector
 class GenVis(html.Div):
     """Returns a component that can be used as its own page or as a component in other layouts."""
 
-    class ids:
-        """Generates standardized IDs for the GenVis component."""
-        #@staticmethod
-        #def global_store(aio_id: str):
-        #    return {
-        #        "aio_id": aio_id
-        #    }
-    # Define the arguments of the All-in-One component
     def __init__(self, config_path: str, aio_id: str | None = None) -> None:
         """Returns a component that can be used as its own page or as a component in other layouts.
 
@@ -81,7 +71,6 @@ class GenVis(html.Div):
 
         super().__init__(
             [
-                #dcc.Store(id=self.ids.global_store(aio_id), data=GlobalState().to_dict(), storage_type='session'),
                 html.Div(
                     [
                         html.Div(

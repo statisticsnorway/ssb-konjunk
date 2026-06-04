@@ -163,11 +163,9 @@ class SeriesSelector(html.Div):
             return children
 
         @callback(
-            # Output(self.ids.selected_store(aio_id), "data"),
             Output(self.ids.checkbox_store(aio_id, MATCH, MATCH, MATCH), "data"),
             Input(self.ids.checkbox(aio_id, MATCH, MATCH, MATCH), "value"),
             Input(self.ids.checkbox(aio_id, MATCH, MATCH, MATCH), "id"),
-            # State(self.ids.selected_store(aio_id), "data"),
             State(self.ids.checkbox_store(aio_id, MATCH, MATCH, MATCH), "data"),
             State(self.ids.store(aio_id), "data"),
         )

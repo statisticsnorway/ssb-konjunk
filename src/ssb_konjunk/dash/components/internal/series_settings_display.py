@@ -14,9 +14,9 @@ from dash import Input
 from dash import Output
 from dash import State
 from dash import callback
-from dash import ctx
 from dash import dcc
 from dash import html
+
 
 from .data_source import GenVisData
 from .loading_test import DatasetConfig
@@ -123,7 +123,6 @@ class SeriesSettingsDisplay(html.Div):
             path: str | Any,
             dataset: str | Any,
             col: str | Any,
-            # groupby: str | Any,
         ) -> dict:
             """ID for a groupby settings component."""
             return {
@@ -133,7 +132,6 @@ class SeriesSettingsDisplay(html.Div):
                 "dataset": dataset,
                 "path": path,
                 "col": col,
-                # "groupby": groupby,
             }
 
     def __init__(
@@ -166,7 +164,6 @@ class SeriesSettingsDisplay(html.Div):
             data: list[dict[str, str]], current_state: list[dict[str, Any]]
         ):
             children = []
-            #print("current_state", current_state)
             for item in data:
                 dataset = item.get("dataset")
                 path = item.get("path")
@@ -186,6 +183,7 @@ class SeriesSettingsDisplay(html.Div):
                         current = state
 
                 data_src = datasets.get(dataset)
+                groupby: dict = current.get("groupby_settings", {})
 
                 if data_src:
                     src = GenVisData(path, data_src.index_col, data_src.index_pattern)
@@ -201,7 +199,7 @@ class SeriesSettingsDisplay(html.Div):
                                 header=groupby_col,
                                 items=options,  # pyright: ignore
                                 searchable=True,
-                                value=current.get("groupby", {}).get(groupby_col),
+                                value=groupby.get(groupby_col),
                                 id=groupby_id,
                             )
                             groupby_dropdowns.append(groupby_dropdown)
@@ -216,7 +214,7 @@ class SeriesSettingsDisplay(html.Div):
                             header=data_src.groupby_col,
                             items=options,  # pyright: ignore
                             searchable=True,
-                            value=current.get("groupby", {}).get(data_src.groupby_col),
+                            value=groupby.get(data_src.groupby_col),
                             id=groupby_id,
                         )
                         groupby_dropdowns.append(groupby_dropdown)
@@ -228,9 +226,9 @@ class SeriesSettingsDisplay(html.Div):
                             html.P(path),
                             html.P(col),
                             dcc.Store(
-                                data=groupby_id,
+                                data=groupby,
                                 id=self.ids.groupby_settings_store(
-                                    aio_id, path, dataset, col  # , data_src.groupby_col
+                                    aio_id, path, dataset, col
                                 ),
                             ),
                             Dropdown(
