@@ -97,13 +97,14 @@ class GraphDisplay(html.Div):
             State(self.ids.graph(aio_id), "figure"),
         )
         def change_graph(
-            series_data: list[dict[str, Any]],
+            series_data: list[dict],
             settings: dict[str, str | Literal["none", "discrete"]],
             old_fig: dict,
         ):
             print(series_data)
             # Callback that updates the graph based on changed series settings or
             # graph settings
+            print("series_data", series_data)
             base_year: str | None = settings.get("base_year")
             convert_method: Literal["none", "discrete"] = settings.get("convert", "none")  # type: ignore
             fig = go.Figure()
