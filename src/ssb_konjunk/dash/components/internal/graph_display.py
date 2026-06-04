@@ -104,7 +104,6 @@ class GraphDisplay(html.Div):
             print(series_data)
             # Callback that updates the graph based on changed series settings or
             # graph settings
-            print("series_data", series_data)
             base_year: str | None = settings.get("base_year")
             convert_method: Literal["none", "discrete"] = settings.get("convert", "none")  # type: ignore
             fig = go.Figure()
