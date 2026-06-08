@@ -51,7 +51,7 @@ class DataManager:
 
     """
 
-    def __init__(self, data: pd.DataFrame) -> None:
+    def __init__(self, data: pd.DataFrame, period_column: str = "periode", nace_column: str = "nar") -> None:
         """Initialiserer klassen med behandlet og strukturert tidsseriedata.
 
         Filtrerer bort spesifikke 'nar'-verdier, sorterer data, henter klassifikasjonskoder,
@@ -62,35 +62,38 @@ class DataManager:
             data (pd.DataFrame): Inndata som inneholder tidsseriedata, med blant annet
                 kolonnene 'nar', 'periode', 'jus', 'korr', 'ujust' og 'verdi'.
         """
+        self.period_col = period_column
+        self.nace_col = nace_column
+
         nus = KlassClassification(
             classification_id="6", language="nb", include_future=False
         )
         self.class_codes = nus.get_codes(from_date="2023-01-01").data[["name", "code"]]
-        data = data[~data["nar"].isin(["CC1.I.IVL.U.M", "CC2.I.IVL.U.M"])]
+        data = data[~data[self.nace_col].isin(["CC1.I.IVL.U.M", "CC2.I.IVL.U.M"])]
 
-        data = data.sort_values("nar", key=self.sort_aggregates)
+        data = data.sort_values(self.nace_col, key=self.sort_aggregates)
         data = data.reset_index(drop=True)
 
-        self.periods = AllPeriods(data["periode"].unique().tolist())  # pyright: ignore
+        self.periods = AllPeriods(data[self.period_col].unique().tolist())  # pyright: ignore
 
         self.data = data
 
         cols = ["jus", "korr", "ujust"]
         data[cols] = data[cols].apply(pd.to_numeric, errors="coerce", axis=1)
 
-        self.season_adjusted_series = data[["nar", "periode", "jus"]].pivot(
-            index="nar", columns="periode", values="jus"
+        self.season_adjusted_series = data[[self.nace_col, self.period_col, "jus"]].pivot(
+            index=self.nace_col, columns=self.period_col, values="jus"
         )
 
-        self.calender_adjusted_series = data[["nar", "periode", "korr"]].pivot(
-            index="nar", columns="periode", values="korr"
+        self.calender_adjusted_series = data[[self.nace_col, self.period_col, "korr"]].pivot(
+            index=self.nace_col, columns=self.period_col, values="korr"
         )
-        self.raw_series = data[["nar", "periode", "ujust"]].pivot(
-            index="nar", columns="periode", values="ujust"
+        self.raw_series = data[[self.nace_col, self.period_col, "ujust"]].pivot(
+            index=self.nace_col, columns=self.period_col, values="ujust"
         )
 
-        self.weight_series = data[["nar", "periode", "verdi"]].pivot(
-            index="nar", columns="periode", values="verdi"
+        self.weight_series = data[[self.nace_col, self.period_col, "verdi"]].pivot(
+            index=self.nace_col, columns=self.period_col, values="verdi"
         )
         polars_data = pl.from_dataframe(data)
 
@@ -98,19 +101,19 @@ class DataManager:
             ujust=pl.col("ujust").cast(pl.Float64),
             jus=pl.col("jus").cast(pl.Float64),
             korr=pl.col("korr").cast(pl.Float64),
-            periode=pl.col("periode").str.strptime(pl.Date, "%Y-%m", strict=False),
+            periode=pl.col(self.period_col).str.strptime(pl.Date, "%Y-%m", strict=False),
         )
         self.weight_source = DataSource(
-            polars_data, "periode", "verdi", "nar", internal_col="weight"
+            polars_data, self.period_col, "verdi", self.nace_col, internal_col="weight"
         )
         self.season_source = DataSource(
-            polars_data, "periode", "jus", "nar", internal_col="season"
+            polars_data, self.period_col, "jus", self.nace_col, internal_col="season"
         )
         self.raw_source = DataSource(
-            polars_data, "periode", "ujust", "nar", internal_col="raw"
+            polars_data, self.period_col, "ujust", self.nace_col, internal_col="raw"
         )
         self.calendar_source = DataSource(
-            polars_data, "periode", "korr", "nar", internal_col="calendar"
+            polars_data, self.period_col, "korr", self.nace_col, internal_col="calendar"
         )
 
     @staticmethod
@@ -129,8 +132,7 @@ class DataManager:
         first_item_len = len(x.split("-")[0]) - 1
         return ("  " * first_item_len) + x
 
-    @staticmethod
-    def calc_indirect(df: pd.DataFrame, col: str) -> float:
+    def calc_indirect(self, df: pd.DataFrame, col: str) -> float:
         """Beregner summen av en kolonne på høyeste hierarkinivå.
 
         Finner den høyeste nivåverdien i kolonnen 'nar' og summerer verdiene i
@@ -143,9 +145,9 @@ class DataManager:
         Returns:
             float: Summen av verdiene for høyeste hierarkinivå.
         """
-        max_splitted = df["nar"].str.split(" - ").apply(lambda x: len(x[0])).max()
+        max_splitted = df[self.nace_col].str.split(" - ").apply(lambda x: len(x[0])).max()
         return df[col][
-            df["nar"].str.split(" - ").apply(lambda x: len(x[0])) == max_splitted
+            df[self.nace_col].str.split(" - ").apply(lambda x: len(x[0])) == max_splitted
         ].sum()
 
     @staticmethod
@@ -182,7 +184,7 @@ class DataManager:
         Returns:
             list[str]: Liste med unike næringskoder.
         """
-        return self.data["nar"].unique().tolist()  # pyright: ignore
+        return self.data[self.nace_col].unique().tolist()  # pyright: ignore
 
     def add_klass_codes(self, data: pd.DataFrame, on: str) -> pd.DataFrame:
         """Legger til klassifikasjonsnavn til et datasett basert på en spesifisert kolonne.
@@ -226,7 +228,7 @@ class DataManager:
         hierarchal_aggregates = defaultdict(list)
 
         for item in map(str, index):
-            if item.isalpha():
+            if item.isalpha() or ("." not in item):
                 main_aggregate.append(item)
             else:
                 key, *sub = item.split(".")
@@ -245,8 +247,8 @@ class DataManager:
         mapper = {item: idx for idx, item in enumerate(main_aggregate)}
         return index.map(mapper)
 
-    @staticmethod
     def _normalize_weight(
+        self,
         table_data: pl.DataFrame,
         includes_parent_aggregate: bool,
     ) -> tuple[pl.DataFrame, pl.DataFrame]:
@@ -284,7 +286,7 @@ class DataManager:
             (0.01 * pl.col(col) * pl.col("weight")).round(2).alias("weighted")
         )
 
-        weighted_pct = table_data.select(["nar", "weighted"])
+        weighted_pct = table_data.select([self.nace_col, "weighted"])
         return table_data, weighted_pct
 
     def get_all_periods(self) -> list[str]:
@@ -439,7 +441,7 @@ class DataManager:
             season=pl.col("season").round(1)
         )
         weighted_pct = (
-            index_season_pct.join(comparison_weight, on="nar")
+            index_season_pct.join(comparison_weight, on=self.nace_col)
             .with_columns(
                 weighted=(pl.col("season") * (pl.col("weight") / 100)).round(2)
             )
@@ -451,17 +453,17 @@ class DataManager:
         sparkline_data.reverse()
 
         table_data = multi_join(
-            [weight, index_season, index_season_pct, weighted_pct], on="nar"
+            [weight, index_season, index_season_pct, weighted_pct], on=self.nace_col
         )
         if max_nace_level is not None:
             numeric_mask = (
-                pl.col("nar").str.replace(".", "", literal=True).str.contains(r"^\d+$")
+                pl.col(self.nace_col).str.replace(".", "", literal=True).str.contains(r"^\d+$")
             )
             table_data = table_data.filter(
                 (
                     numeric_mask
                     & (
-                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        pl.col(self.nace_col).str.replace(".", "").str.len_chars()
                         <= max_nace_level
                     )
                 )
@@ -472,14 +474,14 @@ class DataManager:
                 (
                     numeric_mask
                     & (
-                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        pl.col(self.nace_col).str.replace(".", "").str.len_chars()
                         <= max_nace_level
                     )
                 )
                 | (~numeric_mask)
             )
         if nace_filter:
-            table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
+            table_data = table_data.filter(pl.col(self.nace_col).is_in(nace_filter))
             table_data, weighted_pct = self._normalize_weight(
                 table_data, includes_parent_aggregate=includes_parent_aggregate
             )
@@ -488,10 +490,10 @@ class DataManager:
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
             res_data=(
-                self._prep_df(table_data, "nar")
+                self._prep_df(table_data, self.nace_col)
                 .round(1)
                 .sort_values(
-                    by="nar",
+                    by=self.nace_col,
                     key=lambda col: col.map(
                         lambda x: (
                             str(x).lstrip()[0].isdigit(),
@@ -502,13 +504,14 @@ class DataManager:
                 )
                 .reset_index(drop=True)
             ),
-            figure_data=self._prep_df(weighted_pct, "nar")
-            .set_index("nar")["weighted"]
+            figure_data=self._prep_df(weighted_pct, self.nace_col)
+            .set_index(self.nace_col)["weighted"]
             .iloc[::-1],
-            sparkline_data=multi_join(sparkline_data, on="nar")
+            sparkline_data=multi_join(sparkline_data, on=self.nace_col)
             .to_pandas()
-            .sort_values(by="nar", key=self.sort_aggregates),
+            .sort_values(by=self.nace_col, key=self.sort_aggregates),
             indirect=None,
+            groupby_col=self.nace_col
         )
 
     def get_sesonal_adjusted_mth_change(
@@ -544,7 +547,7 @@ class DataManager:
             season=pl.col("season").round(1)
         )
         weighted_pct = (
-            index_season_pct.join(comparison_weight, on="nar")
+            index_season_pct.join(comparison_weight, on=self.nace_col)
             .with_columns(
                 weighted=(pl.col("season") * (pl.col("weight") / 100)).round(2)
             )
@@ -553,17 +556,17 @@ class DataManager:
         sparkline_data = [self.season_source.n_month(1, i)[1] for i in range(6)]
         sparkline_data.reverse()
         table_data = multi_join(
-            [weight, index_season, index_season_pct, weighted_pct], on="nar"
+            [weight, index_season, index_season_pct, weighted_pct], on=self.nace_col
         )
         if max_nace_level is not None:
             numeric_mask = (
-                pl.col("nar").str.replace(".", "", literal=True).str.contains(r"^\d+$")
+                pl.col(self.nace_col).str.replace(".", "", literal=True).str.contains(r"^\d+$")
             )
             table_data = table_data.filter(
                 (
                     numeric_mask
                     & (
-                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        pl.col(self.nace_col).str.replace(".", "").str.len_chars()
                         <= max_nace_level
                     )
                 )
@@ -574,14 +577,14 @@ class DataManager:
                 (
                     numeric_mask
                     & (
-                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        pl.col(self.nace_col).str.replace(".", "").str.len_chars()
                         <= max_nace_level
                     )
                 )
                 | (~numeric_mask)
             )
         if nace_filter:
-            table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
+            table_data = table_data.filter(pl.col(self.nace_col).is_in(nace_filter))
             table_data, weighted_pct = self._normalize_weight(
                 table_data, includes_parent_aggregate=includes_parent_aggregate
             )
@@ -590,10 +593,10 @@ class DataManager:
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
             res_data=(
-                self._prep_df(table_data, "nar")
+                self._prep_df(table_data, self.nace_col)
                 .round(1)
                 .sort_values(
-                    by="nar",
+                    by=self.nace_col,
                     key=lambda col: col.map(
                         lambda x: (
                             str(x).lstrip()[0].isdigit(),
@@ -604,13 +607,14 @@ class DataManager:
                 )
                 .reset_index(drop=True)
             ),
-            figure_data=self._prep_df(weighted_pct, "nar")
-            .set_index("nar")["weighted"]
+            figure_data=self._prep_df(weighted_pct, self.nace_col)
+            .set_index(self.nace_col)["weighted"]
             .iloc[::-1],
-            sparkline_data=multi_join(sparkline_data, on="nar")
+            sparkline_data=multi_join(sparkline_data, on=self.nace_col)
             .to_pandas()
-            .sort_values(by="nar", key=self.sort_aggregates),
+            .sort_values(by=self.nace_col, key=self.sort_aggregates),
             indirect=None,
+            groupby_col=self.nace_col
         )
 
     def get_sesonal_adjusted_12_mth_change(
@@ -647,24 +651,24 @@ class DataManager:
             calendar=pl.col("calendar").round(1)
         )
         weighted_pct = (
-            index_season_pct.join(comparison_weight, on="nar")
+            index_season_pct.join(comparison_weight, on=self.nace_col)
             .with_columns(
                 weighted=(pl.col("calendar") * (pl.col("weight") / 100)).round(2)
             )
             .drop("weight", "calendar")
         )
         table_data = multi_join(
-            [weight, index_season, index_season_pct, weighted_pct], on="nar"
+            [weight, index_season, index_season_pct, weighted_pct], on=self.nace_col
         )
         if max_nace_level is not None:
             numeric_mask = (
-                pl.col("nar").str.replace(".", "", literal=True).str.contains(r"^\d+$")
+                pl.col(self.nace_col).str.replace(".", "", literal=True).str.contains(r"^\d+$")
             )
             table_data = table_data.filter(
                 (
                     numeric_mask
                     & (
-                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        pl.col(self.nace_col).str.replace(".", "").str.len_chars()
                         <= max_nace_level
                     )
                 )
@@ -675,14 +679,14 @@ class DataManager:
                 (
                     numeric_mask
                     & (
-                        pl.col("nar").str.replace(".", "").str.len_chars()
+                        pl.col(self.nace_col).str.replace(".", "").str.len_chars()
                         <= max_nace_level
                     )
                 )
                 | (~numeric_mask)
             )
         if nace_filter:
-            table_data = table_data.filter(pl.col("nar").is_in(nace_filter))
+            table_data = table_data.filter(pl.col(self.nace_col).is_in(nace_filter))
             table_data, weighted_pct = self._normalize_weight(
                 table_data, includes_parent_aggregate=includes_parent_aggregate
             )
@@ -691,10 +695,10 @@ class DataManager:
             header_1=self.header_1,
             header_2=["", header, header_i, header_i_pct, header_i_pct],
             res_data=(
-                self._prep_df(table_data, "nar")
+                self._prep_df(table_data, self.nace_col)
                 .round(1)
                 .sort_values(
-                    by="nar",
+                    by=self.nace_col,
                     key=lambda col: col.map(
                         lambda x: (
                             str(x).lstrip()[0].isdigit(),
@@ -705,11 +709,12 @@ class DataManager:
                 )
                 .reset_index(drop=True)
             ),
-            figure_data=self._prep_df(weighted_pct, "nar")
-            .set_index("nar")["weighted"]
+            figure_data=self._prep_df(weighted_pct, self.nace_col)
+            .set_index(self.nace_col)["weighted"]
             .iloc[::-1],
             sparkline_data=None,
             indirect=None,
+            groupby_col=self.nace_col
         )
 
     def get_table_1(self, period: str | None = None) -> ReturnData:
@@ -746,7 +751,7 @@ class DataManager:
             season=pl.col("season").round(1)
         )
         weighted_pct = (
-            index_season_pct.join(weight, on="nar")
+            index_season_pct.join(weight, on=self.nace_col)
             .with_columns(
                 weighted=(pl.col("season") * (pl.col("weight") / 100)).round(2)
             )
@@ -765,10 +770,10 @@ class DataManager:
                 "% Endring",
             ],
             header_2=["", *headers],
-            res_data=self._prep_df(multi_join(df_data, on="nar"), sort_by="nar")
+            res_data=self._prep_df(multi_join(df_data, on=self.nace_col), sort_by=self.nace_col)
             .round(1)
             .sort_values(
-                by="nar",
+                by=self.nace_col,
                 key=lambda col: col.map(
                     lambda x: (
                         str(x).lstrip()[0].isdigit(),
@@ -778,11 +783,12 @@ class DataManager:
                 ),
             )
             .reset_index(drop=True),
-            figure_data=self._prep_df(weighted_pct, sort_by="nar")
-            .set_index("nar")["weighted"]
+            figure_data=self._prep_df(weighted_pct, sort_by=self.nace_col)
+            .set_index(self.nace_col)["weighted"]
             .iloc[::-1],
             sparkline_data=None,
             indirect=None,
+            groupby_col=self.nace_col
         )
 
     def get_table_2(self, period: str | None = None) -> ReturnData:
@@ -828,7 +834,7 @@ class DataManager:
             season=pl.col("season").round(1)
         )
         weighted_pct = (
-            index_season_pct.join(weight, on="nar")
+            index_season_pct.join(weight, on=self.nace_col)
             .with_columns(
                 weighted=(pl.col("season") * (pl.col("weight") / 100)).round(2)
             )
@@ -839,11 +845,11 @@ class DataManager:
             header_1=["", "", "", "", "% Endring", "% Endring", "% Endring"],
             header_2=["", *headers, *headers_percent],
             res_data=self._prep_df(
-                multi_join([*df_data, *df_data_percent], on="nar"), sort_by="nar"
+                multi_join([*df_data, *df_data_percent], on=self.nace_col), sort_by=self.nace_col
             )
             .round(1)
             .sort_values(
-                by="nar",
+                by=self.nace_col,
                 key=lambda col: col.map(
                     lambda x: (
                         str(x).lstrip()[0].isdigit(),
@@ -853,11 +859,12 @@ class DataManager:
                 ),
             )
             .reset_index(drop=True),
-            figure_data=self._prep_df(weighted_pct, "nar")
-            .set_index("nar")["weighted"]
+            figure_data=self._prep_df(weighted_pct, self.nace_col)
+            .set_index(self.nace_col)["weighted"]
             .iloc[::-1],
             sparkline_data=None,
             indirect=0,
+            groupby_col=self.nace_col
         )
 
     def get_table_3(self, period: str | None = None) -> ReturnData:
@@ -904,13 +911,13 @@ class DataManager:
         )
 
         weighted_pct = (
-            index_season_pct.join(weight, on="nar")
+            index_season_pct.join(weight, on=self.nace_col)
             .with_columns(
                 weighted=(pl.col("calendar") * (pl.col("weight") / 100)).round(2)
             )
             .drop("weight", "calendar")
         )
-        df = multi_join([*prev, *curr, *percent], on="nar")
+        df = multi_join([*prev, *curr, *percent], on=self.nace_col)
         # TODO
         # Fiks data for graf
 
@@ -928,10 +935,10 @@ class DataManager:
                 "% Endring",
             ],
             header_2=["", *prev_headers, *curr_headers, *percent_headers],
-            res_data=self._prep_df(df, sort_by="nar")
+            res_data=self._prep_df(df, sort_by=self.nace_col)
             .round(1)
             .sort_values(
-                by="nar",
+                by=self.nace_col,
                 key=lambda col: col.map(
                     lambda x: (
                         str(x).lstrip()[0].isdigit(),
@@ -941,11 +948,12 @@ class DataManager:
                 ),
             )
             .reset_index(drop=True),
-            figure_data=self._prep_df(weighted_pct, "nar")
-            .set_index("nar")["weighted"]
+            figure_data=self._prep_df(weighted_pct, self.nace_col)
+            .set_index(self.nace_col)["weighted"]
             .iloc[::-1],
             sparkline_data=None,
             indirect=0,
+            groupby_col=self.nace_col
         )
 
     def get_table_4(self, period: str | None = None) -> ReturnData:
@@ -996,12 +1004,12 @@ class DataManager:
             ],
             header_2=["", *avg_data_header_prev, *avg_data_header, *percent_header],
             res_data=self._prep_df(
-                multi_join([*avg_data_prev, *avg_data, *percent], on="nar"),
-                sort_by="nar",
+                multi_join([*avg_data_prev, *avg_data, *percent], on=self.nace_col),
+                sort_by=self.nace_col,
             )
             .round(1)
             .sort_values(
-                by="nar",
+                by=self.nace_col,
                 key=lambda col: col.map(
                     lambda x: (
                         str(x).lstrip()[0].isdigit(),
@@ -1014,6 +1022,7 @@ class DataManager:
             figure_data=None,
             sparkline_data=None,
             indirect=0,
+            groupby_col=self.nace_col
         )
 
     def get_table_5(self, period: str | None = None) -> ReturnData:
@@ -1072,12 +1081,12 @@ class DataManager:
             ],
             header_2=["", *headers_prev, *headers, *headers_last],
             res_data=self._prep_df(
-                multi_join([*df_data_prev, *df_data, *df_data_last], on="nar"),
-                sort_by="nar",
+                multi_join([*df_data_prev, *df_data, *df_data_last], on=self.nace_col),
+                sort_by=self.nace_col,
             )
             .round(1)
             .sort_values(
-                by="nar",
+                by=self.nace_col,
                 key=lambda col: col.map(
                     lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
                 ),
@@ -1087,6 +1096,7 @@ class DataManager:
             figure_data=None,
             sparkline_data=None,
             indirect=0,
+            groupby_col=self.nace_col
         )
 
     def get_table_6(
@@ -1118,21 +1128,22 @@ class DataManager:
         return ReturnData(
             header_1=[],
             header_2=["", *headers],
-            res_data=self._prep_df(multi_join(df_data, on="nar"), sort_by="nar")
+            res_data=self._prep_df(multi_join(df_data, on=self.nace_col), sort_by=self.nace_col)
             .sort_values(
-                by="nar",
+                by=self.nace_col,
                 key=lambda col: col.map(
                     lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
                 ),
                 ignore_index=True,
             )
             .reset_index(drop=True),
-            figure_data=self._prep_df(df_data[-1], sort_by="nar")
-            .set_index("nar")["weight"]
+            figure_data=self._prep_df(df_data[-1], sort_by=self.nace_col)
+            .set_index(self.nace_col)["weight"]
             .iloc[::-1]
             .round(2),
             sparkline_data=None,
             indirect=0,
+            groupby_col=self.nace_col
         )
 
 

@@ -14,6 +14,7 @@ from dash import clientside_callback
 from dash import ctx
 from dash import dcc
 from dash import html
+from dash import Patch
 
 from .loading_test import DatasetConfig
 
@@ -176,14 +177,12 @@ class TabSelector(html.Div):
             Output(self.ids.store(aio_id), "data"),
             Input(self.ids.checklist_item(aio_id, ALL, ALL), "value"),
             Input(self.ids.checklist_item(aio_id, ALL, ALL), "id"),
-            State(self.ids.store(aio_id), "data"),
             State(self.ids.tabs(aio_id), "active"),
             prevent_initial_call=True,
         )
         def update_checked(
             checked: list[bool],
             ids: list[dict[str, str]],
-            current_state: list[dict[str, str]],
             selected_tab: str | None,
         ):
             # Callback that updates a store that keeps track of which checkboxes are checked.
@@ -195,11 +194,12 @@ class TabSelector(html.Div):
             # A callback is triggered when checkboxes are first rendered
             # This is not an interaction and the following code makes sure
             # we ignore that callback
+            patch_state = Patch()
             if any(".id" in key for key in ctx.triggered_prop_ids.keys()) or (
                 selected_tab is None
             ):
-                return current_state
-
+                return patch_state
+            
             # Some filtering logic.
             if isinstance(triggered, dict):
                 path = triggered.get("path")
@@ -207,15 +207,13 @@ class TabSelector(html.Div):
                     for val, item_id in zip(checked, ids, strict=True):
                         if (item_id is not None) and (item_id["path"] == path):
                             if not val:
-                                current_state = [
-                                    item
-                                    for item in current_state
-                                    if item["path"] != path
-                                ]
+                                patch_state.remove(
+                                    {"path": path, "dataset": selected_tab}
+                                )
                             else:
                                 if val:
-                                    current_state.append(
+                                    patch_state.append(
                                         {"path": path, "dataset": selected_tab}
                                     )
 
-            return current_state
+            return patch_state

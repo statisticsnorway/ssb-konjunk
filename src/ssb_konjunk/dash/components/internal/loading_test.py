@@ -21,7 +21,7 @@ class DatasetConfig:
     glob_pattern: str
     index_col: str
     index_pattern: str
-    groupby_col: str | None = field(default=None)
+    groupby_col: str | list[str] | None = field(default=None)
     agg_type: Literal["SUMMED", "AVERAGE"] = "SUMMED"
     agg_type_by_col: dict[str, AGG_TYPES] | None = field(default=None)
 

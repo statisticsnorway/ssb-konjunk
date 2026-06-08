@@ -1,7 +1,7 @@
 import uuid
 from itertools import cycle
-from typing import Any
-from typing import Literal
+from itertools import product
+from typing import Any, Literal
 
 import plotly.graph_objects as go
 import polars as pl
@@ -15,6 +15,7 @@ from dash import html
 
 from .data_source import GenVisData
 from .loading_test import DatasetConfig
+from .series_settings_display import SeriesSetting
 
 GRAPH_COLORS = [
     "#1A9D49",
@@ -28,6 +29,14 @@ GRAPH_COLORS = [
     "#909090",
     "#000000",
 ]
+
+
+def dict_combinations(d: dict[str, Any]):
+    keys = d.keys()
+    values = d.values()
+
+    for combination in product(*values):
+        yield dict(zip(keys, combination))
 
 
 class GraphDisplay(html.Div):
@@ -96,10 +105,11 @@ class GraphDisplay(html.Div):
             State(self.ids.graph(aio_id), "figure"),
         )
         def change_graph(
-            series_data: list[dict[str, Any]],
+            series_data: list[dict],
             settings: dict[str, str | Literal["none", "discrete"]],
             old_fig: dict,
         ):
+            print(series_data)
             # Callback that updates the graph based on changed series settings or
             # graph settings
             base_year: str | None = settings.get("base_year")
@@ -117,12 +127,16 @@ class GraphDisplay(html.Div):
             if series_data is None:
                 return fig
 
+            series = {}
             for item in series_data:
                 col = item["col"]
                 dataset = item["dataset"]
                 filename = item["path"]
                 # Aggregation settings are optional
                 convert_function = item.get("aggregation", None)
+                if convert_function == "":
+                    convert_function = None
+
                 # Shortens filepaths for displaying
                 short_filename = "/".join(filename.split("/")[-2:])
                 dataset_config = datasets[dataset]
@@ -132,58 +146,65 @@ class GraphDisplay(html.Div):
 
                 data = dataset.data
 
-                if (base_year is not None) and (convert_method != "none"):
-                    agg_type = dataset_config.agg_type
-                    if agg_type is None:
-                        agg_type = dataset_config.agg_type_by_col
-                    if agg_type is None:
-                        agg_type = {}
-
-                    data = dataset.set_base_year(
-                        data,
-                        base_year.split("-")[0],
-                        col,
-                        dataset_config.groupby_col,
-                        convert_method,
-                        agg_type,
-                    )
-
-                if (dataset_config.groupby_col) and ("groupby" in item):
-                    for selected_val in item["groupby"]:
-                        subset = data.filter(
-                            pl.col(dataset_config.groupby_col) == selected_val
-                        )
-                        if convert_function is not None:
-                            if convert_function == "pct":
-                                subset = subset.with_columns(pl.col(col).pct_change())
-
-                        # Add a line to the plot
-                        fig.add_trace(
-                            go.Scatter(
-                                x=subset[dataset_config.index_col],
-                                y=subset[col],
-                                name=f"{short_filename} - {col} - {selected_val}",
-                                line=dict(color=next(GRAPH_CYCLE)),
-                                mode="lines",
-                            )
-                        )
-
+                if dataset_config.groupby_col is None:
+                    groupby_combinations: list[dict[str, Any]] = [{}]
                 else:
-                    if (convert_function is not None) and ("id" in convert_function):
-                        if convert_function["id"] == "pct":
-                            data = data.with_columns(pl.col(col).pct_change())
-
-                    # Add the line to the plot
-                    fig.add_trace(
-                        go.Scatter(
-                            x=data[dataset_config.index_col],
-                            y=data[col],
-                            name=col,
-                            line=dict(color=next(GRAPH_CYCLE)),
-                            mode="lines",
-                        )
+                    groupby_settings: dict[str, list[str] | None] = item.get(
+                        "groupby_settings", {}
                     )
+                    if any(v is None for _, v in groupby_settings.items()) or (
+                        len(groupby_settings) == 0
+                    ):
+                        groupby_combinations= []
+                    else:
+                        groupby_combinations= list(
+                            dict_combinations(groupby_settings)
+                        )
+                for combination in groupby_combinations:
+                    subset = data.clone()
+                    for key, value in combination.items():
+                        subset = subset.filter(pl.col(key) == value)
 
+                    if (base_year is not None) and (convert_method != "none"):
+                        agg_type = dataset_config.agg_type
+                        if agg_type is None:
+                            agg_type = dataset_config.agg_type_by_col
+                        if agg_type is None:
+                            agg_type = {}
+
+                        subset = dataset.set_base_year(
+                            subset,
+                            base_year.split("-")[0],
+                            col,
+                            list(combination.keys()),
+                            convert_method,
+                            agg_type,
+                        )
+                    if convert_function is not None:
+                        if convert_function == "pct":
+                            subset = subset.with_columns(pl.col(col).pct_change())
+                        elif convert_function == "ypct":
+                            subset = subset.with_columns(pl.col(col).pct_change(12))
+                        else:
+                            raise NotImplementedError(
+                                f"Convert function {convert_function} is not supported"
+                            )
+                    comb_names = [f"{k}: {v}" for k, v in combination.items()]
+                    combination_name = " - ".join(comb_names)
+                    series_name = f"{short_filename} - {col} - {combination_name}"
+
+                    series[series_name] = {"data": subset, "col": col}
+
+            for key, value in series.items():
+                fig.add_trace(
+                    go.Scatter(
+                        x=value["data"][dataset_config.index_col],
+                        y=value["data"][value["col"]],
+                        name=key,
+                        line=dict(color=next(GRAPH_CYCLE)),
+                        mode="lines",
+                    )
+                )
             # Tries to keep the selected timerange between callbacks
             selected_time_config = {}
             try:

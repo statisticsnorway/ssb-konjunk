@@ -1,6 +1,7 @@
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
+from dataclasses import field
 from typing import Any
 
 import pandas as pd
@@ -32,6 +33,7 @@ class ReturnData:
     figure_data: pd.Series | None
     sparkline_data: pd.DataFrame | None
     indirect: float | int | None
+    groupby_col: str = field(default="nar")
 
 
 @dataclass
@@ -158,6 +160,7 @@ class AnalyticsPageAIO(html.Div):  # html.Div will be the "parent" component
                             generate_custom_table(
                                 item.table_header,
                                 table.res_data,
+                                table.groupby_col,
                                 table.header_1,
                                 table.header_2,
                                 table.sparkline_data,
