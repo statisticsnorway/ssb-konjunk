@@ -5,16 +5,14 @@ from ssb_dash_components import Checkbox
 from ssb_dash_components import Input as SSBInput
 from ssb_dash_components import Tabs
 
-from dash import ALL
+from dash import ALL, MATCH
 from dash import Input
 from dash import Output
 from dash import State
 from dash import callback
 from dash import clientside_callback
-from dash import ctx
 from dash import dcc
 from dash import html
-from dash import Patch
 
 from .loading_test import DatasetConfig
 
@@ -52,6 +50,19 @@ class TabSelector(html.Div):
             return {
                 "component": "TabSelector",
                 "subcomponent": "checklist_item",
+                "path": path,
+                "aio_id": aio_id,
+                "random": random,  # Required for JS search functionality
+            }
+
+        @staticmethod
+        def checklist_item_store(
+            aio_id: str, path: str | Any, random: str | Any
+        ) -> dict:
+            """ID for a checklist item, including path and random key for JS search."""
+            return {
+                "component": "TabSelector",
+                "subcomponent": "checklist_item_store",
                 "path": path,
                 "aio_id": aio_id,
                 "random": random,  # Required for JS search functionality
@@ -161,59 +172,96 @@ class TabSelector(html.Div):
             if dataset_list:
                 files = dataset_list.get_entries()
                 for file in files:
+                    id_str = str(uuid.uuid4())
+                    checkbox_id = self.ids.checklist_item(aio_id, file, id_str)
+                    checkbox_val: None | dict[str, Any] = None
+                    for item in checked_files:
+                        if (item["dataset"] == selected) and (item["path"] == file):
+                            checkbox_val = {
+                                "path": file,
+                                "dataset": selected,
+                                "checked": True,
+                            }
+
                     children.append(
-                        Checkbox(
-                            className="TabChecklist",
-                            label=file,
-                            name=file,
-                            value=any(file == item["path"] for item in checked_files),
-                            id=self.ids.checklist_item(aio_id, file, str(uuid.uuid4())),
-                            style={"display": "flex"},
+                        html.Div(
+                            children=[
+                                Checkbox(
+                                    className="TabChecklist",
+                                    label=file,
+                                    name=file,
+                                    value=checkbox_val is not None,
+                                    id=checkbox_id,
+                                    style={"display": "flex"},
+                                ),
+                                dcc.Store(
+                                    id=self.ids.checklist_item_store(
+                                        aio_id, file, id_str
+                                    ),
+                                    data=checkbox_val,
+                                ),
+                            ],
+                            id=id_str,
                         )
                     )
             return children
 
         @callback(
-            Output(self.ids.store(aio_id), "data"),
-            Input(self.ids.checklist_item(aio_id, ALL, ALL), "value"),
-            Input(self.ids.checklist_item(aio_id, ALL, ALL), "id"),
+            Output(self.ids.checklist_item_store(aio_id, MATCH, MATCH), "data"),
+            Input(self.ids.checklist_item(aio_id, MATCH, MATCH), "value"),
+            Input(self.ids.checklist_item(aio_id, MATCH, MATCH), "id"),
             State(self.ids.tabs(aio_id), "active"),
             prevent_initial_call=True,
         )
-        def update_checked(
-            checked: list[bool],
-            ids: list[dict[str, str]],
+        def update_checked_state(
+            checked: bool | None,
+            ids: dict[str, str],
             selected_tab: str | None,
         ):
-            # Callback that updates a store that keeps track of which checkboxes are checked.
-            # This persists the state when the tab selector is rerendered, but not between
-            # refreshes
+            if checked is not None:
+                return {
+                    "path": ids["path"],
+                    "dataset": selected_tab,
+                    "checked": checked,
+                }
+            else:
+                return None
 
-            triggered = ctx.triggered_id
+        @callback(
+            Output(self.ids.store(aio_id), "data"),
+            Input(self.ids.checklist_item_store(aio_id, ALL, ALL), "data"),
+            State(self.ids.store(aio_id), "data"),
+        )
+        def update_output_state(
+            items: list[dict[str, Any]], current: list[dict[str, Any]]
+        ):
+            displayed_active = []
+            inactive = []
+            if items:
+                for item in items:
+                    if item is not None:
+                        if item["checked"] is True:
+                            displayed_active.append(item)
+                        else:
+                            inactive.append(item)
 
-            # A callback is triggered when checkboxes are first rendered
-            # This is not an interaction and the following code makes sure
-            # we ignore that callback
-            patch_state = Patch()
-            if any(".id" in key for key in ctx.triggered_prop_ids.keys()) or (
-                selected_tab is None
-            ):
-                return patch_state
-            
-            # Some filtering logic.
-            if isinstance(triggered, dict):
-                path = triggered.get("path")
-                if path:
-                    for val, item_id in zip(checked, ids, strict=True):
-                        if (item_id is not None) and (item_id["path"] == path):
-                            if not val:
-                                patch_state.remove(
-                                    {"path": path, "dataset": selected_tab}
-                                )
-                            else:
-                                if val:
-                                    patch_state.append(
-                                        {"path": path, "dataset": selected_tab}
-                                    )
+            if current:
+                for state in current:
+                    if any(
+                        (i["dataset"] == state["dataset"])
+                        and (i["path"] == state["path"])
+                        for i in displayed_active
+                    ):
+                        continue
 
-            return patch_state
+                    if any(
+                        (i["dataset"] == state["dataset"])
+                        and (i["path"] == state["path"])
+                        for i in inactive
+                    ):
+                        continue
+
+                    displayed_active.append(state)
+
+            displayed_active.sort(key=lambda x: x["path"])
+            return displayed_active

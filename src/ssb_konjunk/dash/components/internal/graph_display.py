@@ -109,7 +109,6 @@ class GraphDisplay(html.Div):
             settings: dict[str, str | Literal["none", "discrete"]],
             old_fig: dict,
         ):
-            print(series_data)
             # Callback that updates the graph based on changed series settings or
             # graph settings
             base_year: str | None = settings.get("base_year")
