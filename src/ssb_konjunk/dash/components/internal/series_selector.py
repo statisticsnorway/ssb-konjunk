@@ -159,7 +159,7 @@ class SeriesSelector(html.Div):
                                 data=store_val,  # pyright: ignore
                             )
                         )
-                children.append(Accordion(header=path, children=cols))
+                children.append(Accordion(header=path, children=cols, id={"path": path, "dataset": dataset}))
             return children
 
         @callback(
