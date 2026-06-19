@@ -38,6 +38,7 @@ dependencies = [
     "pygments (>=2.20.0,<3.0.0)",
     "pathlib (>=1.0.1,<2.0.0)",
     "tornado (>=6.5.7,<7.0.0)",
+    "idna (>=3.18,<4.0)",
 ]
 
 [project.optional-dependencies]
