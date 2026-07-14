@@ -53,7 +53,7 @@ def generate_custom_table(
             cells.append(html.Td(val, style=style))
 
         if sparkline_data is not None:
-            
+
             nar = row_data[groupby_col].split(" - ")[0].strip()
             sparkline_filtered = sparkline_data[sparkline_data[groupby_col] == nar]
             sparkline_filtered = sparkline_filtered.drop(groupby_col, axis=1)

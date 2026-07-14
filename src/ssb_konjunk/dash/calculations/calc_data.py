@@ -51,7 +51,12 @@ class DataManager:
 
     """
 
-    def __init__(self, data: pd.DataFrame, period_column: str = "periode", nace_column: str = "nar") -> None:
+    def __init__(
+        self,
+        data: pd.DataFrame,
+        period_column: str = "periode",
+        nace_column: str = "nar",
+    ) -> None:
         """Initialiserer klassen med behandlet og strukturert tidsseriedata.
 
         Filtrerer bort spesifikke 'nar'-verdier, sorterer data, henter klassifikasjonskoder,
@@ -74,20 +79,22 @@ class DataManager:
         data = data.sort_values(self.nace_col, key=self.sort_aggregates)
         data = data.reset_index(drop=True)
 
-        self.periods = AllPeriods(data[self.period_col].unique().tolist())  # pyright: ignore
+        self.periods = AllPeriods(
+            data[self.period_col].unique().tolist()
+        )  # pyright: ignore
 
         self.data = data
 
         cols = ["jus", "korr", "ujust"]
         data[cols] = data[cols].apply(pd.to_numeric, errors="coerce", axis=1)
 
-        self.season_adjusted_series = data[[self.nace_col, self.period_col, "jus"]].pivot(
-            index=self.nace_col, columns=self.period_col, values="jus"
-        )
+        self.season_adjusted_series = data[
+            [self.nace_col, self.period_col, "jus"]
+        ].pivot(index=self.nace_col, columns=self.period_col, values="jus")
 
-        self.calender_adjusted_series = data[[self.nace_col, self.period_col, "korr"]].pivot(
-            index=self.nace_col, columns=self.period_col, values="korr"
-        )
+        self.calender_adjusted_series = data[
+            [self.nace_col, self.period_col, "korr"]
+        ].pivot(index=self.nace_col, columns=self.period_col, values="korr")
         self.raw_series = data[[self.nace_col, self.period_col, "ujust"]].pivot(
             index=self.nace_col, columns=self.period_col, values="ujust"
         )
@@ -101,7 +108,9 @@ class DataManager:
             ujust=pl.col("ujust").cast(pl.Float64),
             jus=pl.col("jus").cast(pl.Float64),
             korr=pl.col("korr").cast(pl.Float64),
-            periode=pl.col(self.period_col).str.strptime(pl.Date, "%Y-%m", strict=False),
+            periode=pl.col(self.period_col).str.strptime(
+                pl.Date, "%Y-%m", strict=False
+            ),
         )
         self.weight_source = DataSource(
             polars_data, self.period_col, "verdi", self.nace_col, internal_col="weight"
@@ -145,9 +154,12 @@ class DataManager:
         Returns:
             float: Summen av verdiene for høyeste hierarkinivå.
         """
-        max_splitted = df[self.nace_col].str.split(" - ").apply(lambda x: len(x[0])).max()
+        max_splitted = (
+            df[self.nace_col].str.split(" - ").apply(lambda x: len(x[0])).max()
+        )
         return df[col][
-            df[self.nace_col].str.split(" - ").apply(lambda x: len(x[0])) == max_splitted
+            df[self.nace_col].str.split(" - ").apply(lambda x: len(x[0]))
+            == max_splitted
         ].sum()
 
     @staticmethod
@@ -457,7 +469,9 @@ class DataManager:
         )
         if max_nace_level is not None:
             numeric_mask = (
-                pl.col(self.nace_col).str.replace(".", "", literal=True).str.contains(r"^\d+$")
+                pl.col(self.nace_col)
+                .str.replace(".", "", literal=True)
+                .str.contains(r"^\d+$")
             )
             table_data = table_data.filter(
                 (
@@ -511,7 +525,7 @@ class DataManager:
             .to_pandas()
             .sort_values(by=self.nace_col, key=self.sort_aggregates),
             indirect=None,
-            groupby_col=self.nace_col
+            groupby_col=self.nace_col,
         )
 
     def get_sesonal_adjusted_mth_change(
@@ -560,7 +574,9 @@ class DataManager:
         )
         if max_nace_level is not None:
             numeric_mask = (
-                pl.col(self.nace_col).str.replace(".", "", literal=True).str.contains(r"^\d+$")
+                pl.col(self.nace_col)
+                .str.replace(".", "", literal=True)
+                .str.contains(r"^\d+$")
             )
             table_data = table_data.filter(
                 (
@@ -614,7 +630,7 @@ class DataManager:
             .to_pandas()
             .sort_values(by=self.nace_col, key=self.sort_aggregates),
             indirect=None,
-            groupby_col=self.nace_col
+            groupby_col=self.nace_col,
         )
 
     def get_sesonal_adjusted_12_mth_change(
@@ -662,7 +678,9 @@ class DataManager:
         )
         if max_nace_level is not None:
             numeric_mask = (
-                pl.col(self.nace_col).str.replace(".", "", literal=True).str.contains(r"^\d+$")
+                pl.col(self.nace_col)
+                .str.replace(".", "", literal=True)
+                .str.contains(r"^\d+$")
             )
             table_data = table_data.filter(
                 (
@@ -714,7 +732,7 @@ class DataManager:
             .iloc[::-1],
             sparkline_data=None,
             indirect=None,
-            groupby_col=self.nace_col
+            groupby_col=self.nace_col,
         )
 
     def get_table_1(self, period: str | None = None) -> ReturnData:
@@ -770,7 +788,9 @@ class DataManager:
                 "% Endring",
             ],
             header_2=["", *headers],
-            res_data=self._prep_df(multi_join(df_data, on=self.nace_col), sort_by=self.nace_col)
+            res_data=self._prep_df(
+                multi_join(df_data, on=self.nace_col), sort_by=self.nace_col
+            )
             .round(1)
             .sort_values(
                 by=self.nace_col,
@@ -788,7 +808,7 @@ class DataManager:
             .iloc[::-1],
             sparkline_data=None,
             indirect=None,
-            groupby_col=self.nace_col
+            groupby_col=self.nace_col,
         )
 
     def get_table_2(self, period: str | None = None) -> ReturnData:
@@ -845,7 +865,8 @@ class DataManager:
             header_1=["", "", "", "", "% Endring", "% Endring", "% Endring"],
             header_2=["", *headers, *headers_percent],
             res_data=self._prep_df(
-                multi_join([*df_data, *df_data_percent], on=self.nace_col), sort_by=self.nace_col
+                multi_join([*df_data, *df_data_percent], on=self.nace_col),
+                sort_by=self.nace_col,
             )
             .round(1)
             .sort_values(
@@ -864,7 +885,7 @@ class DataManager:
             .iloc[::-1],
             sparkline_data=None,
             indirect=0,
-            groupby_col=self.nace_col
+            groupby_col=self.nace_col,
         )
 
     def get_table_3(self, period: str | None = None) -> ReturnData:
@@ -953,7 +974,7 @@ class DataManager:
             .iloc[::-1],
             sparkline_data=None,
             indirect=0,
-            groupby_col=self.nace_col
+            groupby_col=self.nace_col,
         )
 
     def get_table_4(self, period: str | None = None) -> ReturnData:
@@ -1022,7 +1043,7 @@ class DataManager:
             figure_data=None,
             sparkline_data=None,
             indirect=0,
-            groupby_col=self.nace_col
+            groupby_col=self.nace_col,
         )
 
     def get_table_5(self, period: str | None = None) -> ReturnData:
@@ -1096,7 +1117,7 @@ class DataManager:
             figure_data=None,
             sparkline_data=None,
             indirect=0,
-            groupby_col=self.nace_col
+            groupby_col=self.nace_col,
         )
 
     def get_table_6(
@@ -1128,7 +1149,9 @@ class DataManager:
         return ReturnData(
             header_1=[],
             header_2=["", *headers],
-            res_data=self._prep_df(multi_join(df_data, on=self.nace_col), sort_by=self.nace_col)
+            res_data=self._prep_df(
+                multi_join(df_data, on=self.nace_col), sort_by=self.nace_col
+            )
             .sort_values(
                 by=self.nace_col,
                 key=lambda col: col.map(
@@ -1143,7 +1166,7 @@ class DataManager:
             .round(2),
             sparkline_data=None,
             indirect=0,
-            groupby_col=self.nace_col
+            groupby_col=self.nace_col,
         )
 
 

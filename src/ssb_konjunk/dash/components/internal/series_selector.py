@@ -2,6 +2,7 @@ import uuid
 from typing import Any
 
 import polars as pl
+from pydantic import BaseModel
 from ssb_dash_components import Accordion
 from ssb_dash_components import Checkbox
 
@@ -14,8 +15,6 @@ from dash import callback
 from dash import ctx
 from dash import dcc
 from dash import html
-
-from pydantic import BaseModel
 
 from .loading_test import DatasetConfig
 
@@ -179,7 +178,7 @@ class SeriesSelector(html.Div):
             # doesn't lose settings when they add another series.
             # print(checked, ids, current_state, files)
             triggered: None | dict = ctx.triggered_id
-            
+
             if not isinstance(triggered, dict):
                 return current_state
 

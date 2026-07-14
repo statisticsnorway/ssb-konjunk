@@ -1,6 +1,3 @@
-from ssb_dash_components.DropdownMultiple import DropdownMultiple
-
-
 import uuid
 from dataclasses import dataclass
 from dataclasses import field
@@ -8,15 +5,16 @@ from typing import Any
 
 from ssb_dash_components import Dropdown
 from ssb_dash_components import DropdownMultiple
+from ssb_dash_components.DropdownMultiple import DropdownMultiple
 
-from dash import ALL, MATCH
+from dash import ALL
+from dash import MATCH
 from dash import Input
 from dash import Output
 from dash import State
 from dash import callback
 from dash import dcc
 from dash import html
-
 
 from .data_source import GenVisData
 from .loading_test import DatasetConfig

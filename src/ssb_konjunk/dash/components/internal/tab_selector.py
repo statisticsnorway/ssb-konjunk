@@ -8,13 +8,13 @@ from ssb_dash_components import Tabs
 from dash import ALL
 from dash import Input
 from dash import Output
+from dash import Patch
 from dash import State
 from dash import callback
 from dash import clientside_callback
 from dash import ctx
 from dash import dcc
 from dash import html
-from dash import Patch
 
 from .loading_test import DatasetConfig
 
@@ -199,7 +199,7 @@ class TabSelector(html.Div):
                 selected_tab is None
             ):
                 return patch_state
-            
+
             # Some filtering logic.
             if isinstance(triggered, dict):
                 path = triggered.get("path")
