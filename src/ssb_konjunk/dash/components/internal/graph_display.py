@@ -1,7 +1,8 @@
 import uuid
 from itertools import cycle
 from itertools import product
-from typing import Any, Literal
+from typing import Any
+from typing import Literal
 
 import plotly.graph_objects as go
 import polars as pl
@@ -15,7 +16,6 @@ from dash import html
 
 from .data_source import GenVisData
 from .loading_test import DatasetConfig
-from .series_settings_display import SeriesSetting
 
 GRAPH_COLORS = [
     "#1A9D49",
@@ -155,11 +155,9 @@ class GraphDisplay(html.Div):
                     if any(v is None for _, v in groupby_settings.items()) or (
                         len(groupby_settings) == 0
                     ):
-                        groupby_combinations= []
+                        groupby_combinations = []
                     else:
-                        groupby_combinations= list(
-                            dict_combinations(groupby_settings)
-                        )
+                        groupby_combinations = list(dict_combinations(groupby_settings))
                 for combination in groupby_combinations:
                     subset = data.clone()
                     for key, value in combination.items():

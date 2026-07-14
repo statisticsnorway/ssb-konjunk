@@ -11,6 +11,7 @@ from ssb_konjunk.dash.calculations.calc_data import get_data_manager
 _config = None
 _get_data_manager = None
 
+
 def setup(config: type[Any], data_manager_class: Any = get_data_manager) -> None:
     """Setter global konfigurasjon for modulen.
 

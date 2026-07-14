@@ -4,6 +4,7 @@ Follows the the standardization for versioning and names.
 """
 
 import glob
+import json
 import re
 import warnings
 from pathlib import Path
@@ -246,7 +247,12 @@ def _save_df(
 
     # Save as json
     elif filetype == "json":
-        df.to_json(file_path, orient="records", lines=False)
+        # tillater med nested dicts å bli lagret med dette bioblioteket
+        if isinstance(df, dict):
+            with open(file_path, "w") as f:
+                json.dump(df, f, indent=4)
+        else:
+            df.to_json(file_path, orient="records", lines=False)
 
     # Uknown filetype sent as argument
     else:
