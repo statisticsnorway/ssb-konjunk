@@ -273,9 +273,9 @@ def write_ssb_file(
     undermappe: str | None = None,
     stable_version: bool = True,
     filetype: str = "parquet",
-    json_type: str = "df",
     seperator: str = ";",
     encoding: str = "latin1",
+    json_type: str = "df",
 ) -> None:
     """Function to write and save a dataframe at SSB-format.
 
@@ -344,11 +344,11 @@ def read_ssb_file(
     datatilstand: str = "",
     undermappe: str | None = None,
     filetype: str = "parquet",
-    json_type: str = "df",
     columns: list[str] | None = None,
     version_number: int | None = None,
     seperator: str = ";",
     encoding: str = "latin1",
+    json_type: str = "df",
 ) -> pd.DataFrame | None:
     """Function to read a saved file, stored at SSB-format.
 
