@@ -233,7 +233,7 @@ def _save_df(
     filetype: str,
     seperator: str,
     encoding: str,
-    json_type:str
+    json_type:str,
 ) -> None:
     """Do the actual saving, either as csv or parquet."""
     # Save as parquet
@@ -337,7 +337,7 @@ def read_ssb_file(
     datatilstand: str = "",
     undermappe: str | None = None,
     filetype: str = "parquet",
-    json_type: str = 'df'
+    json_type: str = 'df',
     columns: list[str] | None = None,
     version_number: int | None = None,
     seperator: str = ";",
