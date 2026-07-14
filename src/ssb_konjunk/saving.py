@@ -247,7 +247,7 @@ def _save_df(
 
     # Save as json
     elif filetype == "json":
-        #tillater med nested dicts å bli lagret med dette bioblioteket
+        # tillater med nested dicts å bli lagret med dette bioblioteket
         if isinstance(df, dict):
             with open(file_path, "w") as f:
                 json.dump(df, f, indent=4)
