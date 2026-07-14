@@ -233,7 +233,7 @@ def _save_df(
     filetype: str,
     seperator: str,
     encoding: str,
-    json_type: str,
+    json_type:str,
 ) -> None:
     """Do the actual saving, either as csv or parquet."""
     # Save as parquet
@@ -249,7 +249,7 @@ def _save_df(
     # Save as json
     elif filetype == "json":
         # tillater med nested dicts å bli lagret med dette bioblioteket
-        if json_type == "dict":
+        if json_type == 'dict':
             with open(file_path, "w") as f:
                 json.dump(df, f, indent=4)
         else:
@@ -273,9 +273,9 @@ def write_ssb_file(
     undermappe: str | None = None,
     stable_version: bool = True,
     filetype: str = "parquet",
-    json_type: str = "df",
     seperator: str = ";",
     encoding: str = "latin1",
+    json_type:str = 'df',
 ) -> None:
     """Function to write and save a dataframe at SSB-format.
 
@@ -325,14 +325,7 @@ def write_ssb_file(
         file_path = f"{file_path}_v{version_number}.{filetype}"
         # creates the filepath if it dopes not exist
         Path(file_path).parent.mkdir(parents=True, exist_ok=True)
-        _save_df(
-            df,
-            file_path,
-            filetype,
-            seperator,
-            encoding,
-            json_type,
-        )
+        _save_df(df, file_path, filetype, seperator, encoding, json_type,)
 
 
 def read_ssb_file(
@@ -344,11 +337,11 @@ def read_ssb_file(
     datatilstand: str = "",
     undermappe: str | None = None,
     filetype: str = "parquet",
-    json_type: str = "df",
     columns: list[str] | None = None,
     version_number: int | None = None,
     seperator: str = ";",
     encoding: str = "latin1",
+    json_type: str = 'df',
 ) -> pd.DataFrame | None:
     """Function to read a saved file, stored at SSB-format.
 
@@ -418,7 +411,7 @@ def read_ssb_file(
                 f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn.",
                 stacklevel=2,
             )
-        if json_type == "dict":
+        if json_type == 'dict':
             with open(file_path) as f:
                 df = json.load(f)
         else:
