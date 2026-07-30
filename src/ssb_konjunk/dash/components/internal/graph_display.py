@@ -31,12 +31,18 @@ GRAPH_COLORS = [
 ]
 
 
-def dict_combinations(d: dict[str, Any]):
+def dict_combinations(d: dict[str, Any])-> dict[str, Any]:
+    """Generate all combinations of values from a dictionary of iterables.
+
+    Each key in ``d`` is associated with an iterable of possible values. This
+    generator yields a dictionary for every possible combination of those
+    values, preserving the original keys.
+    """
     keys = d.keys()
     values = d.values()
 
     for combination in product(*values):
-        yield dict(zip(keys, combination))
+        yield dict(zip(keys, combination, strict=True))
 
 
 class GraphDisplay(html.Div):

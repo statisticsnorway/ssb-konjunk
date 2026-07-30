@@ -292,6 +292,7 @@ def write_ssb_file(
         filetype: the filetype to save as. Default: 'parquet'.
         seperator: the seperator to use it filetype is csv. Default: ';'.
         encoding: Encoding for file, base is latin1.
+        json_type (str): en markør for å lagre json i riktig format om det er en df eller en dict.
 
     Raises:
         ValueError: if df has no rows.
@@ -369,6 +370,7 @@ def read_ssb_file(
         columns: Columns to read from the file. If None (default), all columns are read.
         seperator: the seperator to use it filetype is csv. Default: ';'.
         encoding: Encoding for file, base is latin1.
+        json_type (str): en markør for å lagre json i riktig format om det er en df eller en dict.
 
     Raises:
         FileNotFoundError: If no files matching the file path and filetype are found.

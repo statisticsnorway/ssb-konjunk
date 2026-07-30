@@ -26,6 +26,7 @@ def generate_custom_table(
     Args:
         title (str): Tittel som vises over tabellen.
         dataframe (pd.DataFrame): Data som fyller tabellen.
+        groupby_col (str): kolonnen tabellen er skal gruperes på.
         header_1 (list[str] | None, optional): Første overskriftsrad. Defaults to None.
         header_2 (list[str] | None, optional): Andre overskriftsrad. Defaults to None.
         sparkline_data (pd.DataFrame | None, optional): Data for sparklines per rad. Defaults to None.
