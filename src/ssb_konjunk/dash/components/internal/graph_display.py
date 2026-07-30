@@ -1,7 +1,7 @@
 import uuid
+from collections.abc import Iterator
 from itertools import cycle
 from itertools import product
-from collections.abc import Iterator
 from typing import Any
 from typing import Literal
 
