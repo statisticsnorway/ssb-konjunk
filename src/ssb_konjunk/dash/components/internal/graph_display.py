@@ -31,7 +31,7 @@ GRAPH_COLORS = [
 ]
 
 
-def dict_combinations(d: dict[str, Any])-> dict[str, Any]:
+def dict_combinations(d: dict[str, Any]) -> dict[str, Any]:
     """Generate all combinations of values from a dictionary of iterables.
 
     Each key in ``d`` is associated with an iterable of possible values. This
