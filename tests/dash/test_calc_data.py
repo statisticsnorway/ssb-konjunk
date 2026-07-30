@@ -21,10 +21,8 @@ def test_pad_single():
     assert DataManager.pad_single("49.1") == "      49.1"
 
 
-def test_calc_indirect(test_df):
-    assert DataManager.calc_indirect(test_df, "jus") == pytest.approx(
-        7587.79153, rel=1e-4
-    )
+def test_calc_indirect(data, test_df):
+    assert data.calc_indirect(test_df, "jus") == pytest.approx(7587.79153, rel=1e-4)
 
 
 def test_to_percent(data):
@@ -41,23 +39,23 @@ def test_header_1(data):
 
 
 def test_get_nacer(data):
-    assert data.get_nacer() == ["H", "K", "49.1", "49.2", "64"]
+    assert data.get_nacer() == ["H", "K", "64", "49.1", "49.2"]
 
 
 def test_add_klass_codes(data):
     nace_data = data.data["nar"].to_frame()
     nace_data_with_codes = data.add_klass_codes(nace_data, "nar")
     assert nace_data_with_codes["nar"].iloc[0] == "H - Transport og lagring"
-    assert nace_data_with_codes["nar"].iloc[-1] == "64 - Finansieringsvirksomhet"
+    assert nace_data_with_codes["nar"].iloc[-1] == "49.2 - Godstransport med jernbane"
 
 
 def test_sort_aggregates():
     test_series = pd.Series(["42.1", "40.2", "40", "F", "40.1"])
     sorted_series = DataManager.sort_aggregates(test_series).tolist()
-    assert sorted_series == [5, 3, 1, 0, 2]
+    assert sorted_series == [6, 4, 2, 1, 3]
 
 
-def test_normalize_weight():
+def test_normalize_weight(data):
     test_table_data = pl.DataFrame(
         {
             "nar": ["K", "H", "HTNXK"],
@@ -68,7 +66,7 @@ def test_normalize_weight():
         }
     )
 
-    test_table_data, test_weighted = DataManager._normalize_weight(
+    test_table_data, test_weighted = data._normalize_weight(
         test_table_data, includes_parent_aggregate=True
     )
 
@@ -85,7 +83,7 @@ def test_normalize_weight():
         }
     )
 
-    test_table_data_2, _ = DataManager._normalize_weight(
+    test_table_data_2, _ = data._normalize_weight(
         test_table_data_2, includes_parent_aggregate=False
     )
 
@@ -101,9 +99,7 @@ def test_normalize_weight():
     )
 
     with pytest.raises(ValueError):
-        DataManager._normalize_weight(
-            test_table_data_fail, includes_parent_aggregate=True
-        )
+        data._normalize_weight(test_table_data_fail, includes_parent_aggregate=True)
 
 
 def test_get_all_periods(data):
@@ -115,7 +111,7 @@ def test_get_all_periods(data):
 def test_format_aggregates(data):
     nace_data = data.get_nacer()
     nace_data_formated = data.format_aggregates(pd.Series(nace_data)).tolist()
-    expected = ["H", "K", "      49.1", "      49.2", "  64"]
+    expected = ["H", "K", "  64", "      49.1", "      49.2"]
     assert nace_data_formated == expected
 
 
