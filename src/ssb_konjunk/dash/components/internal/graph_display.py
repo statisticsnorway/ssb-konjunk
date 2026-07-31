@@ -33,11 +33,8 @@ GRAPH_COLORS = [
 
 
 def dict_combinations(d: dict[str, Any]) -> Iterator[dict[str, Any]]:
-    """Generate all combinations of values from a dictionary of iterables.
-
-    Each key in ``d`` is associated with an iterable of possible values. This
-    generator yields a dictionary for every possible combination of those
-    values, preserving the original keys.
+    """Generates dicts with every possibility of both keys and values.
+    If there are lists of values for the same kley, there will now be more dicts that have only one value, and one key.
     """
     keys = d.keys()
     values = d.values()
