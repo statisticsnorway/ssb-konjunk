@@ -2,7 +2,6 @@ import uuid
 from typing import Any
 
 import polars as pl
-from pydantic import BaseModel
 from ssb_dash_components import Accordion
 from ssb_dash_components import Checkbox
 
