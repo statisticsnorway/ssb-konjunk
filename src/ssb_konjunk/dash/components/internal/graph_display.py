@@ -34,7 +34,7 @@ GRAPH_COLORS = [
 
 def dict_combinations(d: dict[str, Any]) -> Iterator[dict[str, Any]]:
     """Generates dicts with every possibility of both keys and values.
-    
+
     If there are lists of values for the same kley, there will now be more dicts that have only one value, and one key.
     """
     keys = d.keys()
