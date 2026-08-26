@@ -2,7 +2,6 @@ import uuid
 from typing import Any
 
 import polars as pl
-from pydantic import BaseModel
 from ssb_dash_components import Accordion
 from ssb_dash_components import Checkbox
 
@@ -17,10 +16,6 @@ from dash import dcc
 from dash import html
 
 from .loading_test import DatasetConfig
-
-
-class CurrentState(BaseModel):
-    pass
 
 
 class SeriesSelector(html.Div):

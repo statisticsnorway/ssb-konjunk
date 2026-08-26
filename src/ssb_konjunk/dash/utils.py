@@ -17,6 +17,7 @@ def setup(config: type[Any], data_manager_class: Any = get_data_manager) -> None
 
     Args:
         config (type[Config]): Klassen som inneholder konfigurasjonsinnstillinger.
+        data_manager_class (Any): en instans av datamanagerklassen
     """
     global _config
     global _get_data_manager

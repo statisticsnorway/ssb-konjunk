@@ -66,6 +66,8 @@ class DataManager:
         Args:
             data (pd.DataFrame): Inndata som inneholder tidsseriedata, med blant annet
                 kolonnene 'nar', 'periode', 'jus', 'korr', 'ujust' og 'verdi'.
+            period_column (str): navnet på kolonnen som har perioden.
+            nace_column (str): navnet på kolonnen som har nace.
         """
         self.period_col = period_column
         self.nace_col = nace_column

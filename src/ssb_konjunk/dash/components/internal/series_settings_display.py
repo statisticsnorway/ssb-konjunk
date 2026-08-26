@@ -5,7 +5,6 @@ from typing import Any
 
 from ssb_dash_components import Dropdown
 from ssb_dash_components import DropdownMultiple
-from ssb_dash_components.DropdownMultiple import DropdownMultiple
 
 from dash import ALL
 from dash import MATCH
@@ -40,6 +39,7 @@ class SeriesSetting:
 
 
 def create_dropdown_options(groupbys: list[str]) -> list[dict[str, str]]:
+    """Create dropdown options from a list."""
     options = []
     for i in groupbys:
         options.append({"title": i, "id": i})

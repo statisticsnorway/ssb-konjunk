@@ -38,17 +38,22 @@ class Period:
         return cls(period)
 
     def _period_to_datetime(self, item: str) -> pendulum.DateTime:
-        """Konverterer en periode-streng (YYYY-MM) til et `pendulum.DateTime`-objekt.
+        """Konverterer en periode-streng til et `pendulum.DateTime`-objekt.
 
         Args:
-            item (str): Periodestreng med format 'YYYY-MM'.
+            item (str): Periodestreng i ett av formatene `YYYY`, `YYYY-MM`,
+                `YYYY-MM-DD`, `YYYYMmm` eller `YYYYmMM`.
 
         Returns:
             pendulum.DateTime: Dato med første dag i måneden.
         """
-        year = int(item[0:4])
-        month = int(item[-2:])
-        return pendulum.datetime(year, month, 1)
+        item = item.replace("m", "-").replace("M", "-")
+        parts = item.split("-")
+        year = int(parts[0])
+        month = int(parts[1]) if len(parts) > 1 else 1
+        day = int(parts[2]) if len(parts) > 2 else 1
+
+        return pendulum.datetime(year, month, day)
 
     def as_period(self) -> str:
         """Returnerer perioden som en streng i formatet 'YYYY-MM'.
