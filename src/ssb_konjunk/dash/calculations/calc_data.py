@@ -272,18 +272,16 @@ class DataManager:
         return sort_order
 
     def sort_aggregates(self, codes: pd.Series) -> pd.Series:
-        """
-        Sorterer aggregeringskoder i henhold til en forhåndsdefinert sorteringsrekkefølge.
+        """Sorterer aggregeringskoder i henhold til en forhåndsdefinert sorteringsrekkefølge.
 
         Args:
         codes: En pandas Series med aggregeringskoder som skal sorteres.
-        
+
         Returns:
         En pandas Series der hver aggregeringskode er mappet til sin
         tilsvarende sorteringsverdi.
         """
         return codes.map(self._sort_order)
-
 
     def _normalize_weight(
         self,
