@@ -240,7 +240,7 @@ class DataManager:
             En dict som har et tall til hver code som brukes til sortering,
         """
         class_codes = self.class_codes
-        children: dict[str | None, list[str]] = {
+        children: dict[str | None, list[str]] = {}
 
         for row in class_codes.itertuples(index=False):
             parent = row.parentCode
