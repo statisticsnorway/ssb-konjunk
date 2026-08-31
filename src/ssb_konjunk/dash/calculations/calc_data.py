@@ -245,7 +245,8 @@ class DataManager:
         for row in class_codes.itertuples(index=False):
             parent = row.parentCode
             code = row.code
-
+            if pd.isna(parent):
+                parent = None
             if not isinstance(parent, (str, type(None))):
                 raise TypeError(f"Ugyldig parentCode: {parent!r}")
             if not isinstance(code, str):
