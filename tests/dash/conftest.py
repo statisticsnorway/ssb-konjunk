@@ -12,7 +12,7 @@ def test_df():
     np.random.seed(0)
     periods = pd.date_range("2021-11", "2024-12", freq="MS").strftime("%Y-%m")
 
-    nars = ["H", "49.1", "49.2", "K", "64"]
+    nars = ["H", "49.1", "49.2", "J", "59"]
 
     rows = []
     for nar in nars:

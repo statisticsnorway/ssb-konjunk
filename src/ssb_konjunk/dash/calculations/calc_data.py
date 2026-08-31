@@ -1,4 +1,3 @@
-from collections import defaultdict
 from functools import cache
 
 import pandas as pd
@@ -75,8 +74,12 @@ class DataManager:
         nus = KlassClassification(
             classification_id="6", language="nb", include_future=False
         )
-        self.class_codes = nus.get_codes(from_date="2023-01-01").data[["name", "code"]]
-        data = data[~data[self.nace_col].isin(["CC1.I.IVL.U.M", "CC2.I.IVL.U.M"])]
+        self.root_code = None
+        self.class_codes = nus.get_codes(from_date="2023-01-01").data[
+            ["code", "parentCode", "name"]
+        ]
+
+        self._sort_order = self._build_sort_order()
 
         data = data.sort_values(self.nace_col, key=self.sort_aggregates)
         data = data.reset_index(drop=True)
@@ -216,7 +219,10 @@ class DataManager:
         """
         data_copy = data[on].to_frame()
         data_copy = data_copy.merge(
-            self.class_codes, left_on=on, right_on="code", how="inner"
+            self.class_codes[["code", "name"]],
+            left_on=on,
+            right_on="code",
+            how="inner",
         )
         data_copy["complete"] = data_copy[on] + " - " + data_copy["name"]
         data_copy = data_copy.drop("name", axis="columns")
@@ -225,41 +231,61 @@ class DataManager:
         data = data.rename(columns={"complete": on})
         return data
 
-    @staticmethod
-    def sort_aggregates(index: pd.Series) -> pd.Series:
-        """Returnerer en sorteringsnøkkel basert på næringskoders hierarki.
+    def _build_sort_order(self) -> dict[str, int]:
+        """Bygger en hierarkisk sorteringsrekkefølge fra klassifikasjonskodene.
 
-        Grupperer og sorterer koder alfabetisk og numerisk, inkludert undernivåer (f.eks. '1', '1.1', '1.2')
-        slik at dataserier får ønsket rekkefølge.
-
-        Args:
-            index (pd.Series): En serie med næringskoder som strenger.
+        Hierarkiet er definert av "parentCode" og starter ved "self.root_code" som kan vere definert i LocalDataManager, hvis ikke er den None.
+        Du kan og legge til egene custom coder i en LocalDataManager.
 
         Returns:
-            pd.Series: En serie med heltallsverdier som representerer sorteringsrekkefølge.
+            dict[str, int]: En dict som har et tall til hver code som brukes til sortering,
         """
-        main_aggregate = []
-        hierarchal_aggregates = defaultdict(list)
+        class_codes = self.class_codes
+        children: dict[str | None, list[str]] = {}
 
-        for item in map(str, index):
-            if item.isalpha() or ("." not in item):
-                main_aggregate.append(item)
-            else:
-                key, *sub = item.split(".")
-                if sub:
-                    hierarchal_aggregates[key].append(sub[0])
-                else:
-                    hierarchal_aggregates[key]
+        for row in class_codes.itertuples(index=False):
+            parent = row.parentCode
+            code = row.code
+            if pd.isna(parent):
+                parent = None
+            if not isinstance(parent, (str, type(None))):
+                raise TypeError(f"Ugyldig parentCode: {parent!r}")
+            if not isinstance(code, str):
+                raise TypeError(f"Ugyldig code: {code!r}")
+            if parent not in children:
+                children[parent] = []
+            children[parent].append(code)
+        for child_codes in children.values():
+            child_codes.sort()
 
-        for key_int in sorted(map(int, hierarchal_aggregates.keys())):
-            main_aggregate.append(f"{key_int}")
-            main_aggregate.extend(
-                f"{key_int}.{sub}"
-                for sub in sorted(map(int, hierarchal_aggregates[str(key_int)]))
-            )
+        sort_order = {}
 
-        mapper = {item: idx for idx, item in enumerate(main_aggregate)}
-        return index.map(mapper)
+        def add_children(parent_code: str | None, position: int) -> int:
+            for code in children.get(parent_code, []):
+                sort_order[code] = position
+                position += 1
+                position = add_children(code, position)
+
+            return position
+
+        if self.root_code is None:
+            add_children(None, 0)
+        else:
+            sort_order[self.root_code] = 0
+            add_children(self.root_code, 1)
+        return sort_order
+
+    def sort_aggregates(self, codes: pd.Series) -> pd.Series:
+        """Sorterer aggregeringskoder i henhold til en forhåndsdefinert sorteringsrekkefølge.
+
+        Args:
+        codes: En pandas Series med aggregeringskoder som skal sorteres.
+
+        Returns:
+        En pandas Series der hver aggregeringskode er mappet til sin
+        tilsvarende sorteringsverdi.
+        """
+        return codes.map(self._sort_order)
 
     def _normalize_weight(
         self,
@@ -510,13 +536,7 @@ class DataManager:
                 .round(1)
                 .sort_values(
                     by=self.nace_col,
-                    key=lambda col: col.map(
-                        lambda x: (
-                            str(x).lstrip()[0].isdigit(),
-                            -len(str(x).split("-", 1)[0]),
-                            str(x),
-                        )
-                    ),
+                    key=self.sort_aggregates,
                 )
                 .reset_index(drop=True)
             ),
@@ -613,16 +633,7 @@ class DataManager:
             res_data=(
                 self._prep_df(table_data, self.nace_col)
                 .round(1)
-                .sort_values(
-                    by=self.nace_col,
-                    key=lambda col: col.map(
-                        lambda x: (
-                            str(x).lstrip()[0].isdigit(),
-                            -len(str(x).split("-", 1)[0]),
-                            str(x),
-                        )
-                    ),
-                )
+                .sort_values(by=self.nace_col, key=self.sort_aggregates)
                 .reset_index(drop=True)
             ),
             figure_data=self._prep_df(weighted_pct, self.nace_col)
@@ -717,16 +728,7 @@ class DataManager:
             res_data=(
                 self._prep_df(table_data, self.nace_col)
                 .round(1)
-                .sort_values(
-                    by=self.nace_col,
-                    key=lambda col: col.map(
-                        lambda x: (
-                            str(x).lstrip()[0].isdigit(),
-                            -len(str(x).split("-", 1)[0]),
-                            str(x),
-                        )
-                    ),
-                )
+                .sort_values(by=self.nace_col, key=self.sort_aggregates)
                 .reset_index(drop=True)
             ),
             figure_data=self._prep_df(weighted_pct, self.nace_col)
@@ -794,16 +796,7 @@ class DataManager:
                 multi_join(df_data, on=self.nace_col), sort_by=self.nace_col
             )
             .round(1)
-            .sort_values(
-                by=self.nace_col,
-                key=lambda col: col.map(
-                    lambda x: (
-                        str(x).lstrip()[0].isdigit(),
-                        -len(str(x).split("-", 1)[0]),
-                        str(x),
-                    )
-                ),
-            )
+            .sort_values(by=self.nace_col, key=self.sort_aggregates)
             .reset_index(drop=True),
             figure_data=self._prep_df(weighted_pct, sort_by=self.nace_col)
             .set_index(self.nace_col)["weighted"]
@@ -871,16 +864,7 @@ class DataManager:
                 sort_by=self.nace_col,
             )
             .round(1)
-            .sort_values(
-                by=self.nace_col,
-                key=lambda col: col.map(
-                    lambda x: (
-                        str(x).lstrip()[0].isdigit(),
-                        -len(str(x).split("-", 1)[0]),
-                        str(x),
-                    )
-                ),
-            )
+            .sort_values(by=self.nace_col, key=self.sort_aggregates)
             .reset_index(drop=True),
             figure_data=self._prep_df(weighted_pct, self.nace_col)
             .set_index(self.nace_col)["weighted"]
@@ -960,16 +944,7 @@ class DataManager:
             header_2=["", *prev_headers, *curr_headers, *percent_headers],
             res_data=self._prep_df(df, sort_by=self.nace_col)
             .round(1)
-            .sort_values(
-                by=self.nace_col,
-                key=lambda col: col.map(
-                    lambda x: (
-                        str(x).lstrip()[0].isdigit(),
-                        -len(str(x).split("-", 1)[0]),
-                        str(x),
-                    )
-                ),
-            )
+            .sort_values(by=self.nace_col, key=self.sort_aggregates)
             .reset_index(drop=True),
             figure_data=self._prep_df(weighted_pct, self.nace_col)
             .set_index(self.nace_col)["weighted"]
@@ -1031,16 +1006,7 @@ class DataManager:
                 sort_by=self.nace_col,
             )
             .round(1)
-            .sort_values(
-                by=self.nace_col,
-                key=lambda col: col.map(
-                    lambda x: (
-                        str(x).lstrip()[0].isdigit(),
-                        -len(str(x).split("-", 1)[0]),
-                        str(x),
-                    )
-                ),
-            )
+            .sort_values(by=self.nace_col, key=self.sort_aggregates)
             .reset_index(drop=True),
             figure_data=None,
             sparkline_data=None,
@@ -1108,13 +1074,7 @@ class DataManager:
                 sort_by=self.nace_col,
             )
             .round(1)
-            .sort_values(
-                by=self.nace_col,
-                key=lambda col: col.map(
-                    lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
-                ),
-                ignore_index=True,
-            )
+            .sort_values(by=self.nace_col, key=self.sort_aggregates)
             .reset_index(drop=True),
             figure_data=None,
             sparkline_data=None,
@@ -1154,13 +1114,7 @@ class DataManager:
             res_data=self._prep_df(
                 multi_join(df_data, on=self.nace_col), sort_by=self.nace_col
             )
-            .sort_values(
-                by=self.nace_col,
-                key=lambda col: col.map(
-                    lambda x: (str(x).lstrip()[0].isdigit(), str(x).lstrip())
-                ),
-                ignore_index=True,
-            )
+            .sort_values(by=self.nace_col, key=self.sort_aggregates)
             .reset_index(drop=True),
             figure_data=self._prep_df(df_data[-1], sort_by=self.nace_col)
             .set_index(self.nace_col)["weight"]
