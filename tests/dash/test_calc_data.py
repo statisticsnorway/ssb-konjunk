@@ -27,7 +27,7 @@ def test_calc_indirect(data, test_df):
 
 def test_to_percent(data):
     np.random.seed(0)
-    weight = data.weight_source.data.filter(pl.col("nar") == "K")["verdi"]
+    weight = data.weight_source.data.filter(pl.col("nar") == "J")["verdi"]
     chg_rate = pl.Series("chg_rate", np.random.uniform(-2, 2, 38))
 
     percent_change = data.to_percent(weight, chg_rate)
@@ -39,20 +39,30 @@ def test_header_1(data):
 
 
 def test_get_nacer(data):
-    assert data.get_nacer() == ["H", "K", "64", "49.1", "49.2"]
+    assert data.get_nacer() == ["H", "49.1", "49.2", "J", "59",]
 
 
 def test_add_klass_codes(data):
     nace_data = data.data["nar"].to_frame()
     nace_data_with_codes = data.add_klass_codes(nace_data, "nar")
-    assert nace_data_with_codes["nar"].iloc[0] == "H - Transport og lagring"
-    assert nace_data_with_codes["nar"].iloc[-1] == "49.2 - Godstransport med jernbane"
+    assert "H - Transport og lagring" in nace_data_with_codes["nar"].values
+    assert "49.2 - Godstransport med jernbane" in nace_data_with_codes["nar"].values
+
+def test_build_sort_order(data):
+    sort_order = data._build_sort_order()
+    assert set(sort_order) == set(data.class_codes["code"])
 
 
-def test_sort_aggregates():
-    test_series = pd.Series(["42.1", "40.2", "40", "F", "40.1"])
-    sorted_series = DataManager.sort_aggregates(test_series).tolist()
-    assert sorted_series == [6, 4, 2, 1, 3]
+def test_sort_aggregates(data):
+    test_series = pd.Series(["42.1", "41.2", "41", "F", "41.1"])
+
+    sorted_codes = (
+        test_series
+        .iloc[data.sort_aggregates(test_series).argsort()]
+        .tolist()
+    )
+
+    assert sorted_codes == ["F", "41", "41.1", "41.2", "42.1"]
 
 
 def test_normalize_weight(data):
@@ -111,7 +121,7 @@ def test_get_all_periods(data):
 def test_format_aggregates(data):
     nace_data = data.get_nacer()
     nace_data_formated = data.format_aggregates(pd.Series(nace_data)).tolist()
-    expected = ["H", "K", "  64", "      49.1", "      49.2"]
+    expected = ["H","      49.1", "      49.2", "J", "  59"]
     assert nace_data_formated == expected
 
 
@@ -143,7 +153,7 @@ def test_create_period_range(data):
 
 def test_get_sesonal_adjusted_3_mth_change(data):
     seasonal_3_mnt_change_1 = data.get_sesonal_adjusted_3_mth_change(
-        nace_filter=["H", "K"], includes_parent_aggregate=False
+        nace_filter=["H", "J"], includes_parent_aggregate=False
     )
     seasonal_3_mnt_change_2 = data.get_sesonal_adjusted_3_mth_change(
         nace_filter=["H", "49.1", "49.2"], includes_parent_aggregate=False
@@ -163,7 +173,7 @@ def test_get_sesonal_adjusted_3_mth_change(data):
         {
             "nar": [
                 "  H - Transport og lagring",
-                "  K - Finansierings- og forsikringsvirks",
+                "  J - Informasjon og kommunikasjon",
             ],
             "weight": [62.8, 37.2],
             "season": [112.2, 95.3],
@@ -189,8 +199,8 @@ def test_get_sesonal_adjusted_3_mth_change(data):
         {
             "nar": [
                 "  H - Transport og lagring",
-                "  K - Finansierings- og forsikringsvirks",
-                "    64 - Finansieringsvirksomhet",
+                "  J - Informasjon og kommunikasjon",
+                "    59 - Film-, video- og fjernsynsprogr",
             ],
             "weight": [45.7, 27.1, 33.3],
             "season": [112.2, 95.3, 110.3],
@@ -208,7 +218,7 @@ def test_get_sesonal_adjusted_3_mth_change(data):
 
 def test_get_sesonal_adjusted_mth_change(data):
     seasonal_mnt_change_1 = data.get_sesonal_adjusted_mth_change(
-        nace_filter=["H", "K"], includes_parent_aggregate=False
+        nace_filter=["H", "J"], includes_parent_aggregate=False
     )
     seasonal_mnt_change_2 = data.get_sesonal_adjusted_mth_change(
         nace_filter=["H", "49.1", "49.2"], includes_parent_aggregate=False
@@ -228,7 +238,7 @@ def test_get_sesonal_adjusted_mth_change(data):
         {
             "nar": [
                 "  H - Transport og lagring",
-                "  K - Finansierings- og forsikringsvirks",
+                "  J - Informasjon og kommunikasjon",
             ],
             "weight": [69.6, 30.4],
             "season": [108.6, 104.3],
@@ -254,8 +264,8 @@ def test_get_sesonal_adjusted_mth_change(data):
         {
             "nar": [
                 "  H - Transport og lagring",
-                "  K - Finansierings- og forsikringsvirks",
-                "    64 - Finansieringsvirksomhet",
+                "  J - Informasjon og kommunikasjon",
+                "    59 - Film-, video- og fjernsynsprogr",
             ],
             "weight": [44.7, 19.5, 22.7],
             "season": [108.6, 104.3, 94.9],
@@ -273,7 +283,7 @@ def test_get_sesonal_adjusted_mth_change(data):
 
 def test_get_sesonal_adjusted_12_mth_change(data):
     seasonal_12_mnt_change_1 = data.get_sesonal_adjusted_12_mth_change(
-        nace_filter=["H", "K"], includes_parent_aggregate=False
+        nace_filter=["H", "J"], includes_parent_aggregate=False
     )
     seasonal_12_mnt_change_2 = data.get_sesonal_adjusted_12_mth_change(
         nace_filter=["H", "49.1", "49.2"], includes_parent_aggregate=False
@@ -293,7 +303,7 @@ def test_get_sesonal_adjusted_12_mth_change(data):
         {
             "nar": [
                 "  H - Transport og lagring",
-                "  K - Finansierings- og forsikringsvirks",
+                "  J - Informasjon og kommunikasjon",
             ],
             "weight": [69.6, 30.4],
             "calendar": [120.0, 99.1],
@@ -320,8 +330,8 @@ def test_get_sesonal_adjusted_12_mth_change(data):
         {
             "nar": [
                 "  H - Transport og lagring",
-                "  K - Finansierings- og forsikringsvirks",
-                "    64 - Finansieringsvirksomhet",
+                "  J - Informasjon og kommunikasjon",
+                "    59 - Film-, video- og fjernsynsprogr",
             ],
             "weight": [44.7, 19.5, 22.7],
             "calendar": [120.0, 99.1, 80.1],
@@ -372,19 +382,20 @@ def test_get_table_1(data):
         {
             "nar": [
                 "  H - Transport og lagring",
-                "  K - Finansierings- og forsikringsvirks",
                 "        49.1 - Passasjertransport med je",
                 "        49.2 - Godstransport med jernban",
-                "    64 - Finansieringsvirksomhet",
+                "  J - Informasjon og kommunikasjon",
+                "    59 - Film-, video- og fjernsynsprogr",
             ],
-            "season": [115.9, 94.5, 112.9, 89.3, 118.7],
-            "season0": [112.2, 87.0, 83.9, 118.8, 117.2],
-            "season1": [108.6, 104.3, 116.3, 90.0, 94.9],
-            "season2": [-19.7, -23.6, 2.4, 13.8, -10.1],
-            "season3": [20.6, 29.7, 6.4, -7.6, 27.6],
-            "season4": [12.5, -11.6, 13.0, -5.4, 13.6],
-            "season5": [-3.2, -7.9, -25.7, 33.0, -1.3],
-            "season6": [-3.2, 19.9, 38.6, -24.2, -19.0],
+        
+            "season":  [115.9, 112.9, 89.3, 94.5, 118.7],
+            "season0": [112.2, 83.9, 118.8, 87.0, 117.2],
+            "season1": [108.6, 116.3, 90.0, 104.3, 94.9],
+            "season2": [-19.7, 2.4, 13.8, -23.6, -10.1],
+            "season3": [20.6, 6.4, -7.6, 29.7, 27.6],
+            "season4": [12.5, 13.0, -5.4, -11.6, 13.6],
+            "season5": [-3.2, -25.7, 33.0, -7.9, -1.3],
+            "season6": [-3.2, 38.6, -24.2, 19.9, -19.0],
         }
     )
 
@@ -409,17 +420,18 @@ def test_get_table_2(data):
         {
             "nar": [
                 "  H - Transport og lagring",
-                "  K - Finansierings- og forsikringsvirks",
                 "        49.1 - Passasjertransport med je",
                 "        49.2 - Godstransport med jernban",
-                "    64 - Finansieringsvirksomhet",
+                "  J - Informasjon og kommunikasjon",
+                "    59 - Film-, video- og fjernsynsprogr",
             ],
-            "season": [107.1, 86.6, 97.9, 112.0, 100.2],
-            "season0": [98.3, 99.1, 95.2, 95.5, 92.5],
-            "season1": [112.2, 95.3, 104.4, 99.3, 110.3],
-            "season2": [12.0, -18.3, -1.6, 23.2, -5.5],
-            "season3": [-8.2, 14.4, -2.8, -14.7, -7.7],
-            "season4": [14.2, -3.8, 9.7, 4.0, 19.2],
+            
+            "season":  [107.1, 97.9, 112.0, 86.6, 100.2],
+            "season0": [98.3, 95.2, 95.5, 99.1, 92.5],
+            "season1": [112.2, 104.4, 99.3, 95.3, 110.3],
+            "season2": [12.0, -1.6, 23.2, -18.3, -5.5],
+            "season3": [-8.2, -2.8, -14.7, 14.4, -7.7],
+            "season4": [14.2, 9.7, 4.0, -3.8, 19.2],
         }
     )
     print(get_table_2.res_data)
@@ -459,20 +471,20 @@ def test_get_table_3(data):
         {
             "nar": [
                 "  H - Transport og lagring",
-                "  K - Finansierings- og forsikringsvirks",
                 "        49.1 - Passasjertransport med je",
                 "        49.2 - Godstransport med jernban",
-                "    64 - Finansieringsvirksomhet",
+                "  J - Informasjon og kommunikasjon",
+                "    59 - Film-, video- og fjernsynsprogr",
             ],
-            "calendar": [108.7, 93.4, 95.8, 94.3, 88.9],
-            "calendar0": [80.8, 100.8, 99.5, 117.2, 84.0],
-            "calendar1": [90.8, 96.4, 109.9, 98.2, 114.3],
-            "calendar2": [94.7, 98.8, 87.6, 93.9, 100.3],
-            "calendar3": [108.2, 93.1, 114.5, 116.2, 100.8],
-            "calendar4": [120.0, 99.1, 111.0, 84.2, 80.1],
-            "calendar5": [-12.8, 5.9, -8.6, -0.3, 12.8],
-            "calendar6": [33.8, -7.6, 15.0, -0.8, 20.0],
-            "calendar7": [32.1, 2.8, 0.9, -14.2, -29.9],
+            "calendar":  [108.7, 95.8, 94.3, 93.4, 88.9],
+            "calendar0": [80.8, 99.5, 117.2, 100.8, 84.0],
+            "calendar1": [90.8, 109.9, 98.2, 96.4, 114.3],
+            "calendar2": [94.7, 87.6, 93.9, 98.8, 100.3],
+            "calendar3": [108.2, 114.5, 116.2, 93.1, 100.8],
+            "calendar4": [120.0, 111.0, 84.2, 99.1, 80.1],
+            "calendar5": [-12.8, -8.6, -0.3, 5.9, 12.8],
+            "calendar6": [33.8, 15.0, -0.8, -7.6, 20.0],
+            "calendar7": [32.1, 0.9, -14.2, 2.8, -29.9],
         }
     )
 
@@ -512,20 +524,20 @@ def test_get_table_4(data):
         {
             "nar": [
                 "  H - Transport og lagring",
-                "  K - Finansierings- og forsikringsvirks",
                 "        49.1 - Passasjertransport med je",
                 "        49.2 - Godstransport med jernban",
-                "    64 - Finansieringsvirksomhet",
+                "  J - Informasjon og kommunikasjon",
+                "    59 - Film-, video- og fjernsynsprogr",
             ],
-            "calendar": [90.9, 94.1, 114.1, 107.4, 99.5],
-            "calendar0": [101.5, 98.1, 88.1, 108.8, 87.0],
-            "calendar1": [93.4, 96.9, 101.8, 103.2, 95.7],
-            "calendar2": [102.5, 105.8, 110.0, 103.6, 100.1],
-            "calendar3": [96.6, 102.5, 101.8, 103.8, 101.0],
-            "calendar4": [107.6, 97.0, 104.3, 98.1, 93.7],
-            "calendar5": [12.7, 12.5, -3.6, -3.5, 0.5],
-            "calendar6": [-4.8, 4.4, 15.6, -4.6, 16.1],
-            "calendar7": [15.2, 0.2, 2.5, -4.9, -2.1],
+            "calendar":  [90.9, 114.1, 107.4, 94.1, 99.5],
+            "calendar0": [101.5, 88.1, 108.8, 98.1, 87.0],
+            "calendar1": [93.4, 101.8, 103.2, 96.9, 95.7],
+            "calendar2": [102.5, 110.0, 103.6, 105.8, 100.1],
+            "calendar3": [96.6, 101.8, 103.8, 102.5, 101.0],
+            "calendar4": [107.6, 104.3, 98.1, 97.0, 93.7],
+            "calendar5": [12.7, -3.6, -3.5, 12.5, 0.5],
+            "calendar6": [-4.8, 15.6, -4.6, 4.4, 16.1],
+            "calendar7": [15.2, 2.5, -4.9, 0.2, -2.1],
         }
     )
 
@@ -565,20 +577,20 @@ def test_get_table_5(data):
         {
             "nar": [
                 "  H - Transport og lagring",
-                "  K - Finansierings- og forsikringsvirks",
                 "        49.1 - Passasjertransport med je",
                 "        49.2 - Godstransport med jernban",
-                "    64 - Finansieringsvirksomhet",
+                "  J - Informasjon og kommunikasjon",
+                "    59 - Film-, video- og fjernsynsprogr",
             ],
-            "raw": [96.8, 105.9, 95.9, 81.9, 100.8],
-            "raw0": [111.3, 106.3, 105.2, 88.5, 88.5],
-            "raw1": [104.4, 100.9, 107.0, 112.6, 97.7],
-            "raw2": [85.0, 99.3, 106.1, 105.0, 90.3],
-            "raw3": [-3.3, -10.0, 5.6, 30.7, 8.5],
-            "raw4": [-14.9, -9.4, -0.1, 25.1, 4.7],
-            "raw5": [109.4, 104.9, 116.1, 93.1, 86.5],
-            "raw6": [86.0, 91.4, 93.3, 118.0, 89.9],
-            "raw7": [-21.4, -12.9, -19.6, 26.8, 4.0],
+            "raw":  [96.8, 95.9, 81.9, 105.9, 100.8],
+            "raw0": [111.3, 105.2, 88.5, 106.3, 88.5],
+            "raw1": [104.4, 107.0, 112.6, 100.9, 97.7],
+            "raw2": [85.0, 106.1, 105.0, 99.3, 90.3],
+            "raw3": [-3.3, 5.6, 30.7, -10.0, 8.5],
+            "raw4": [-14.9, -0.1, 25.1, -9.4, 4.7],
+            "raw5": [109.4, 116.1, 93.1, 104.9, 86.5],
+            "raw6": [86.0, 93.3, 118.0, 91.4, 89.9],
+            "raw7": [-21.4, -19.6, 26.8, -12.9, 4.0],
         }
     )
 
@@ -601,14 +613,14 @@ def test_get_table_6(data):
         {
             "nar": [
                 "  H - Transport og lagring",
-                "  K - Finansierings- og forsikringsvirks",
                 "        49.1 - Passasjertransport med je",
                 "        49.2 - Godstransport med jernban",
-                "    64 - Finansieringsvirksomhet",
+                "  J - Informasjon og kommunikasjon",
+                "    59 - Film-, video- og fjernsynsprogr",
             ],
-            "weight": [29.3, 32.3, 21.6, 30.1, 32.5],
-            "weight0": [23.5, 34.2, 28.2, 28.0, 26.7],
-            "weight1": [35.5, 29.9, 32.2, 27.7, 33.7],
+            "weight":  [29.3, 21.6, 30.1, 32.3, 32.5],
+            "weight0": [23.5, 28.2, 28.0, 34.2, 26.7],
+            "weight1": [35.5, 32.2, 27.7, 29.9, 33.7],
         }
     )
 
