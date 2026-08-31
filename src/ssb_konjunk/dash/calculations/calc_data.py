@@ -1,4 +1,3 @@
-from collections import defaultdict
 from functools import cache
 
 import pandas as pd
@@ -76,7 +75,9 @@ class DataManager:
             classification_id="6", language="nb", include_future=False
         )
         self.root_code = None
-        self.class_codes = nus.get_codes(from_date="2023-01-01").data[["code", "parentCode", "name"]]
+        self.class_codes = nus.get_codes(from_date="2023-01-01").data[
+            ["code", "parentCode", "name"]
+        ]
 
         self._sort_order = self._build_sort_order()
 
@@ -231,17 +232,16 @@ class DataManager:
         return data
 
     def _build_sort_order(self) -> dict[str, int]:
-        """
-        Bygger en hierarkisk sorteringsrekkefølge fra klassifikasjonskodene.
+        """Bygger en hierarkisk sorteringsrekkefølge fra klassifikasjonskodene.
 
         Hierarkiet er definert av ``parentCode`` og starter ved ``self.root_code``.
-    
+
         Returns:
             En dict som har et tall til hver code som brukes til sortering,
         """
         class_codes = self.class_codes
         children = {}
-        
+
         for row in class_codes.itertuples(index=False):
             parent = row.parentCode
             code = row.code
@@ -253,9 +253,9 @@ class DataManager:
             children[parent].append(code)
         for child_codes in children.values():
             child_codes.sort()
-    
+
         sort_order = {}
-    
+
         def add_children(parent_code: str | None, position: int) -> int:
             for code in children.get(parent_code, []):
                 sort_order[code] = position
@@ -263,6 +263,7 @@ class DataManager:
                 position = add_children(code, position)
 
             return position
+
         if self.root_code is None:
             add_children(None, 0)
         else:

@@ -39,7 +39,13 @@ def test_header_1(data):
 
 
 def test_get_nacer(data):
-    assert data.get_nacer() == ["H", "49.1", "49.2", "J", "59",]
+    assert data.get_nacer() == [
+        "H",
+        "49.1",
+        "49.2",
+        "J",
+        "59",
+    ]
 
 
 def test_add_klass_codes(data):
@@ -47,6 +53,7 @@ def test_add_klass_codes(data):
     nace_data_with_codes = data.add_klass_codes(nace_data, "nar")
     assert "H - Transport og lagring" in nace_data_with_codes["nar"].values
     assert "49.2 - Godstransport med jernbane" in nace_data_with_codes["nar"].values
+
 
 def test_build_sort_order(data):
     sort_order = data._build_sort_order()
@@ -56,11 +63,9 @@ def test_build_sort_order(data):
 def test_sort_aggregates(data):
     test_series = pd.Series(["42.1", "41.2", "41", "F", "41.1"])
 
-    sorted_codes = (
-        test_series
-        .iloc[data.sort_aggregates(test_series).argsort()]
-        .tolist()
-    )
+    sorted_codes = test_series.iloc[
+        data.sort_aggregates(test_series).argsort()
+    ].tolist()
 
     assert sorted_codes == ["F", "41", "41.1", "41.2", "42.1"]
 
@@ -121,7 +126,7 @@ def test_get_all_periods(data):
 def test_format_aggregates(data):
     nace_data = data.get_nacer()
     nace_data_formated = data.format_aggregates(pd.Series(nace_data)).tolist()
-    expected = ["H","      49.1", "      49.2", "J", "  59"]
+    expected = ["H", "      49.1", "      49.2", "J", "  59"]
     assert nace_data_formated == expected
 
 
@@ -387,8 +392,7 @@ def test_get_table_1(data):
                 "  J - Informasjon og kommunikasjon",
                 "    59 - Film-, video- og fjernsynsprogr",
             ],
-        
-            "season":  [115.9, 112.9, 89.3, 94.5, 118.7],
+            "season": [115.9, 112.9, 89.3, 94.5, 118.7],
             "season0": [112.2, 83.9, 118.8, 87.0, 117.2],
             "season1": [108.6, 116.3, 90.0, 104.3, 94.9],
             "season2": [-19.7, 2.4, 13.8, -23.6, -10.1],
@@ -425,8 +429,7 @@ def test_get_table_2(data):
                 "  J - Informasjon og kommunikasjon",
                 "    59 - Film-, video- og fjernsynsprogr",
             ],
-            
-            "season":  [107.1, 97.9, 112.0, 86.6, 100.2],
+            "season": [107.1, 97.9, 112.0, 86.6, 100.2],
             "season0": [98.3, 95.2, 95.5, 99.1, 92.5],
             "season1": [112.2, 104.4, 99.3, 95.3, 110.3],
             "season2": [12.0, -1.6, 23.2, -18.3, -5.5],
@@ -476,7 +479,7 @@ def test_get_table_3(data):
                 "  J - Informasjon og kommunikasjon",
                 "    59 - Film-, video- og fjernsynsprogr",
             ],
-            "calendar":  [108.7, 95.8, 94.3, 93.4, 88.9],
+            "calendar": [108.7, 95.8, 94.3, 93.4, 88.9],
             "calendar0": [80.8, 99.5, 117.2, 100.8, 84.0],
             "calendar1": [90.8, 109.9, 98.2, 96.4, 114.3],
             "calendar2": [94.7, 87.6, 93.9, 98.8, 100.3],
@@ -529,7 +532,7 @@ def test_get_table_4(data):
                 "  J - Informasjon og kommunikasjon",
                 "    59 - Film-, video- og fjernsynsprogr",
             ],
-            "calendar":  [90.9, 114.1, 107.4, 94.1, 99.5],
+            "calendar": [90.9, 114.1, 107.4, 94.1, 99.5],
             "calendar0": [101.5, 88.1, 108.8, 98.1, 87.0],
             "calendar1": [93.4, 101.8, 103.2, 96.9, 95.7],
             "calendar2": [102.5, 110.0, 103.6, 105.8, 100.1],
@@ -582,7 +585,7 @@ def test_get_table_5(data):
                 "  J - Informasjon og kommunikasjon",
                 "    59 - Film-, video- og fjernsynsprogr",
             ],
-            "raw":  [96.8, 95.9, 81.9, 105.9, 100.8],
+            "raw": [96.8, 95.9, 81.9, 105.9, 100.8],
             "raw0": [111.3, 105.2, 88.5, 106.3, 88.5],
             "raw1": [104.4, 107.0, 112.6, 100.9, 97.7],
             "raw2": [85.0, 106.1, 105.0, 99.3, 90.3],
@@ -618,7 +621,7 @@ def test_get_table_6(data):
                 "  J - Informasjon og kommunikasjon",
                 "    59 - Film-, video- og fjernsynsprogr",
             ],
-            "weight":  [29.3, 21.6, 30.1, 32.3, 32.5],
+            "weight": [29.3, 21.6, 30.1, 32.3, 32.5],
             "weight0": [23.5, 28.2, 28.0, 34.2, 26.7],
             "weight1": [35.5, 32.2, 27.7, 29.9, 33.7],
         }
