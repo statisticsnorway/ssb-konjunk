@@ -232,9 +232,10 @@ class DataManager:
         return data
 
     def _build_sort_order(self) -> dict[str, int]:
-        """Bygger en hierarkisk sorteringsrekkefølge fra klassifikasjonskodene.
+        """
+        Bygger en hierarkisk sorteringsrekkefølge fra klassifikasjonskodene.
 
-        Hierarkiet er definert av ``parentCode`` og starter ved ``self.root_code``.
+        Hierarkiet er definert av "parentCode" og starter ved "self.root_code" som kan vere definert i LocalDataManager, hvis ikke er den None.
 
         Returns:
             En dict som har et tall til hver code som brukes til sortering,
