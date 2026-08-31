@@ -243,8 +243,8 @@ class DataManager:
         children: dict[str | None, list[str]] = {}
 
         for row in class_codes.itertuples(index=False):
-            parent = row.parentCode
-            code = row.code
+            parent: str | None = row.parentCode
+            code: str = row.code
 
             if pd.isna(parent):
                 parent = None
