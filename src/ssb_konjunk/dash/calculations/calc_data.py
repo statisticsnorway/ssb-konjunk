@@ -243,11 +243,13 @@ class DataManager:
         children: dict[str | None, list[str]] = {}
 
         for row in class_codes.itertuples(index=False):
-            parent: str | None = row.parentCode
-            code: str = row.code
+            parent = row.parentCode
+            code = row.code
 
-            if pd.isna(parent):
-                parent = None
+            if not isinstance(parent, (str, type(None))):
+                raise TypeError(f"Ugyldig parentCode: {parent!r}")
+            if not isinstance(code, str):
+                raise TypeError(f"Ugyldig code: {code!r}")
             if parent not in children:
                 children[parent] = []
             children[parent].append(code)
