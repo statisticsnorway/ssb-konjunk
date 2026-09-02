@@ -1,6 +1,6 @@
 [project]
 name = "ssb-konjunk"
-version = "2.2.23"
+version = "2.2.24"
 description = "SSB Konjunk 422"
 authors = [
     {name = "Johanne Saxegaard", email = "jox@ssb.no"},
@@ -40,6 +40,7 @@ dependencies = [
     "tornado (>=6.5.8,<7.0.0)",
     "idna (>=3.18,<4.0)",
     "setuptools (>=83.0.0,<85.0.0)",
+    "soupsieve (>=2.8.4,<3.0.0)",
 ]
 
 [project.optional-dependencies]
