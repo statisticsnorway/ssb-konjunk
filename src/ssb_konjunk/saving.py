@@ -8,6 +8,7 @@ import json
 import re
 import warnings
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
 import polars as pl
@@ -363,7 +364,7 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     seperator: str = ";",
     encoding: str = "latin1",
     json_type: str = "df",
-    dataframe_type: type[T] = pd.DataFrame,
+    dataframe_type: type[T] | None = None,
 ) -> T | None:
     """Function to read a saved file, stored at SSB-format.
 
@@ -393,6 +394,10 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     Returns:
         pd.DataFrame: file as a data frame.
     """
+    # neccecary for mypy to be happy
+    if dataframe_type is None:
+        dataframe_type = cast(type[T], pd.DataFrame)
+
     # Get the filepath, only without version number and filetype.
     file_path = _structure_ssb_filepath(
         periode=periode,
@@ -409,39 +414,54 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     if not version_number:
         # If version number not specified then list out versions.
         files = _get_files(file_path, filetype)
-        # If list is empty, no matching files of any version were found.
-        if not files:
-            raise FileNotFoundError(
-                f"Fant ingen {filetype}-filer som matcher filstien '{file_path}'."
-            )
-        # Otherwise, use the newest version of file.
-        file_path = files[-1]
+    # If list is empty, no matching files of any version were found.
+    if not files:
+        raise FileNotFoundError(
+            f"Fant ingen {filetype}-filer som matcher filstien '{file_path}'."
+        )
+    # Otherwise, use the newest version of file.
+    file_path = files[-1]
 
-    # Different functions used for reading depending on the filetype.
     if filetype == "csv":
-        df = pd.read_csv(file_path, sep=seperator, encoding=encoding, usecols=columns)
+        df = cast(
+            T,
+            pd.read_csv(
+                file_path,
+                sep=seperator,
+                encoding=encoding,
+                usecols=columns,
+            ),
+        )
+
     elif filetype == "parquet":
-        if isinstance(df, pd.DataFrame):
-            df = pd.read_parquet(file_path, columns=columns)
-        elif isinstance(df, pl.DataFrame):
-            df = pl.read_parquet(file_path, columns=columns)
+        if dataframe_type is pd.DataFrame:
+            # cast is only for mypy; it has no runtime effect.
+            df = cast(T, pd.read_parquet(file_path, columns=columns))
+        else:
+            df = cast(T, pl.read_parquet(file_path, columns=columns))
+
     elif filetype == "jsonl":
         if columns is not None:
             warnings.warn(
-                f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn.",
+                f"Columns argumentet blir ignorert for {filetype} filer, "
+                "hele filen vil bli lastet inn.",
                 stacklevel=2,
             )
-        df = pd.read_json(file_path, lines=True)
+        df = cast(T, pd.read_json(file_path, lines=True))
+
     elif filetype == "json":
         if columns is not None:
             warnings.warn(
-                f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn.",
+                f"Columns argumentet blir ignorert for {filetype} filer, "
+                "hele filen vil bli lastet inn.",
                 stacklevel=2,
             )
+
         if json_type == "dict":
             with open(file_path) as f:
-                df = json.load(f)
+                df = cast(T, json.load(f))
         else:
-            df = pd.read_json(file_path, lines=False)
+            df = cast(T, pd.read_json(file_path, lines=False))
+
     # Returns df.
     return df
