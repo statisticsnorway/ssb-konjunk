@@ -8,8 +8,10 @@ import json
 import re
 import warnings
 from pathlib import Path
+from typing import cast
 
 import pandas as pd
+import polars as pl
 from gcsfs import GCSFileSystem
 
 from ssb_konjunk import timestamp
@@ -228,7 +230,7 @@ def _verify_datatilstand(datatilstand: str) -> str:
 
 
 def _save_df(
-    df: pd.DataFrame,
+    df: pd.DataFrame | pl.DataFrame | dict,
     file_path: str,
     filetype: str,
     seperator: str,
@@ -238,22 +240,34 @@ def _save_df(
     """Do the actual saving, either as csv or parquet."""
     # Save as parquet
     if filetype == "parquet":
-        df.to_parquet(file_path, index=False)
-    # Save as csv
-    elif filetype == "csv":
-        df.to_csv(file_path, sep=seperator, index=False, encoding=encoding)
-    # Save as jsonl
-    elif filetype == "jsonl":
-        df.to_json(file_path, orient="records", lines=True)
+        if isinstance(df, pd.DataFrame):
+            df.to_parquet(file_path, index=False)
+        elif isinstance(df, pl.DataFrame):
+            df.write_parquet(file_path)
 
-    # Save as json
+    elif filetype == "csv":
+        if isinstance(df, pd.DataFrame):
+            df.to_csv(file_path, sep=seperator, index=False, encoding=encoding)
+        elif isinstance(df, pl.DataFrame):
+            df.write_csv(file_path, separator=seperator)
+
+    elif filetype == "jsonl":
+        if isinstance(df, pd.DataFrame):
+            df.to_json(file_path, orient="records", lines=True)
+        elif isinstance(df, pl.DataFrame):
+            df.write_ndjson(file_path)
+
     elif filetype == "json":
-        # tillater med nested dicts å bli lagret med dette bioblioteket
         if json_type == "dict":
             with open(file_path, "w") as f:
                 json.dump(df, f, indent=4)
-        else:
+
+        elif isinstance(df, pd.DataFrame):
             df.to_json(file_path, orient="records", lines=False)
+
+        elif isinstance(df, pl.DataFrame):
+            with open(file_path, "w") as f:
+                f.write(df.write_json())
 
     # Uknown filetype sent as argument
     else:
@@ -262,8 +276,8 @@ def _save_df(
         )
 
 
-def write_ssb_file(
-    df: pd.DataFrame,
+def write_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
+    df: T,
     periode: tuple[int, ...],
     frequency: str,
     bucket: str,
@@ -336,7 +350,7 @@ def write_ssb_file(
         )
 
 
-def read_ssb_file(
+def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     periode: tuple[int, ...],
     frequency: str,
     bucket: str,
@@ -350,7 +364,8 @@ def read_ssb_file(
     seperator: str = ";",
     encoding: str = "latin1",
     json_type: str = "df",
-) -> pd.DataFrame | None:
+    dataframe_type: type[T] | None = None,
+) -> T | None:
     """Function to read a saved file, stored at SSB-format.
 
     Get the last version saved in the datatilstand specified (klargjorte-data, statistikk, utdata).
@@ -370,7 +385,8 @@ def read_ssb_file(
         columns: Columns to read from the file. If None (default), all columns are read.
         seperator: the seperator to use it filetype is csv. Default: ';'.
         encoding: Encoding for file, base is latin1.
-        json_type (str): en markør for å lagre json i riktig format om det er en df eller en dict.
+        json_type (str): A marker to read a json file in the rigth format as a df or a dict, depends how its saved.
+        dataframe_type: Type of DataFrame to return, either pd.DataFrame or pl.DataFrame. Defaults to pd.DataFrame.
 
     Raises:
         FileNotFoundError: If no files matching the file path and filetype are found.
@@ -378,6 +394,10 @@ def read_ssb_file(
     Returns:
         pd.DataFrame: file as a data frame.
     """
+    # neccecary for mypy to be happy
+    if dataframe_type is None:
+        dataframe_type = cast(type[T], pd.DataFrame)
+
     # Get the filepath, only without version number and filetype.
     file_path = _structure_ssb_filepath(
         periode=periode,
@@ -402,28 +422,46 @@ def read_ssb_file(
         # Otherwise, use the newest version of file.
         file_path = files[-1]
 
-    # Different functions used for reading depending on the filetype.
     if filetype == "csv":
-        df = pd.read_csv(file_path, sep=seperator, encoding=encoding, usecols=columns)
+        df = cast(
+            T,
+            pd.read_csv(
+                file_path,
+                sep=seperator,
+                encoding=encoding,
+                usecols=columns,
+            ),
+        )
+
     elif filetype == "parquet":
-        df = pd.read_parquet(file_path, columns=columns)
+        if dataframe_type is pd.DataFrame:
+            # cast is only for mypy; it has no runtime effect.
+            df = cast(T, pd.read_parquet(file_path, columns=columns))
+        else:
+            df = cast(T, pl.read_parquet(file_path, columns=columns))
+
     elif filetype == "jsonl":
         if columns is not None:
             warnings.warn(
-                f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn.",
+                f"Columns argumentet blir ignorert for {filetype} filer, "
+                "hele filen vil bli lastet inn.",
                 stacklevel=2,
             )
-        df = pd.read_json(file_path, lines=True)
+        df = cast(T, pd.read_json(file_path, lines=True))
+
     elif filetype == "json":
         if columns is not None:
             warnings.warn(
-                f"Columns argumentet blir ignorert for {filetype} filer, hele filen vil bli lastet inn.",
+                f"Columns argumentet blir ignorert for {filetype} filer, "
+                "hele filen vil bli lastet inn.",
                 stacklevel=2,
             )
+
         if json_type == "dict":
             with open(file_path) as f:
-                df = json.load(f)
+                df = cast(T, json.load(f))
         else:
-            df = pd.read_json(file_path, lines=False)
-    # Returns pandas df.
+            df = cast(T, pd.read_json(file_path, lines=False))
+
+    # Returns df.
     return df
