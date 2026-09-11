@@ -414,13 +414,13 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     if not version_number:
         # If version number not specified then list out versions.
         files = _get_files(file_path, filetype)
-    # If list is empty, no matching files of any version were found.
-    if not files:
-        raise FileNotFoundError(
-            f"Fant ingen {filetype}-filer som matcher filstien '{file_path}'."
-        )
-    # Otherwise, use the newest version of file.
-    file_path = files[-1]
+        # If list is empty, no matching files of any version were found.
+        if not files:
+            raise FileNotFoundError(
+                f"Fant ingen {filetype}-filer som matcher filstien '{file_path}'."
+            )
+        # Otherwise, use the newest version of file.
+        file_path = files[-1]
 
     if filetype == "csv":
         df = cast(
