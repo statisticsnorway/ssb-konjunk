@@ -10,6 +10,7 @@ import warnings
 from pathlib import Path
 
 import pandas as pd
+import polars as pl
 from gcsfs import GCSFileSystem
 
 from ssb_konjunk import timestamp
