@@ -17,6 +17,16 @@ from gcsfs import GCSFileSystem
 from ssb_konjunk import timestamp
 
 
+# used for some backwards compatibility stuff with seperator / separator, in order to differentiate having explicitly passed
+# seperator as None vs not having passed it at all
+class _UnsetType:
+    def __repr__(self) -> str:
+        return "<UNSET>"
+
+
+_UNSET = _UnsetType()  # default value of seperator from now on
+
+
 def _remove_edge_slashes(input_string: str, only_last: bool = False) -> str:
     """Function to remove edge slashes in strings.
 
@@ -233,7 +243,7 @@ def _save_df(
     df: pd.DataFrame | pl.DataFrame | dict,
     file_path: str,
     filetype: str,
-    seperator: str,
+    separator: str,  # breaking change 16.09.26 (seperator -> separator), men hvis du bruker fuksjoner som begynner med _ noe sted er det din egen feil
     encoding: str,
     json_type: str,
 ) -> None:
@@ -247,9 +257,9 @@ def _save_df(
 
     elif filetype == "csv":
         if isinstance(df, pd.DataFrame):
-            df.to_csv(file_path, sep=seperator, index=False, encoding=encoding)
+            df.to_csv(file_path, sep=separator, index=False, encoding=encoding)
         elif isinstance(df, pl.DataFrame):
-            df.write_csv(file_path, separator=seperator)
+            df.write_csv(file_path, separator=separator)
 
     elif filetype == "jsonl":
         if isinstance(df, pd.DataFrame):
@@ -287,9 +297,12 @@ def write_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     undermappe: str | None = None,
     stable_version: bool = True,
     filetype: str = "parquet",
-    seperator: str = ";",
+    separator: str = ";",
     encoding: str = "latin1",
     json_type: str = "df",
+    seperator: (
+        str | _UnsetType
+    ) = _UNSET,  # dont use this. just for backwards compatibility
 ) -> None:
     """Function to write and save a dataframe at SSB-format.
 
@@ -304,13 +317,22 @@ def write_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
         undermappe: Optional folder under 'datatilstand'.
         stable_version: Bool for whether you should have checks in place in case of overwrite.
         filetype: the filetype to save as. Default: 'parquet'.
-        seperator: the seperator to use it filetype is csv. Default: ';'.
+        separator: the separator to use it filetype is csv. Default: ';'.
         encoding: Encoding for file, base is latin1.
         json_type (str): en markør for å lagre json i riktig format om det er en df eller en dict.
+        seperator: old, misspelled argument. Kept for backwards compatibility. Will trigger a warning if used.
+            Keep at the end always, if you ever wanna add more variables to this function
 
     Raises:
         ValueError: if df has no rows.
     """
+    if not isinstance(seperator, _UnsetType):
+        warnings.warn(
+            "You are using the old, misspelled 'seperator' argument. For now, it works fine, but at some point it is likely to be removed. Replace with 'separator' (with an 'a').",
+            category=FutureWarning,
+            stacklevel=2,
+        )
+        separator = seperator
     # Check content in df
     if not len(df) > 0:
         raise ValueError("Dataframen har ingen rader. Fiks dette og prøv igjen.")
@@ -344,7 +366,7 @@ def write_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
             df,
             file_path,
             filetype,
-            seperator,
+            separator,
             encoding,
             json_type,
         )
@@ -361,10 +383,13 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     filetype: str = "parquet",
     columns: list[str] | None = None,
     version_number: int | None = None,
-    seperator: str = ";",
+    separator: str = ";",
     encoding: str = "latin1",
     json_type: str = "df",
     dataframe_type: type[T] | None = None,
+    seperator: (
+        str | _UnsetType
+    ) = _UNSET,  # misspelled. Keeping it for backwards compatibility.
 ) -> T | None:
     """Function to read a saved file, stored at SSB-format.
 
@@ -383,10 +408,12 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
         version_number: possibility to get another version, than the newest (i.e. highest version number). Default: np.nan.
         filetype: the filetype to save as. Default: 'parquet'.
         columns: Columns to read from the file. If None (default), all columns are read.
-        seperator: the seperator to use it filetype is csv. Default: ';'.
+        separator: the separator to use it filetype is csv. Default: ';'.
         encoding: Encoding for file, base is latin1.
         json_type (str): A marker to read a json file in the rigth format as a df or a dict, depends how its saved.
         dataframe_type: Type of DataFrame to return, either pd.DataFrame or pl.DataFrame. Defaults to pd.DataFrame.
+        seperator: old, misspelled argument. Kept for backwards compatibility. Will trigger a warning if used.
+            Keep at the end always, if you ever wanna add more variables to this function
 
     Raises:
         FileNotFoundError: If no files matching the file path and filetype are found.
@@ -394,6 +421,14 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     Returns:
         pd.DataFrame: file as a data frame.
     """
+    if not isinstance(seperator, _UnsetType):
+        warnings.warn(
+            "You are using the old, misspelled 'seperator' argument. For now, it works fine, but at some point it is likely to be removed. Replace with 'separator' (with an 'a').",
+            category=FutureWarning,
+            stacklevel=2,
+        )
+        separator = seperator
+
     # neccecary for mypy to be happy
     if dataframe_type is None:
         dataframe_type = cast(type[T], pd.DataFrame)
@@ -427,7 +462,7 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
             T,
             pd.read_csv(
                 file_path,
-                sep=seperator,
+                sep=separator,
                 encoding=encoding,
                 usecols=columns,
             ),
