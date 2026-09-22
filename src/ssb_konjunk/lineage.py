@@ -24,7 +24,8 @@ class LineageTracker:
             lineage_type: []
             for lineage_type in VALID_LINEAGE_TYPES
         }
-
+        
+        self.metadata: dict[str, object] = {}
     @staticmethod
     def _generate_run_id() -> str:
         timestamp = pendulum.now().format("YYYYMMDDHHmmss")
@@ -74,6 +75,13 @@ class LineageTracker:
                 text=True,
             ).strip(),
         }
+        
+    def add_metadata(
+        self,
+        key: str,
+        value: object,
+    ) -> None:
+        self.metadata[key] = value
 
     def register_input(
         self,
@@ -110,6 +118,7 @@ class LineageTracker:
                 "sha256": self._calculate_sha256(output_file),
             },
             "git": self._git_info(),
+            "metadata": self.metadata,
         }
 
         lineage_file = f"{output_file}.lineage.json"
@@ -141,6 +150,16 @@ def write_lineage(
         output_file,
         lineage_type,
     )
+
+def add_lineage_metadata(
+    key: str,
+    value: object,
+) -> None:
+    if _tracker is None:
+        return
+
+    _tracker.add_metadata(key, value)
+    
 
 def start_lineage_run() -> None:
     global _tracker
