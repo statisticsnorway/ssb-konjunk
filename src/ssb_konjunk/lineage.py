@@ -1,11 +1,17 @@
 import hashlib
 import json
 import subprocess
+import pendulum
+import fsspec
 import uuid
-from datetime import UTC, datetime
 from pathlib import Path
 import os
 
+_tracker = None
+
+VALID_LINEAGE_TYPES = {
+    "production",
+}
 
 
 class LineageTracker:
@@ -13,22 +19,25 @@ class LineageTracker:
 
     def __init__(self) -> None:
         self.run_id = self._generate_run_id()
-        self.inputs: dict[str, list[dict]] = {lineage_type: []}
+    
+        self.inputs: dict[str, list[dict]] = {
+            lineage_type: []
+            for lineage_type in VALID_LINEAGE_TYPES
+        }
 
     @staticmethod
     def _generate_run_id() -> str:
-        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+        timestamp = pendulum.now().format("YYYYMMDDHHmmss")
         short_uuid = str(uuid.uuid4())[:8]
-        return f"{timestamp}_{short_uuid}"
+        return f"{timestamp}{short_uuid}"
 
     @staticmethod
     def _calculate_sha256(filepath: str) -> str:
         sha256 = hashlib.sha256()
-
-        with open(filepath, "rb") as f:
+        with fsspec.open(filepath, "rb") as f:
             for chunk in iter(lambda: f.read(8192), b""):
                 sha256.update(chunk)
-
+    
         return sha256.hexdigest()
 
 
@@ -46,10 +55,10 @@ class LineageTracker:
             )
         )
     
-        if dirty:
-            raise RuntimeError(
-                "Git repository contains uncommitted changes. Commit or stash changes before creating lineage."
-            )
+        #if dirty:
+        #    raise RuntimeError(
+        #        "Git repository contains uncommitted changes. Commit or stash changes before creating lineage."
+        #    )
     
         return {
             "repo": subprocess.check_output(
@@ -72,11 +81,9 @@ class LineageTracker:
         lineage_type: str,
     ) -> None:
 
-        path = Path(filepath)
-
         entry = {
-            "path": str(path),
-            "sha256": self._calculate_sha256(str(path)),
+            "path": filepath,
+            "sha256": self._calculate_sha256(filepath),
         }
 
         existing_paths = {
@@ -95,7 +102,7 @@ class LineageTracker:
 
         lineage = {
             "run_id": self.run_id,
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": pendulum.now().format("YYYY-MM-DD HH:mm:ss"),
             "user": self._user_info(),
             "inputs": self.inputs[lineage_type],
             "output": {
