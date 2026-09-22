@@ -15,6 +15,8 @@ import polars as pl
 from gcsfs import GCSFileSystem
 
 from ssb_konjunk import timestamp
+from ssb_konjunk.lineage import register_input
+from ssb_konjunk.lineage import write_lineage
 
 
 # used for some backwards compatibility stuff with seperator / separator, in order to differentiate having explicitly passed
@@ -300,6 +302,7 @@ def write_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     separator: str = ";",
     encoding: str = "latin1",
     json_type: str = "df",
+    lineage: str | None = "production",
     seperator: (
         str | _UnsetType
     ) = _UNSET,  # dont use this. just for backwards compatibility
@@ -319,7 +322,8 @@ def write_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
         filetype: the filetype to save as. Default: 'parquet'.
         separator: the separator to use it filetype is csv. Default: ';'.
         encoding: Encoding for file, base is latin1.
-        json_type (str): en markør for å lagre json i riktig format om det er en df eller en dict.
+        json_type: a flag used to save JSON in the correct format, depending on whether the input is a DataFrame or a dictionary.
+        lineage: a flag used to create a lineage log, showing which files are being saved.
         seperator: old, misspelled argument. Kept for backwards compatibility. Will trigger a warning if used.
             Keep at the end always, if you ever wanna add more variables to this function
 
@@ -370,6 +374,11 @@ def write_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
             encoding,
             json_type,
         )
+        if lineage:
+            write_lineage(
+                output_file=file_path,
+                lineage_type=lineage,
+            )
 
 
 def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
@@ -387,6 +396,7 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     encoding: str = "latin1",
     json_type: str = "df",
     dataframe_type: type[T] | None = None,
+    lineage: str | None = "production",
     seperator: (
         str | _UnsetType
     ) = _UNSET,  # misspelled. Keeping it for backwards compatibility.
@@ -412,6 +422,7 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
         encoding: Encoding for file, base is latin1.
         json_type (str): A marker to read a json file in the rigth format as a df or a dict, depends how its saved.
         dataframe_type: Type of DataFrame to return, either pd.DataFrame or pl.DataFrame. Defaults to pd.DataFrame.
+        lineage: a flag used to create a lineage log, showing which files are being read.
         seperator: old, misspelled argument. Kept for backwards compatibility. Will trigger a warning if used.
             Keep at the end always, if you ever wanna add more variables to this function
 
@@ -456,7 +467,11 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
             )
         # Otherwise, use the newest version of file.
         file_path = files[-1]
-
+    if lineage:
+        register_input(
+            filepath=file_path,
+            lineage_type=lineage,
+        )
     if filetype == "csv":
         df = cast(
             T,
