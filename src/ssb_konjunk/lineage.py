@@ -29,7 +29,7 @@ class LineageTracker:
     @staticmethod
     def _generate_run_id() -> str:
         """Function to generate an unique for each lineage file.
-        
+
         Returns:
             str: a uniuque 22 long string.
         """
@@ -67,7 +67,7 @@ class LineageTracker:
         Returns:
             dict[str, str]: Metadata containing the remote
             repository URL, current branch, and commit hash.
-             
+
         Raises:
             RuntimeError: If the Git repository contains uncommitted changes.
         """
@@ -128,7 +128,6 @@ class LineageTracker:
             lineage_type: Lineage category to register the file under.
                 Reserved for future lineage-specific functionality.
         """
-
         entry = {
             "path": filepath,
             "sha256": self._calculate_sha256(filepath),
@@ -157,7 +156,6 @@ class LineageTracker:
                 input files. Reserved for future lineage-specific
                 functionality
         """
-
         lineage = {
             "run_id": self.run_id,
             "created_at": pendulum.now().format("YYYY-MM-DD HH:mm:ss"),
