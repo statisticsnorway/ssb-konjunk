@@ -28,12 +28,22 @@ class LineageTracker:
 
     @staticmethod
     def _generate_run_id() -> str:
+         """Function to generate an unique for each lineage file.
+    
+        Returns:
+            str: a uniuque 22 long string.
+        """
         timestamp = pendulum.now().format("YYYYMMDDHHmmss")
         short_uuid = str(uuid.uuid4())[:8]
         return f"{timestamp}{short_uuid}"
 
     @staticmethod
     def _calculate_sha256(filepath: str) -> str:
+        """Function to generate an unique hash for each lineage file.
+    
+        Returns:
+            str: a uniuque 22 long string.
+        """
         sha256 = hashlib.sha256()
         with fsspec.open(filepath, "rb") as f:
             for chunk in iter(lambda: f.read(8192), b""):
@@ -43,10 +53,24 @@ class LineageTracker:
 
     @staticmethod
     def _user_info() -> dict:
+        """Function to generate the user that is running the program.
+    
+        Returns:
+            str: a string with the users 3 letter mail.
+        """
         return {"user": os.environ.get("DAPLA_USER")}
 
     @staticmethod
     def _git_info() -> dict:
+        """Function to show what git repo, and branch that is beeing used.
+        
+        Returns:
+            dict[str, str]: Metadata containing the remote
+            repository URL, current branch, and commit hash.
+             
+        Raises:
+            RuntimeError: If the Git repository contains uncommitted changes.
+        """
         dirty = bool(
             subprocess.call(
                 ["git", "diff", "--quiet"],
@@ -78,6 +102,14 @@ class LineageTracker:
         key: str,
         value: object,
     ) -> None:
+        """Add custom metadata to the lineage log.
+
+        The metadata is included in the lineage log when it is written.
+        
+        Args:
+            key: Metadata field name.
+            value: Metadata value to store.
+        """
         self.metadata[key] = value
 
     def register_input(
@@ -85,6 +117,17 @@ class LineageTracker:
         filepath: str,
         lineage_type: str,
     ) -> None:
+        """Register an input file in the lineage log.
+    
+        Stores the file path and SHA-256 hash.
+        If the file has already been registered for that lineage
+        type, it is not added again.
+    
+        Args:
+            filepath: Path to the input file.
+            lineage_type: Lineage category to register the file under.
+                Reserved for future lineage-specific functionality.
+        """
 
         entry = {
             "path": filepath,
@@ -101,6 +144,19 @@ class LineageTracker:
         output_file: str,
         lineage_type: str,
     ) -> None:
+        """Write a lineage log for an output file.
+
+        Creates a lineage log containing run information, input files,
+        output file details, Git metadata, user information, and any
+        additional metadata. The lineage log is written as a JSON file
+        alongside the output file.
+        
+        Args:
+            output_file: Path to the output file.
+            lineage_type: Lineage category used to select the registered
+                input files. Reserved for future lineage-specific
+                functionality
+        """
 
         lineage = {
             "run_id": self.run_id,
@@ -125,6 +181,15 @@ def register_input(
     filepath: str,
     lineage_type: str,
 ) -> None:
+    """Register an input file in the active lineage run.
+
+    If no lineage run is active, the function does nothing.
+
+    Args:
+        filepath: Path to the input file.
+        lineage_type: Lineage category to register the file under.
+            Reserved for future lineage-specific functionality.
+    """
     if _tracker is None:
         return
 
@@ -138,6 +203,16 @@ def write_lineage(
     output_file: str,
     lineage_type: str,
 ) -> None:
+    """Write a lineage log for an output file.
+
+    If no lineage run is active, the function does nothing.
+
+    Args:
+        output_file: Path to the output file.
+        lineage_type: Lineage category used to select the registered
+            input files. Reserved for future lineage-specific
+            functionality.
+    """
     if _tracker is None:
         return
 
@@ -151,6 +226,14 @@ def add_lineage_metadata(
     key: str,
     value: object,
 ) -> None:
+    """Add custom metadata to the active lineage run.
+
+    If no lineage run is active, the function does nothing.
+
+    Args:
+        key: Metadata field name.
+        value: Metadata value to store.
+    """
     if _tracker is None:
         return
 
@@ -158,10 +241,20 @@ def add_lineage_metadata(
 
 
 def start_lineage_run() -> None:
+    """Start a new lineage run.
+
+    Creates a new lineage tracker and initializes a unique run ID.
+    Any previously active lineage run is replaced.
+    """
     global _tracker
     _tracker = LineageTracker()
 
 
 def stop_lineage_run() -> None:
+    """Stop the active lineage run.
+
+    Removes the current lineage tracker. Subsequent lineage
+    operations become no-ops until a new lineage run is started.
+    """
     global _tracker
     _tracker = None
