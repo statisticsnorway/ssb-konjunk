@@ -204,6 +204,7 @@ def test_stop_lineage_run():
 
     assert lineage._tracker is None
 
+
 def test_register_input_no_tracker(tmp_path):
     lineage._tracker = None
 
@@ -211,9 +212,10 @@ def test_register_input_no_tracker(tmp_path):
     file.write_text("hello")
 
     lineage.register_input(
-    str(file),
-    "production",
+        str(file),
+        "production",
     )
+
 
 def test_write_lineage_no_tracker():
     lineage._tracker = None
@@ -222,6 +224,7 @@ def test_write_lineage_no_tracker():
         "output.parquet",
         "production",
     )
+
 
 def test_write_lineage_no_tracker():
     lineage._tracker = None
