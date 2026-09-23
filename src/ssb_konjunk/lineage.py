@@ -56,10 +56,10 @@ class LineageTracker:
             )
         )
     
-        #if dirty:
-        #    raise RuntimeError(
-        #        "Git repository contains uncommitted changes. Commit or stash changes before creating lineage."
-        #    )
+        if dirty:
+            raise RuntimeError(
+                "Git repository contains uncommitted changes. Commit or stash changes before creating lineage."
+            )
     
         return {
             "repo": subprocess.check_output(
