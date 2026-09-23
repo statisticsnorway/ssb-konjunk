@@ -19,7 +19,7 @@ class LineageTracker:
 
     def __init__(self) -> None:
         """Initialize a new lineage tracker.
-    
+
         Creates a unique run ID and initializes containers for
         registered input files and custom metadata.
         """
