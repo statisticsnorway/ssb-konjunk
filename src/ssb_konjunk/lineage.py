@@ -1,11 +1,11 @@
 import hashlib
 import json
-import subprocess
-import pendulum
-import fsspec
-import uuid
-from pathlib import Path
 import os
+import subprocess
+import uuid
+
+import fsspec
+import pendulum
 
 _tracker = None
 
@@ -19,13 +19,13 @@ class LineageTracker:
 
     def __init__(self) -> None:
         self.run_id = self._generate_run_id()
-    
+
         self.inputs: dict[str, list[dict]] = {
-            lineage_type: []
-            for lineage_type in VALID_LINEAGE_TYPES
+            lineage_type: [] for lineage_type in VALID_LINEAGE_TYPES
         }
-        
+
         self.metadata: dict[str, object] = {}
+
     @staticmethod
     def _generate_run_id() -> str:
         timestamp = pendulum.now().format("YYYYMMDDHHmmss")
@@ -38,16 +38,13 @@ class LineageTracker:
         with fsspec.open(filepath, "rb") as f:
             for chunk in iter(lambda: f.read(8192), b""):
                 sha256.update(chunk)
-    
-        return sha256.hexdigest()
 
+        return sha256.hexdigest()
 
     @staticmethod
     def _user_info() -> dict:
-        return {
-            "user": os.environ.get("DAPLA_USER")
-        }
-    
+        return {"user": os.environ.get("DAPLA_USER")}
+
     @staticmethod
     def _git_info() -> dict:
         dirty = bool(
@@ -55,12 +52,12 @@ class LineageTracker:
                 ["git", "diff", "--quiet"],
             )
         )
-    
+
         if dirty:
             raise RuntimeError(
                 "Git repository contains uncommitted changes. Commit or stash changes before creating lineage."
             )
-    
+
         return {
             "repo": subprocess.check_output(
                 ["git", "config", "--get", "remote.origin.url"],
@@ -75,7 +72,7 @@ class LineageTracker:
                 text=True,
             ).strip(),
         }
-        
+
     def add_metadata(
         self,
         key: str,
@@ -94,10 +91,7 @@ class LineageTracker:
             "sha256": self._calculate_sha256(filepath),
         }
 
-        existing_paths = {
-            item["path"]
-            for item in self.inputs[lineage_type]
-        }
+        existing_paths = {item["path"] for item in self.inputs[lineage_type]}
 
         if entry["path"] not in existing_paths:
             self.inputs[lineage_type].append(entry)
@@ -139,6 +133,7 @@ def register_input(
         lineage_type,
     )
 
+
 def write_lineage(
     output_file: str,
     lineage_type: str,
@@ -151,6 +146,7 @@ def write_lineage(
         lineage_type,
     )
 
+
 def add_lineage_metadata(
     key: str,
     value: object,
@@ -159,12 +155,13 @@ def add_lineage_metadata(
         return
 
     _tracker.add_metadata(key, value)
-    
+
 
 def start_lineage_run() -> None:
     global _tracker
     _tracker = LineageTracker()
-    
+
+
 def stop_lineage_run() -> None:
     global _tracker
     _tracker = None
