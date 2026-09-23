@@ -18,6 +18,11 @@ class LineageTracker:
     """Tracks read files and writes lineage metadata."""
 
     def __init__(self) -> None:
+        """Initialize a new lineage tracker.
+    
+        Creates a unique run ID and initializes containers for
+        registered input files and custom metadata.
+        """
         self.run_id = self._generate_run_id()
 
         self.inputs: dict[str, list[dict]] = {
