@@ -1,9 +1,11 @@
 import hashlib
 import json
-import pytest
 import subprocess
 
+import pytest
+
 import ssb_konjunk.lineage as lineage
+
 
 def test_generate_run_id():
     run_id = lineage.LineageTracker._generate_run_id()
@@ -11,17 +13,17 @@ def test_generate_run_id():
     assert isinstance(run_id, str)
     assert len(run_id) == 22
 
+
 def test_calculate_sha256(tmp_path):
     file = tmp_path / "input.txt"
     file.write_text("hello world")
 
     expected = hashlib.sha256(b"hello world").hexdigest()
 
-    result = lineage.LineageTracker._calculate_sha256(
-        str(file)
-    )
+    result = lineage.LineageTracker._calculate_sha256(str(file))
 
     assert result == expected
+
 
 def test_user_info(monkeypatch):
     monkeypatch.setenv("DAPLA_USER", "hvr@ssb.no")
@@ -29,6 +31,7 @@ def test_user_info(monkeypatch):
     result = lineage.LineageTracker._user_info()
 
     assert result == {"user": "hvr@ssb.no"}
+
 
 def test_git_info(monkeypatch):
     monkeypatch.setattr(
@@ -59,6 +62,7 @@ def test_git_info(monkeypatch):
         "commit": "abc123",
     }
 
+
 def test_git_info_dirty_repo(monkeypatch):
     monkeypatch.setattr(
         subprocess,
@@ -72,12 +76,14 @@ def test_git_info_dirty_repo(monkeypatch):
     ):
         lineage.LineageTracker._git_info()
 
+
 def test_add_metadata():
     tracker = lineage.LineageTracker()
 
     tracker.add_metadata("table_id", 123)
 
     assert tracker.metadata == {"table_id": 123}
+
 
 def test_register_input(tmp_path):
     file = tmp_path / "input.txt"
@@ -92,6 +98,7 @@ def test_register_input(tmp_path):
 
     assert len(tracker.inputs["production"]) == 1
     assert tracker.inputs["production"][0]["path"] == str(file)
+
 
 def test_register_input_duplicate(tmp_path):
     file = tmp_path / "input.txt"
@@ -137,6 +144,7 @@ def test_write_lineage(tmp_path, monkeypatch):
     lineage_file = tmp_path / "output.txt.lineage.json"
 
     assert lineage_file.exists()
+
 
 def test_write_lineage_content(tmp_path, monkeypatch):
     input_file = tmp_path / "input.txt"
