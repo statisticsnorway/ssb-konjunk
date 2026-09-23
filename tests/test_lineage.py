@@ -203,3 +203,30 @@ def test_stop_lineage_run():
     lineage.stop_lineage_run()
 
     assert lineage._tracker is None
+
+def test_register_input_no_tracker(tmp_path):
+    lineage._tracker = None
+
+    file = tmp_path / "input.txt"
+    file.write_text("hello")
+
+    lineage.register_input(
+    str(file),
+    "production",
+    )
+
+def test_write_lineage_no_tracker():
+    lineage._tracker = None
+
+    lineage.write_lineage(
+        "output.parquet",
+        "production",
+    )
+
+def test_write_lineage_no_tracker():
+    lineage._tracker = None
+
+    lineage.write_lineage(
+        "output.parquet",
+        "production",
+    )
