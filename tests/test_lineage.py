@@ -224,12 +224,3 @@ def test_write_lineage_no_tracker():
         "output.parquet",
         "production",
     )
-
-
-def test_write_lineage_no_tracker():
-    lineage._tracker = None
-
-    lineage.write_lineage(
-        "output.parquet",
-        "production",
-    )
