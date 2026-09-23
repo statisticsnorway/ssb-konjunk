@@ -28,8 +28,8 @@ class LineageTracker:
 
     @staticmethod
     def _generate_run_id() -> str:
-         """Function to generate an unique for each lineage file.
-
+        """Function to generate an unique for each lineage file.
+        
         Returns:
             str: a uniuque 22 long string.
         """
