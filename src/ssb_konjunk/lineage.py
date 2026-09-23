@@ -29,7 +29,7 @@ class LineageTracker:
     @staticmethod
     def _generate_run_id() -> str:
          """Function to generate an unique for each lineage file.
-    
+
         Returns:
             str: a uniuque 22 long string.
         """
@@ -40,7 +40,7 @@ class LineageTracker:
     @staticmethod
     def _calculate_sha256(filepath: str) -> str:
         """Function to generate an unique hash for each lineage file.
-    
+
         Returns:
             str: a uniuque 22 long string.
         """
@@ -54,7 +54,7 @@ class LineageTracker:
     @staticmethod
     def _user_info() -> dict:
         """Function to generate the user that is running the program.
-    
+
         Returns:
             str: a string with the users 3 letter mail.
         """
@@ -63,7 +63,7 @@ class LineageTracker:
     @staticmethod
     def _git_info() -> dict:
         """Function to show what git repo, and branch that is beeing used.
-        
+
         Returns:
             dict[str, str]: Metadata containing the remote
             repository URL, current branch, and commit hash.
@@ -105,7 +105,7 @@ class LineageTracker:
         """Add custom metadata to the lineage log.
 
         The metadata is included in the lineage log when it is written.
-        
+
         Args:
             key: Metadata field name.
             value: Metadata value to store.
@@ -118,11 +118,11 @@ class LineageTracker:
         lineage_type: str,
     ) -> None:
         """Register an input file in the lineage log.
-    
+
         Stores the file path and SHA-256 hash.
         If the file has already been registered for that lineage
         type, it is not added again.
-    
+
         Args:
             filepath: Path to the input file.
             lineage_type: Lineage category to register the file under.
@@ -150,7 +150,7 @@ class LineageTracker:
         output file details, Git metadata, user information, and any
         additional metadata. The lineage log is written as a JSON file
         alongside the output file.
-        
+
         Args:
             output_file: Path to the output file.
             lineage_type: Lineage category used to select the registered
