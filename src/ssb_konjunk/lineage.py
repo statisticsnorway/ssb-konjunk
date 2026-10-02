@@ -165,11 +165,11 @@ class LineageTracker:
         filepath: str,
         storage: list[dict],
     ) -> None:
-        """Registers a file to the lineage log
+        """Registers a file to the lineage log.
 
         Args:
-            filepath: the path to the file that is beeing logged
-            storage: if its an output or an input file
+            filepath: the path to the file that is beeing logged.
+            storage: if its an output or an input file.
 
         """
         entry = {
@@ -186,10 +186,10 @@ class LineageTracker:
         self,
         filepath: str,
     ) -> None:
-        """Function to register an input to the lineage logger
+        """Function to register an input to the lineage logger.
 
         Args:
-            filepath: the path to the file that is beeing logged
+            filepath: the path to the file that is beeing logged.
         """
         self._register_file(
             filepath,
@@ -200,10 +200,10 @@ class LineageTracker:
         self,
         filepath: str,
     ) -> None:
-        """Function to register an output to the lineage logger
+        """Function to register an output to the lineage logger.
 
         Args:
-            filepath: the path to the file that is beeing logged
+            filepath: the path to the file that is beeing logged.
         """
         self._register_file(
             filepath,
