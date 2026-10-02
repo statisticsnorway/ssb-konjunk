@@ -89,7 +89,7 @@ def test_git_info_dirty_repo(monkeypatch):
 
 def test_add_metadata(tmp_path):
     lineage_file = tmp_path / "test-lineage.json"
-    tracker = lineage.LineageTracker(lineage_file)
+    tracker = lineage.LineageTracker(str(lineage_file))
 
     tracker.add_metadata("table_id", 123)
 
@@ -101,7 +101,7 @@ def test_register_input(tmp_path):
     file.write_text("hello world")
 
     lineage_file = tmp_path / "test-lineage.json"
-    tracker = lineage.LineageTracker(lineage_file)
+    tracker = lineage.LineageTracker(str(lineage_file))
 
     tracker.register_input(
         filepath=str(file),
@@ -116,7 +116,7 @@ def test_register_input_duplicate(tmp_path):
     file.write_text("hello")
 
     lineage_file = tmp_path / "test-lineage.json"
-    tracker = lineage.LineageTracker(lineage_file)
+    tracker = lineage.LineageTracker(str(lineage_file))
 
     tracker.register_input(str(file))
     tracker.register_input(str(file))
@@ -129,7 +129,7 @@ def test_register_output(tmp_path):
     file.write_text("hello world")
 
     lineage_file = tmp_path / "test-lineage.json"
-    tracker = lineage.LineageTracker(lineage_file)
+    tracker = lineage.LineageTracker(str(lineage_file))
 
     tracker.register_output(
         filepath=str(file),
@@ -147,7 +147,7 @@ def test_write_lineage_content(tmp_path, monkeypatch):
     output_file = tmp_path / "output.txt"
     output_file.write_text("output")
     lineage_file = tmp_path / "lineage.json"
-    tracker = lineage.LineageTracker(lineage_file)
+    tracker = lineage.LineageTracker(str(lineage_file))
 
     tracker.register_input(
         str(input_file),
@@ -175,14 +175,14 @@ def test_write_lineage_content(tmp_path, monkeypatch):
 
 def test_start_lineage_run(tmp_path):
     lineage_file = tmp_path / "test-lineage.json"
-    lineage.start_lineage_run(lineage_file)
+    lineage.start_lineage_run(str(lineage_file))
 
     assert lineage._tracker is not None
 
 
 def test_stop_lineage_run(tmp_path):
     lineage_file = tmp_path / "test-lineage.json"
-    lineage.LineageTracker(lineage_file)
+    lineage.LineageTracker(str(lineage_file))
 
     lineage.stop_lineage_run()
 
