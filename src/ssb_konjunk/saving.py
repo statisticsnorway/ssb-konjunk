@@ -16,7 +16,7 @@ from gcsfs import GCSFileSystem
 
 from ssb_konjunk import timestamp
 from ssb_konjunk.lineage import register_input
-from ssb_konjunk.lineage import write_lineage
+from ssb_konjunk.lineage import register_output
 
 
 # used for some backwards compatibility stuff with seperator / separator, in order to differentiate having explicitly passed
@@ -375,9 +375,8 @@ def write_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
             json_type,
         )
         if lineage:
-            write_lineage(
-                output_file=file_path,
-                lineage_type=lineage,
+            register_output(
+                filepath=file_path,
             )
 
 
@@ -470,7 +469,6 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     if lineage:
         register_input(
             filepath=file_path,
-            lineage_type=lineage,
         )
     if filetype == "csv":
         df = cast(
