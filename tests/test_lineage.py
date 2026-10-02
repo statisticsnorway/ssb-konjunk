@@ -6,6 +6,7 @@ import pytest
 
 import ssb_konjunk.lineage as lineage
 
+
 @pytest.fixture(autouse=True)
 def mock_git(monkeypatch):
     monkeypatch.setattr(
@@ -20,8 +21,9 @@ def mock_git(monkeypatch):
         lambda *args, **kwargs: "dummy\n",
     )
 
+
 def test_generate_run_id():
-    
+
     run_id = lineage.LineageTracker._generate_run_id()
 
     assert isinstance(run_id, str)
@@ -84,6 +86,7 @@ def test_git_info_dirty_repo(monkeypatch):
     ):
         lineage.LineageTracker._git_info()
 
+
 def test_add_metadata(tmp_path):
     lineage_file = tmp_path / "test-lineage.json"
     tracker = lineage.LineageTracker(lineage_file)
@@ -137,7 +140,7 @@ def test_register_output(tmp_path):
 
 
 def test_write_lineage_content(tmp_path, monkeypatch):
-    
+
     input_file = tmp_path / "input.txt"
     input_file.write_text("input")
 
