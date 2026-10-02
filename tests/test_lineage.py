@@ -6,8 +6,22 @@ import pytest
 
 import ssb_konjunk.lineage as lineage
 
+@pytest.fixture(autouse=True)
+def mock_git(monkeypatch):
+    monkeypatch.setattr(
+        subprocess,
+        "call",
+        lambda *args, **kwargs: 0,
+    )
+
+    monkeypatch.setattr(
+        subprocess,
+        "check_output",
+        lambda *args, **kwargs: "dummy\n",
+    )
 
 def test_generate_run_id():
+    
     run_id = lineage.LineageTracker._generate_run_id()
 
     assert isinstance(run_id, str)
@@ -34,12 +48,6 @@ def test_user_info(monkeypatch):
 
 
 def test_git_info(monkeypatch):
-    monkeypatch.setattr(
-        subprocess,
-        "call",
-        lambda *args, **kwargs: 0,
-    )
-
     values = iter(
         [
             "repo-url\n",
@@ -76,9 +84,9 @@ def test_git_info_dirty_repo(monkeypatch):
     ):
         lineage.LineageTracker._git_info()
 
-
-def test_add_metadata():
-    tracker = lineage.LineageTracker()
+def test_add_metadata(tmp_path):
+    lineage_file = tmp_path / "test-lineage.json"
+    tracker = lineage.LineageTracker(lineage_file)
 
     tracker.add_metadata("table_id", 123)
 
@@ -89,85 +97,57 @@ def test_register_input(tmp_path):
     file = tmp_path / "input.txt"
     file.write_text("hello world")
 
-    tracker = lineage.LineageTracker()
+    lineage_file = tmp_path / "test-lineage.json"
+    tracker = lineage.LineageTracker(lineage_file)
 
     tracker.register_input(
         filepath=str(file),
-        lineage_type="production",
     )
 
-    assert len(tracker.inputs["production"]) == 1
-    assert tracker.inputs["production"][0]["path"] == str(file)
+    assert len(tracker.inputs) == 1
+    assert tracker.inputs[0]["path"] == str(file)
 
 
 def test_register_input_duplicate(tmp_path):
     file = tmp_path / "input.txt"
     file.write_text("hello")
 
-    tracker = lineage.LineageTracker()
+    lineage_file = tmp_path / "test-lineage.json"
+    tracker = lineage.LineageTracker(lineage_file)
 
-    tracker.register_input(str(file), "production")
-    tracker.register_input(str(file), "production")
+    tracker.register_input(str(file))
+    tracker.register_input(str(file))
 
-    assert len(tracker.inputs["production"]) == 1
+    assert len(tracker.inputs) == 1
 
 
-def test_write_lineage(tmp_path, monkeypatch):
-    input_file = tmp_path / "input.txt"
-    input_file.write_text("input")
+def test_register_output(tmp_path):
+    file = tmp_path / "output.txt"
+    file.write_text("hello world")
 
-    output_file = tmp_path / "output.txt"
-    output_file.write_text("output")
+    lineage_file = tmp_path / "test-lineage.json"
+    tracker = lineage.LineageTracker(lineage_file)
 
-    tracker = lineage.LineageTracker()
-
-    monkeypatch.setattr(
-        tracker,
-        "_git_info",
-        lambda: {
-            "repo": "repo",
-            "branch": "main",
-            "commit": "abc",
-        },
+    tracker.register_output(
+        filepath=str(file),
     )
 
-    tracker.register_input(
-        str(input_file),
-        "production",
-    )
-
-    tracker.write_lineage(
-        str(output_file),
-        "production",
-    )
-
-    lineage_file = tmp_path / "output.txt.lineage.json"
-
-    assert lineage_file.exists()
+    assert len(tracker.outputs) == 1
+    assert tracker.outputs[0]["path"] == str(file)
 
 
 def test_write_lineage_content(tmp_path, monkeypatch):
+    
     input_file = tmp_path / "input.txt"
     input_file.write_text("input")
 
     output_file = tmp_path / "output.txt"
     output_file.write_text("output")
-
-    tracker = lineage.LineageTracker()
-
-    monkeypatch.setattr(
-        tracker,
-        "_git_info",
-        lambda: {
-            "repo": "repo",
-            "branch": "main",
-            "commit": "abc",
-        },
-    )
+    lineage_file = tmp_path / "lineage.json"
+    tracker = lineage.LineageTracker(lineage_file)
 
     tracker.register_input(
         str(input_file),
-        "production",
     )
 
     tracker.add_metadata(
@@ -175,30 +155,31 @@ def test_write_lineage_content(tmp_path, monkeypatch):
         "123",
     )
 
-    tracker.write_lineage(
+    tracker.register_output(
         str(output_file),
-        "production",
     )
 
     with open(
-        output_file.with_suffix(".txt.lineage.json"),
+        lineage_file.with_suffix(".json"),
         encoding="utf-8",
     ) as f:
         lineage_dict = json.load(f)
+    run = next(iter(lineage_dict.values()))
+    assert run["metadata"]["dataset"] == "123"
+    assert run["git"]["commit"] == "dummy"
+    assert len(run["inputs"]) == 1
 
-    assert lineage_dict["metadata"]["dataset"] == "123"
-    assert lineage_dict["git"]["commit"] == "abc"
-    assert len(lineage_dict["inputs"]) == 1
 
-
-def test_start_lineage_run():
-    lineage.start_lineage_run()
+def test_start_lineage_run(tmp_path):
+    lineage_file = tmp_path / "test-lineage.json"
+    lineage.start_lineage_run(lineage_file)
 
     assert lineage._tracker is not None
 
 
-def test_stop_lineage_run():
-    lineage.start_lineage_run()
+def test_stop_lineage_run(tmp_path):
+    lineage_file = tmp_path / "test-lineage.json"
+    lineage.LineageTracker(lineage_file)
 
     lineage.stop_lineage_run()
 
@@ -213,14 +194,4 @@ def test_register_input_no_tracker(tmp_path):
 
     lineage.register_input(
         str(file),
-        "production",
-    )
-
-
-def test_write_lineage_no_tracker():
-    lineage._tracker = None
-
-    lineage.write_lineage(
-        "output.parquet",
-        "production",
     )
