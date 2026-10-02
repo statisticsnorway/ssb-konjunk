@@ -3,32 +3,45 @@ import json
 import os
 import subprocess
 import uuid
+from pathlib import Path
 
 import fsspec
 import pendulum
 
 _tracker = None
 
-VALID_LINEAGE_TYPES = {
-    "production",
-}
-
 
 class LineageTracker:
     """Tracks read files and writes lineage metadata."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        lineage_file: str,
+    ) -> None:
         """Initialize a new lineage tracker.
 
-        Creates a unique run ID and initializes containers for
-        registered input files and custom metadata.
+        Creates the 'abse' of the dict that is used in the lineage log.
+
+        Args:
+            lineage_file: the filelocation of the created lineage log file.
         """
+        self.lineage_file = lineage_file
+        try:
+            with fsspec.open(
+                lineage_file,
+                "r",
+                encoding="utf-8",
+            ) as f:
+                self.lineage_history = json.load(f)
+        except FileNotFoundError:
+            self.lineage_history = {}
+
         self.run_id = self._generate_run_id()
-
-        self.inputs: dict[str, list[dict]] = {
-            lineage_type: [] for lineage_type in VALID_LINEAGE_TYPES
-        }
-
+        self.created_at = pendulum.now().format("YYYY-MM-DD HH:mm:ss")
+        self.user_info = self._user_info()
+        self.inputs: list[dict] = []
+        self.outputs: list[dict] = []
+        self.git_info = self._git_info()
         self.metadata: dict[str, object] = {}
 
     @staticmethod
@@ -47,7 +60,7 @@ class LineageTracker:
         """Function to generate an unique hash for each lineage file.
 
         Returns:
-            str: a uniuque 22 long string.
+            str: SHA-256 hash of the file
         """
         sha256 = hashlib.sha256()
         with fsspec.open(filepath, "rb") as f:
@@ -102,6 +115,35 @@ class LineageTracker:
             ).strip(),
         }
 
+    def _flush(self) -> None:
+        """Function to update the lineagelogging file everytime a file or metadata is added.
+
+        overwrites the file on disk with the most updated version of the dict any time its updated, so it possible to read 'unfinished' runs.
+
+        """
+        lineage = {
+            "run_id": self.run_id,
+            "created_at": self.created_at,
+            "user": self.user_info,
+            "inputs": self.inputs,
+            "outputs": self.outputs,
+            "git": self.git_info,
+            "metadata": self.metadata,
+        }
+
+        self.lineage_history[self.run_id] = lineage
+
+        with fsspec.open(
+            self.lineage_file,
+            "w",
+            encoding="utf-8",
+        ) as f:
+            json.dump(
+                self.lineage_history,
+                f,
+                indent=4,
+            )
+
     def add_metadata(
         self,
         key: str,
@@ -116,73 +158,61 @@ class LineageTracker:
             value: Metadata value to store.
         """
         self.metadata[key] = value
+        self._flush()
 
-    def register_input(
+    def _register_file(
         self,
         filepath: str,
-        lineage_type: str,
+        storage: list[dict],
     ) -> None:
-        """Register an input file in the lineage log.
-
-        Stores the file path and SHA-256 hash.
-        If the file has already been registered for that lineage
-        type, it is not added again.
+        """Registers a file to the lineage log
 
         Args:
-            filepath: Path to the input file.
-            lineage_type: Lineage category to register the file under.
-                Reserved for future lineage-specific functionality.
+            filepath: the path to the file that is beeing logged
+            storage: if its an output or an input file
+
         """
         entry = {
             "path": filepath,
             "sha256": self._calculate_sha256(filepath),
         }
-
-        existing_paths = {item["path"] for item in self.inputs[lineage_type]}
+        existing_paths = {item["path"] for item in storage}
 
         if entry["path"] not in existing_paths:
-            self.inputs[lineage_type].append(entry)
+            storage.append(entry)
+            self._flush()
 
-    def write_lineage(
+    def register_input(
         self,
-        output_file: str,
-        lineage_type: str,
+        filepath: str,
     ) -> None:
-        """Write a lineage log for an output file.
-
-        Creates a lineage log containing run information, input files,
-        output file details, Git metadata, user information, and any
-        additional metadata. The lineage log is written as a JSON file
-        alongside the output file.
+        """Function to register an input to the lineage logger
 
         Args:
-            output_file: Path to the output file.
-            lineage_type: Lineage category used to select the registered
-                input files. Reserved for future lineage-specific
-                functionality
+            filepath: the path to the file that is beeing logged
         """
-        lineage = {
-            "run_id": self.run_id,
-            "created_at": pendulum.now().format("YYYY-MM-DD HH:mm:ss"),
-            "user": self._user_info(),
-            "inputs": self.inputs[lineage_type],
-            "output": {
-                "path": output_file,
-                "sha256": self._calculate_sha256(output_file),
-            },
-            "git": self._git_info(),
-            "metadata": self.metadata,
-        }
+        self._register_file(
+            filepath,
+            self.inputs,
+        )
 
-        lineage_file = f"{output_file}.lineage.json"
+    def register_output(
+        self,
+        filepath: str,
+    ) -> None:
+        """Function to register an output to the lineage logger
 
-        with open(lineage_file, "w", encoding="utf-8") as f:
-            json.dump(lineage, f, indent=4)
+        Args:
+            filepath: the path to the file that is beeing logged
+        """
+        self._register_file(
+            filepath,
+            self.outputs,
+        )
 
 
 def register_input(
     filepath: str,
-    lineage_type: str,
 ) -> None:
     """Register an input file in the active lineage run.
 
@@ -190,38 +220,30 @@ def register_input(
 
     Args:
         filepath: Path to the input file.
-        lineage_type: Lineage category to register the file under.
-            Reserved for future lineage-specific functionality.
     """
     if _tracker is None:
         return
 
     _tracker.register_input(
         filepath,
-        lineage_type,
     )
 
 
-def write_lineage(
-    output_file: str,
-    lineage_type: str,
+def register_output(
+    filepath: str,
 ) -> None:
-    """Write a lineage log for an output file.
+    """Register an output file in the active lineage run.
 
     If no lineage run is active, the function does nothing.
 
     Args:
-        output_file: Path to the output file.
-        lineage_type: Lineage category used to select the registered
-            input files. Reserved for future lineage-specific
-            functionality.
+        filepath: Path to the input file.
     """
     if _tracker is None:
         return
 
-    _tracker.write_lineage(
-        output_file,
-        lineage_type,
+    _tracker.register_output(
+        filepath,
     )
 
 
@@ -243,21 +265,26 @@ def add_lineage_metadata(
     _tracker.add_metadata(key, value)
 
 
-def start_lineage_run() -> None:
+def start_lineage_run(
+    lineage_file: str,
+) -> None:
     """Start a new lineage run.
 
     Creates a new lineage tracker and initializes a unique run ID.
     Any previously active lineage run is replaced.
     """
     global _tracker
-    _tracker = LineageTracker()
+    Path(lineage_file).parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+    _tracker = LineageTracker(lineage_file)
 
 
 def stop_lineage_run() -> None:
     """Stop the active lineage run.
 
-    Removes the current lineage tracker. Subsequent lineage
-    operations become no-ops until a new lineage run is started.
+    Removes the current lineage tracker.
     """
     global _tracker
     _tracker = None
