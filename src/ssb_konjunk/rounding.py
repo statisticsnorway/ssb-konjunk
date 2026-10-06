@@ -20,7 +20,6 @@ def round_half_up_float(n: float, decimals: int = 0) -> float | int:
     multiplier = 10**decimals
     return float(math.floor(n * multiplier + 0.5) / multiplier)
 
-
 def round_half_up(df: pd.DataFrame, column: str, digits: str = "1.") -> pd.DataFrame:
     """Round a pandas column half up.
 
