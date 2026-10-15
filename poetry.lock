@@ -4768,4 +4768,4 @@ dash = ["dash", "plotly", "polars", "ssb-dash-components"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "080fdbdc3c41c4f06b344e9c679b39685b1e09dd307c8c68e539d9c559eeb7e8"
+content-hash = "65611818a9550708c568c38bba185ba430b6a040dda6cb7879868677e020f0c6"

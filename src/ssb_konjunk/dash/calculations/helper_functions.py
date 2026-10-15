@@ -202,13 +202,16 @@ class DataSource:
         Returns:
             tuple[str, pl.DataFrame]: En tuple med periodebeskrivelse og datasett med prosentendringer.
         """
-        return self._base_w_header(
+       return self._base_w_header(
             n,
             skip,
             **{
                 self._avg: self._percent_change(
-                    pl.col(self._avg), pl.col(self._avg).shift(1)
-                ).get(-1 - skip)
+                    pl.col(self._avg),
+                    pl.col(self._avg).shift(1),
+                )
+                .round(1)
+                .get(-1 - skip)
             },
         )
 

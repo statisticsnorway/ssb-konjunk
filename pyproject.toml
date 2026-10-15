@@ -90,13 +90,6 @@ classifiers = ["Development Status :: 1 - Planning"]
 [tool.poetry.urls]
 Changelog = "https://github.com/statisticsnorway/ssb-konjunk/releases"
 
-[tool.poetry.dependencies]
-python = ">=3.12,<4.0"
-
-[tool.poetry.group.dev.dependencies]
-pygments = ">=2.10.0"
-
-
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 

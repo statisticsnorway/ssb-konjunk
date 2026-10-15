@@ -53,82 +53,66 @@ class DataManager:
     def __init__(
         self,
         data: pd.DataFrame,
+        weight_data: pd.DataFrame,
         period_column: str = "periode",
-        nace_column: str = "nar",
+        group_column: str = "nar",
+        value_columns: list[str] | None = None,
+        categorical_columns: list[str] | None = None,
     ) -> None:
-        """Initialiserer klassen med behandlet og strukturert tidsseriedata.
-
-        Filtrerer bort spesifikke 'nar'-verdier, sorterer data, henter klassifikasjonskoder,
-        og oppretter datastrukturer for sesongjustert, kalenderjustert, rådata og vekter.
-        Konverterer deretter data til Polars og oppretter tilknyttede datakilder.
-
-        Args:
-            data (pd.DataFrame): Inndata som inneholder tidsseriedata, med blant annet
-                kolonnene 'nar', 'periode', 'jus', 'korr', 'ujust' og 'verdi'.
-            period_column (str): navnet på kolonnen som har perioden.
-            nace_column (str): navnet på kolonnen som har nace.
-        """
-        self.period_col = period_column
-        self.nace_col = nace_column
-
-        nus = KlassClassification(
-            classification_id="6", language="nb", include_future=False
-        )
-        self.root_code = None
-        self.class_codes = nus.get_codes(from_date="2023-01-01").data[
-            ["code", "parentCode", "name"]
-        ]
-
-        self._sort_order = self._build_sort_order()
-
-        data = data.sort_values(self.nace_col, key=self.sort_aggregates)
-        data = data.reset_index(drop=True)
-
-        self.periods = AllPeriods(
-            data[self.period_col].unique().tolist()
-        )  # pyright: ignore
 
         self.data = data
-
-        cols = ["jus", "korr", "ujust"]
-        data[cols] = data[cols].apply(pd.to_numeric, errors="coerce", axis=1)
-
-        self.season_adjusted_series = data[
-            [self.nace_col, self.period_col, "jus"]
-        ].pivot(index=self.nace_col, columns=self.period_col, values="jus")
-
-        self.calender_adjusted_series = data[
-            [self.nace_col, self.period_col, "korr"]
-        ].pivot(index=self.nace_col, columns=self.period_col, values="korr")
-        self.raw_series = data[[self.nace_col, self.period_col, "ujust"]].pivot(
-            index=self.nace_col, columns=self.period_col, values="ujust"
-        )
-
-        self.weight_series = data[[self.nace_col, self.period_col, "verdi"]].pivot(
-            index=self.nace_col, columns=self.period_col, values="verdi"
-        )
-        polars_data = pl.from_dataframe(data)
-
-        polars_data = polars_data.with_columns(
-            ujust=pl.col("ujust").cast(pl.Float64),
-            jus=pl.col("jus").cast(pl.Float64),
-            korr=pl.col("korr").cast(pl.Float64),
-            periode=pl.col(self.period_col).str.strptime(
-                pl.Date, "%Y-%m", strict=False
-            ),
-        )
         self.weight_source = DataSource(
-            polars_data, self.period_col, "verdi", self.nace_col, internal_col="weight"
+            pl.from_pandas(weight_data).with_columns(
+                pl.col(self.period_col).str.strptime(
+                    pl.Date,
+                    "%Y-%m",
+                    strict=False,
+                )
+            ),
+            self.period_col,
+            "vekt",
+            self.group_col,
+            internal_col="weight",
         )
-        self.season_source = DataSource(
-            polars_data, self.period_col, "jus", self.nace_col, internal_col="season"
+        self.period_col = period_column
+        self.group_col = nace_column
+        
+    
+        self.value_columns = (
+            ["verdiindeks", "omsetning"]
+            if value_columns is None
+            else value_columns
         )
-        self.raw_source = DataSource(
-            polars_data, self.period_col, "ujust", self.nace_col, internal_col="raw"
+        
+        self.categorical_columns = (
+            ["sesongjustering", "marked"]
+            if categorical_columns is None
+            else categorical_columns
         )
-        self.calendar_source = DataSource(
-            polars_data, self.period_col, "korr", self.nace_col, internal_col="calendar"
+
+        self.id_columns = [
+            self.period_col,
+            self.group_col,
+            *self.categorical_columns,
+        ]
+        
+        self.available_values = {
+            col: sorted(
+                data[col].dropna().unique().tolist()
+            )
+            for col in self.categorical_columns
+        }
+
+        
+        self.class_codes = self._load_classification()
+        self.root_code = None
+        self._sort_order = self._build_sort_order()
+        
+        self.periods = AllPeriods(
+            data[self.period_col].unique().tolist()
         )
+
+    
 
     @staticmethod
     def pad_single(x: str) -> str:
@@ -145,6 +129,18 @@ class DataManager:
         """
         first_item_len = len(x.split("-")[0]) - 1
         return ("  " * first_item_len) + x
+    def _load_nace_klass(self) -> pd.DataFrame:
+        nus = KlassClassification(
+            classification_id="6",
+            language="nb",
+            include_future=False,
+        )
+    
+        return nus.get_codes(
+            from_date="2023-01-01"
+        ).data[
+            ["code", "parentCode", "name"]
+        ]
 
     def calc_indirect(self, df: pd.DataFrame, col: str) -> float:
         """Beregner summen av en kolonne på høyeste hierarkinivå.
@@ -160,10 +156,10 @@ class DataManager:
             float: Summen av verdiene for høyeste hierarkinivå.
         """
         max_splitted = (
-            df[self.nace_col].str.split(" - ").apply(lambda x: len(x[0])).max()
+            df[self.group_col].str.split(" - ").apply(lambda x: len(x[0])).max()
         )
         return df[col][
-            df[self.nace_col].str.split(" - ").apply(lambda x: len(x[0]))
+            df[self.group_col].str.split(" - ").apply(lambda x: len(x[0]))
             == max_splitted
         ].sum()
 
@@ -201,7 +197,7 @@ class DataManager:
         Returns:
             list[str]: Liste med unike næringskoder.
         """
-        return self.data[self.nace_col].unique().tolist()  # pyright: ignore
+        return self.data[self.group_col].unique().tolist()  # pyright: ignore
 
     def add_klass_codes(self, data: pd.DataFrame, on: str) -> pd.DataFrame:
         """Legger til klassifikasjonsnavn til et datasett basert på en spesifisert kolonne.
@@ -326,7 +322,7 @@ class DataManager:
             (0.01 * pl.col(col) * pl.col("weight")).round(2).alias("weighted")
         )
 
-        weighted_pct = table_data.select([self.nace_col, "weighted"])
+        weighted_pct = table_data.select([self.group_col, "weighted"])
         return table_data, weighted_pct
 
     def get_all_periods(self) -> list[str]:
@@ -444,6 +440,48 @@ class DataManager:
             all_periods.append(latest)
         return all_periods
 
+    def get_source(
+        self,
+        value_column: str,
+        filters: dict[str, str] | None = None,
+    ) -> DataSource:
+    
+        if value_column not in self.value_columns:
+            raise ValueError(
+                f"Unknown value column: {value_column}"
+            )
+    
+        subset = self.data.copy()
+    
+        if filters:
+            for column, value in filters.items():
+    
+                if column not in self.categorical_columns:
+                    raise ValueError(
+                        f"Unknown categorical column: {column}"
+                    )
+    
+                subset = subset[subset[column] == value]
+    
+        polars_data = pl.from_pandas(subset)
+    
+        polars_data = polars_data.with_columns(
+            pl.col(value_column).cast(pl.Float64),
+            pl.col(self.period_col).str.strptime(
+                pl.Date,
+                "%Y-%m",
+                strict=False,
+            ),
+        )
+
+        return DataSource(
+            polars_data,
+            self.period_col,
+            value_column,
+            self.group_col,
+            internal_col="value",
+        )
+
     def get_sesonal_adjusted_3_mth_change(
         self,
         period: str | None = None,
@@ -550,11 +588,12 @@ class DataManager:
             groupby_col=self.nace_col,
         )
 
-    def get_sesonal_adjusted_mth_change(
+    def get_mth_change(
         self,
+        source: DataSource,
         period: str | None = None,
-        max_nace_level: int | None = None,
-        nace_filter: list[str] | None = None,
+        max_level: int | None = None,
+        group_filter: list[str] | None = None,
         includes_parent_aggregate: bool = True,
     ) -> ReturnData:
         """Beregner månedlig sesongjustert endring og vektet bidrag for valgt periode.
@@ -575,25 +614,63 @@ class DataManager:
         skip = self._prep_skip(period)
         header, weight = self.weight_source.n_month(1, skip=skip)
         _, comparison_weight = self.weight_source.n_mean_rolling(1, skip=1)
-        header_i, index_season = self.season_source.n_month(1, skip=skip)
-        header_i_pct, index_season_pct = self.season_source.n_month_percent(
+        header_i, index = source.n_month(1, skip=skip)
+        header_i_pct, index_pct = source.n_month_percent(
             1, skip=skip
         )
-        index_season_pct = index_season_pct.with_columns(
-            season=pl.col("season").round(1)
-        )
         weighted_pct = (
-            index_season_pct.join(comparison_weight, on=self.nace_col)
+            index_pct.join(comparison_weight, on=self.group_col)
             .with_columns(
-                weighted=(pl.col("season") * (pl.col("weight") / 100)).round(2)
+                weighted_value=(pl.col("value") * (pl.col("weight") / 100)).round(2)
             )
-            .drop("weight", "season")
+            .drop("weight", "value")
         )
-        sparkline_data = [self.season_source.n_month(1, i)[1] for i in range(6)]
+        
+        sparkline_data = [source.n_month(1, i)[1] for i in range(6)]
         sparkline_data.reverse()
+        
         table_data = multi_join(
-            [weight, index_season, index_season_pct, weighted_pct], on=self.nace_col
+            [weight, index, index_pct, weighted_pct], on=self.group_col
         )
+        
+        if max_nace_level:
+            table_data = self._filter_max_nace_level(
+                table_data,
+                max_nace_level,
+            )
+            weighted_pct = self._filter_max_nace_level(
+                weighted_pct,
+                max_nace_level,
+            )
+        
+        if group_filter:
+            table_data, weighted_pct = self._apply_group_filter(
+                table_data,
+                weighted_pct,
+                group_filter,
+                includes_parent_aggregate,
+            )
+
+         return ReturnData(
+            header_1=self.header_1,
+            header_2=["", header, header_i, header_i_pct, header_i_pct],
+            res_data=(
+                self._prep_df(table_data, self.nace_col)
+                .round(1)
+                .sort_values(by=self.nace_col, key=self.sort_aggregates)
+                .reset_index(drop=True)
+            ),
+            figure_data=self._prep_df(weighted_pct, self.nace_col)
+            .set_index(self.nace_col)["weighted"]
+            .iloc[::-1],
+            sparkline_data=multi_join(sparkline_data, on=self.nace_col)
+            .to_pandas()
+            .sort_values(by=self.nace_col, key=self.sort_aggregates),
+            indirect=None,
+            groupby_col=self.nace_col,
+        )
+
+        
         if max_nace_level is not None:
             numeric_mask = (
                 pl.col(self.nace_col)
@@ -739,7 +816,11 @@ class DataManager:
             groupby_col=self.nace_col,
         )
 
-    def get_table_1(self, period: str | None = None) -> ReturnData:
+    def get_table_1(self,
+                    period: str | None = None,
+                    value_column: str,
+                    
+                   ) -> ReturnData:
         """Genererer samleskjema med månedlige nivåer, endringer og vektet bidrag.
 
         Samler sesongjusterte nivådata for de tre siste månedene og prosentvise endringer
@@ -753,6 +834,7 @@ class DataManager:
             ReturnData: Et objekt som inneholder overskrifter, samlet tabell for visning,
             figurtall for vektet bidrag, og tom sparkline-data.
         """
+
         skip = self._prep_skip(period)
         df_data = []
         headers = []
