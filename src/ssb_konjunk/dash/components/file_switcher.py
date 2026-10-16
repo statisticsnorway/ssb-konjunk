@@ -32,7 +32,6 @@ class FileSwitcher(html.Div):
         Args:
             aio_id: Optional id for the AIO component.
         """
-
         if options is None:
             options = [
                 {"id": "old", "title": "Previous"},
