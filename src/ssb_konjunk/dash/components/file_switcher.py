@@ -1,3 +1,5 @@
+from typing import cast
+
 from ssb_dash_components import Dropdown
 
 from dash import Input
@@ -19,17 +21,31 @@ class FileSwitcher(html.Div):
 
     ids = AIOids
 
-    def __init__(self, aio_id: str | None = None) -> None:
+    def __init__(
+        self, options: None | list[str] | list[dict] = None, aio_id: str | None = None
+    ) -> None:
         """Initialize the FileSwitcher component.
 
         Args:
             aio_id: Optional id for the AIO component.
         """
-        select_dropdown = Dropdown(
-            items=[
+
+        if options is None:
+            options = [
                 {"id": "old", "title": "Previous"},
                 {"id": "latest", "title": "Latest"},
-            ],
+            ]
+
+        if isinstance(options, list) and all(isinstance(item, str) for item in options):
+            options = [{"id": item, "title": item} for item in options]
+
+        assert isinstance(options, list) and all(
+            isinstance(item, dict) for item in options
+        )
+
+        complete_options = cast(list[Dropdown.Items], options)
+        select_dropdown = Dropdown(
+            items=complete_options,
             id=self.ids.toogle,
             value="latest",
             description="Select the file to use",

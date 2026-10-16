@@ -124,23 +124,23 @@ class AnalyticsPageAIO(html.Div):  # html.Div will be the "parent" component
 
         @callback(
             Output(self.ids.dropdown_container(aio_id), "children"),
-            Input(FileSwitcher.ids.store, "data"),
+            Input(FileSwitcher.ids.store, "data", allow_optional=True),
             Input(self.ids.dropdown(aio_id), "value"),
         )
-        def update_dropdown(prev_store: str, value: str):  # type: ignore
+        def update_dropdown(prev_store: str | None, value: str):  # type: ignore
             options = get_dropdown_data_function(prev_store)
             if (value is None) or (value == "None"):
                 value = options[0]["id"]
             elif value not in [x["id"] for x in options]:
                 value = options[0]["id"]
-            return Dropdown(items=options, id=self.ids.dropdown(aio_id), value=value)
+            return Dropdown(items=options, id=self.ids.dropdown(aio_id), value=value) # type: ignore
 
         @callback(
             Output(self.ids.table_container(aio_id), "children"),
             Input(self.ids.dropdown(aio_id), "value"),
-            State(FileSwitcher.ids.store, "data"),
+            State(FileSwitcher.ids.store, "data", allow_optional=True),
         )
-        def update_table(value: str, prev_store: str):  # type: ignore
+        def update_table(value: str, prev_store: str | None):  # type: ignore
             all_tables: list[html.Div] = []
             if (value is None) or (len(value) == 0):
                 return all_tables

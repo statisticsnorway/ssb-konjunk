@@ -5,11 +5,13 @@ from dash import page_registry
 from .file_switcher import FileSwitcher
 
 
-def header_nav() -> html.Div:
+def header_nav(
+    options: list[str] | list[dict] | None = None,
+) -> html.Div:
     """Funksjon for å generer navigasjonsmenyen på toppen.
 
     Args:
-        None
+        options (list[str] | list[str] | None): Options to show in the file switcher
 
     Returns:
         html.Div
@@ -41,7 +43,7 @@ def header_nav() -> html.Div:
                         ],
                         className="nav-row-container",
                     ),
-                    html.Div(FileSwitcher()),
+                    html.Div(FileSwitcher(options=options)),
                 ],
                 className="nav-container",
             ),
