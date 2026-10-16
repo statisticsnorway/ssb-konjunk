@@ -22,7 +22,10 @@ class FileSwitcher(html.Div):
     ids = AIOids
 
     def __init__(
-        self, options: None | list[str] | list[dict] = None, aio_id: str | None = None
+        self,
+        options: None | list[str] | list[dict] = None,
+        aio_id: str | None = None,
+        searchable: bool = False,
     ) -> None:
         """Initialize the FileSwitcher component.
 
@@ -50,6 +53,7 @@ class FileSwitcher(html.Div):
             value="latest",
             description="Select the file to use",
             showDescription=True,
+            searchable=searchable,
         )
         super().__init__(
             [select_dropdown, dcc.Store(id=self.ids.store)], id=self.ids.switcher

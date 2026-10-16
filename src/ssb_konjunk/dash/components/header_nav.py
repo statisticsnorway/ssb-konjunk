@@ -7,6 +7,7 @@ from .file_switcher import FileSwitcher
 
 def header_nav(
     options: list[str] | list[dict] | None = None,
+    searchable_fileswitcher: bool = False,
 ) -> html.Div:
     """Funksjon for å generer navigasjonsmenyen på toppen.
 
@@ -43,7 +44,11 @@ def header_nav(
                         ],
                         className="nav-row-container",
                     ),
-                    html.Div(FileSwitcher(options=options)),
+                    html.Div(
+                        FileSwitcher(
+                            options=options, searchable=searchable_fileswitcher
+                        )
+                    ),
                 ],
                 className="nav-container",
             ),
