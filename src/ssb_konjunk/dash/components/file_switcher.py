@@ -30,7 +30,7 @@ class FileSwitcher(html.Div):
         """Initialize the FileSwitcher component.
 
         Args:
-            options: A possible list with the options to display in the dropdown. 
+            options: A possible list with the options to display in the dropdown.
             aio_id: Optional id for the AIO component.
             searchable: An option to make the fileswitcher searchable.
         """
