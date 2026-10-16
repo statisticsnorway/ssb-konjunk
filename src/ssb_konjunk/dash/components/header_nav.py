@@ -12,7 +12,8 @@ def header_nav(
     """Funksjon for å generer navigasjonsmenyen på toppen.
 
     Args:
-        options (list[str] | list[str] | None): Options to show in the file switcher
+        options: Options to show in the file switcher
+        searchable_fileswitcher: An option to make the Dropdown searchable.
 
     Returns:
         html.Div
