@@ -52,26 +52,8 @@ dash = [
 ]
 
 [dependency-groups]
-lint = [
-    "black[jupyter]>=25.11.0",
-    "pre-commit>=4.4.0",
-    "pre-commit-hooks>=6.0.0",
-    "pydoclint>=0.8.3",
-    "ruff>=0.14.5",
-]
-doc = [
-    "furo>=2025.9.25",
-    "myst-parser>=4.0.1",
-    "sphinx>=8.2.3",
-    "sphinx-autobuild>=2025.8.25",
-    "sphinx-autodoc-typehints>=3.5.2",
-    "sphinx-click>=6.1.0",
-]
-
 # Type hint stubs should be placed in the dev dependency group
 dev = [
-    {include-group = "lint"},
-    {include-group = "doc"},
     "coverage[toml]>=7.11.3",
     "deptry>=0.24.0; python_version < '4.0'",
     "mypy>=1.18.2",
@@ -81,6 +63,17 @@ dev = [
     "xdoctest[colors]>=1.3.0",
     "ipykernel (>=6.29.5,<8.0.0)",
     "pytest-cov (>=7.1.0,<8.0.0)",
+    "black[jupyter]>=25.11.0",
+    "pre-commit>=4.4.0",
+    "pre-commit-hooks>=6.0.0",
+    "pydoclint>=0.8.3",
+    "ruff>=0.14.5",
+    "furo>=2025.9.25",
+    "myst-parser>=4.0.1",
+    "sphinx>=8.2.3",
+    "sphinx-autobuild>=2025.8.25",
+    "sphinx-autodoc-typehints>=3.5.2",
+    "sphinx-click>=6.1.0",
 ]
 
 [tool.poetry]
