@@ -172,16 +172,8 @@ class DataManager:
         """
         return (weights * chg_rate) / 100
 
-    @property
-    def header_1(self) -> list[str]:
-        """Lister standardkolonner for visning i tabelloversikt.
 
-        Returns:
-            list[str]: Overskrifter som inkluderer vekt, indeks og endringer.
-        """
-        return ["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"]
-
-    def get_nacer(self) -> list[str]:
+    def get_group_col(self) -> list[str]:
         """Returnerer en liste over unike næringskoder fra datasettet.
 
         Henter alle unike verdier fra kolonnen 'nar' i selve datasettet.
@@ -305,7 +297,7 @@ class DataManager:
                 )
             )
         col = next(
-            (c for c in ["season1", "calendar1"] if c in table_data.columns), None
+            (c for c in ["value", "season1", "calendar1"] if c in table_data.columns), None
         )
         if col is None:
             raise ValueError("Wrong column name in table_data")
@@ -437,6 +429,7 @@ class DataManager:
         table_data: pl.DataFrame,
         weighted_data: pl.DataFrame,
         sparkline_data: list[pl.DataFrame] | None,
+        header_1: list[str],
         header_2: list[str],
     ) -> ReturnData:
     
@@ -469,7 +462,7 @@ class DataManager:
             )
     
         return ReturnData(
-            header_1=self.header_1,
+            header_1=header_1,
             header_2=header_2,
             res_data=result_df,
             figure_data=figure_data,
@@ -574,17 +567,14 @@ class DataManager:
         skip = self._prep_skip(period)
     
         header, weight = self.weight_source.n_month(1, skip=skip)
-        _, comparison_weight = self.weight_source.n_mean_rolling(1, skip=1)
-    
         header_i, index = source.n_month(1, skip=skip)
-    
         header_i_pct, index_pct = source.n_month_percent(
             1,
             skip=skip,
         )
-    
+        
         weighted_pct = (
-            index_pct.join(comparison_weight, on=self.group_col)
+            index_pct.join(weight, on=self.group_col)
             .with_columns(
                 weighted_value=(
                     pl.col("value") * (pl.col("weight") / 100)
@@ -592,7 +582,7 @@ class DataManager:
             )
             .drop("weight", "value")
         )
-    
+        
         sparkline_data = [source.n_month(1, i)[1] for i in range(6)]
         sparkline_data.reverse()
     
@@ -623,6 +613,13 @@ class DataManager:
             table_data=table_data,
             weighted_data=weighted_pct,
             sparkline_data=sparkline_data,
+            header_1 = [
+                "",
+                "Vekt %",
+                "Indeks",
+                "% Endring",
+                "% Endring vektet"
+            ],
             header_2=[
                 "",
                 header,
@@ -631,7 +628,237 @@ class DataManager:
                 header_i_pct,
             ],
         )
-    
+    def get_3_mth_change(
+        self,
+        source: DataSource,
+        period: str | None = None,
+        max_nace_level: int | None = None,
+        group_filter: list[str] | None = None,
+        includes_parent_aggregate: bool = True,
+    ) -> ReturnData:
+        """Henter sesongjusterte 3-måneders endringer og beregner vektede bidrag.
+
+        Utfører rullerende 3-måneders gjennomsnitt på sesongjusterte serier og vekter,
+        samt beregner prosentvis endring og vektet påvirkning. Returnerer dataene som
+        tabell, figurer og sparkline-format for rapportering eller visualisering.
+
+        Args:
+            period (str or None): Valgfri referanseperiode som '2023M03'. Hvis None,
+                brukes siste tilgjengelige periode.
+            max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn).
+                Brukes til å filtrere detaljeringsnivå i resultatene.
+            nace_filter: (list[str] or None): Filter for hvilke nacer du ønsker å ha med i tabellen.
+            includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
+
+        Returns:
+            ReturnData: Et objekt som inneholder overskrifter, formaterte resultatdata,
+            figursøyledata og sparkline-serier for de valgte periodene.
+        """
+        skip = self._prep_skip(period)
+        header, weight = self.weight_source.n_mean_rolling(3, skip=skip)
+
+        #This is used to get the weigth right when the weight the previous 3 months and the 3 months before that is not the same 
+        _, comparison_weight = self.weight_source.n_mean_rolling(3, skip=3)
+        
+        header_i, index = source.n_mean_rolling(3, skip=skip)
+
+        header_i_pct, index_pct = (
+            source.n_month_rolling_percent_compare(3, skip, skip + 3)
+        )
+        index_pct = index_pct.with_columns(
+            value=pl.col("value").round(1)
+        )
+        weighted_pct = (
+            index_pct.join(comparison_weight, on=self.group_col)
+            .with_columns(
+                weighted_value=(pl.col("value") * (pl.col("weight") / 100)).round(2)
+            )
+            .drop("weight", "value")
+        )
+        sparkline_data = [
+            source.n_mean_rolling(3, i * 3)[1] for i in range(4)
+        ]
+        sparkline_data.reverse()
+
+        table_data = multi_join(
+            [weight, index, index_pct, weighted_pct], on=self.group_col
+        )
+        
+        if max_nace_level:
+            table_data = self._filter_max_nace_level(
+                table_data,
+                max_nace_level,
+            )
+            weighted_pct = self._filter_max_nace_level(
+                weighted_pct,
+                max_nace_level,
+            )
+        if group_filter:
+            table_data, weighted_pct = self._apply_group_filter(
+                table_data,
+                weighted_pct,
+                group_filter,
+                includes_parent_aggregate,
+            )
+        return self._build_return_data(
+            table_data=table_data,
+            weighted_data=weighted_pct,
+            sparkline_data=sparkline_data,
+            header_1 = [
+                "",
+                "Vekt %",
+                "Indeks",
+                "% Endring",
+                "% Endring vektet"
+            ],
+            header_2=[
+                "",
+                header,
+                header_i,
+                header_i_pct,
+                header_i_pct,
+            ],
+        )
+        
+    def get_12_mth_change(
+        self,
+        source: DataSource,
+        period: str | None = None,
+        max_nace_level: int | None = None,
+        group_filter: list[str] | None = None,
+        includes_parent_aggregate: bool = True,
+    ) -> ReturnData:
+        """Beregner 12-måneders kalenderjusterte endringer og tilhørende vektede bidrag.
+
+        Utfører aggregering og prosentvis sammenligning over et 12-måneders vindu
+        basert på kalenderjustert data. Dataen sammenstilles til rapporteringsvennlige
+        datasett som inkluderer både råverdier, endringer og vektet påvirkning.
+
+        Args:
+            period (str or None): Valgfri referanseperiode, som '2023M03'. Hvis None, brukes siste tilgjengelige periode.
+            max_nace_level (int or None): Maksimalt antall tegn i NACE-koder som brukes til å filtrere detaljeringsnivå i resultatene.
+            nace_filter: (list[str] or None): Filter for hvilke nacer du ønsker å ha med i tabellen.
+            includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
+
+        Returns:
+            ReturnData: Objekt med tabelloverskrifter, datasett for visning og analyse,
+            og vektede figurtall. Sparkline-data er ikke inkludert i denne varianten.
+        """
+        skip = self._prep_skip(period)
+        header, weight = self.weight_source.n_month(1, skip=skip)
+        _, comparison_weight = self.weight_source.n_mean_rolling(1, skip=12)
+        header_i, index = source.n_month(1, skip=skip)
+        header_i_pct, index_pct = source.n_percent_rolling(
+            13, skip=skip
+        )
+        index_pct = index_pct.with_columns(
+            value=pl.col("value").round(1)
+        )
+        weighted_pct = (
+            index_pct.join(comparison_weight, on=self.group_col)
+            .with_columns(
+                weighted_value=(pl.col("value") * (pl.col("weight") / 100)).round(2)
+            )
+            .drop("weight", "value")
+        )
+        table_data = multi_join(
+            [weight, index, index_pct, weighted_pct], on=self.group_col
+        )
+        if max_nace_level:
+            table_data = self._filter_max_nace_level(
+                table_data,
+                max_nace_level,
+            )
+            weighted_pct = self._filter_max_nace_level(
+                weighted_pct,
+                max_nace_level,
+            )
+        if group_filter:
+            table_data, weighted_pct = self._apply_group_filter(
+                table_data,
+                weighted_pct,
+                group_filter,
+                includes_parent_aggregate,
+            )
+        return self._build_return_data(
+            table_data=table_data,
+            weighted_data=weighted_pct,
+            sparkline_data=None,
+            header_1 = [
+                "",
+                "Vekt %",
+                "Indeks",
+                "% Endring",
+                "% Endring vektet"
+            ],
+            header_2=[
+                "",
+                header,
+                header_i,
+                header_i_pct,
+                header_i_pct,
+            ],
+        )
+        
+    def get_table_1(self, source: DataSource, period: str | None = None) -> ReturnData:
+        """Genererer samleskjema med månedlige nivåer, endringer og vektet bidrag.
+
+        Samler sesongjusterte nivådata for de tre siste månedene og prosentvise endringer
+        for de siste fem. Deretter beregnes vektet bidrag for nåværende periode og alt
+        settes sammen til et tabellvennlig datasett med riktige overskrifter.
+
+        Args:
+            period (str or None): Valgfri referanseperiode (f.eks. '2023M03'). Hvis None, brukes siste tilgjengelige periode.
+
+        Returns:
+            ReturnData: Et objekt som inneholder overskrifter, samlet tabell for visning,
+            figurtall for vektet bidrag, og tom sparkline-data.
+        """
+        skip = self._prep_skip(period)
+        df_data = []
+        headers = []
+
+        for i in range(2, -1, -1):
+            header, data = source.n_month(1, i + skip)
+            df_data.append(data)
+            headers.append(header)
+
+        for i in range(4, -1, -1):
+            header, data = source.n_month_percent(1, i + skip)
+            df_data.append(data)
+            headers.append(header)
+
+        header, weight = self.weight_source.n_month(1, skip=skip)
+        _, index_pct = source.n_month_percent(1, skip=skip)
+        index_pct = index_pct.with_columns(
+            value=pl.col("value").round(1)
+        )
+        weighted_pct = (
+            index_pct.join(weight, on=self.group_col)
+            .with_columns(
+                weighted_value=(pl.col("value") * (pl.col("weight") / 100)).round(2)
+            )
+            .drop("weight", "value")
+        )
+
+        return self._build_return_data(
+                    table_data=multi_join(df_data, on=self.group_col),
+                    weighted_data=weighted_pct,
+                    sparkline_data=None,
+                    header_1=[
+                        "",
+                        "",
+                        "",
+                        "",
+                        "% Endring",
+                        "% Endring",
+                        "% Endring",
+                        "% Endring",
+                        "% Endring",
+                    ],
+                    header_2=["", *headers],
+                )
+        
 @cache
 def get_data_manager(path: str) -> DataManager:
     """Laster inn et Parquet-datasett og returnerer en DataManager-instans.
