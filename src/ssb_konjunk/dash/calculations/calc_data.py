@@ -25,15 +25,15 @@ class DataManager:
     ---------------------
     - Leser og forbereder data for videre analyse.
     - Henter og kobler til klassifikasjonskoder for næringsaggregering.
-    - Bygger egne datastrukturer for sesongjustert, kalenderjustert, rå og vektet serie.
+    - Lager grunnlaget for å generere opp serier fra strukturert data
     - Genererer ulike tabell- og figurformater (returnert som `ReturnData`) for analyse og presentasjon.
     - Støtter aggregering på ulike nivåer samt filtrering på detaljnivå.
 
     Hovedkomponenter:
     ------------------
-    - `self.raw_source`, `self.calendar_source`, `self.season_source`, `self.weight_source`:
-    Datastrukturer for ulike måter å representere eller justere tidsserier.
-    - `get_table_X_v2(...)`: Metoder for å hente ulike tabellvarianter (1-7), hver tilpasset spesifikke analysetyper.
+    - Data som er en dataframe som ineholder en dato kolonne, en grupperings kolonne, ingen, en eller flere kategorikolonner,
+    og minst en verdikolonne. Med dette formatet kan man generere opp tidsserier basert på de.
+    - `get_table_X(...)`: Metoder for å hente ulike tabellvarianter, med mulighet til å legge til egene versjoner.
     - Statiske hjelpefunksjoner for sortering, prosentberegning og visuell formatering.
     - Intern periodehåndtering for fleksibel datoanalyse.
 
@@ -44,8 +44,21 @@ class DataManager:
 
     Eksempel:
     ---------
-        instans = Næringsanalyse(dataframe)
-        tabell = instans.get_table_1_v2(period="2024M12")
+        instans = DataManager(
+            data = df_piba,
+            weight_data=df_piba_vekt,
+            period_column = "periode",
+            group_column = "nar",
+            value_columns = ['volumindeks'],
+            categorical_columns = ['sesongjustering']
+        )
+        source = instans.get_source(
+            value_column="volumindeks",
+            filters={
+                "sesongjustering": "Y",
+            },
+        )
+        tabell = instans.get_table_1(source, value)
         vis(tabell.res_data)
 
     """
@@ -432,7 +445,21 @@ class DataManager:
         header_1: list[str],
         header_2: list[str],
     ) -> ReturnData:
+        """A simplefied Returndata that does some usual coputations to keep the calls simpler.
     
+        A simplifie version of the ReturnData that does the standard calcualtions that is used, if you want more customization
+        you have to use the ReturnData directly.
+    
+        args:
+            table_data (pl.DataFrame) : The dataframe you want to display.
+            figure_data (tuple[pl.DataFrame, str]) | None: a touple with the dataframe you want to graph, and the column name of the datacolumn.
+            sparkline_data (list[pl.DataFrame] | None): a small line diagram that shows some timeseries data of a given column in every data row.
+            header_1 (list[str]): the top row of column names in the data.
+            header_2 (list[str]): the second row of column names in the data.
+    
+        returns:
+            ReturnData: A ReturnData object with some given parameters.
+        """
         result_df = (
             self._prep_df(table_data, self.group_col)
             .round(1)
@@ -479,6 +506,16 @@ class DataManager:
         data: pl.DataFrame,
         max_nace_level: int,
     ) -> pl.DataFrame:
+        """A way to filter down the nace levles in a group column in a DataSource object.
+
+        You give an input Datasource object and a number and you get that level of nace
+        max_nace_level 2 give only F, 41 ,42, 43
+        max_nace_level 3 gives F, 41, 41.1, 41.2 ..... and so on.
+
+        args:
+            data (pl.DataFrame): the dataframe you want to diaplay.
+            max_nace_level (int): the number 'level' you want to filter the nace to.
+        """
         numeric_mask = (
             pl.col(self.group_col)
             .str.replace(".", "", literal=True)
@@ -498,24 +535,37 @@ class DataManager:
             | (~numeric_mask)
         )
 
-    def _apply_group_filter(
+    def _apply_group_column_filter(
         self,
         table_data: pl.DataFrame,
-        weighted_data: pl.DataFrame,
+        weighted_data: pl.DataFrame | None,
         group_filter: list[str],
+        normalize_weight: bool = True,
         includes_parent_aggregate: bool = True,
     ) -> tuple[pl.DataFrame, pl.DataFrame]:
+        """A way to filter the data on specific group column (nace, kommune, fylke...) values.
     
+        A list that filters specific values for the group column, so the data can show precisely what you want. and also
+    
+        args:
+            table_data (pl.DataFrame): the data you want to filter down.
+            weighted_data (pl.DataFrame | None): if you also want to normalize the weights you must include this
+            group_filter (list[str]): the list of strings that filters the group column.
+            normalize_weight (bool): if you want to normalize weigths at all.
+            includes_parent_aggregate (bool): if you want to also include the parent aggregat (F to 41,42,43 foreksample) in the normalization.
+            
+        
+        """
         table_data = table_data.filter(
             pl.col(self.group_col).is_in(group_filter)
         )
-    
-        table_data, weighted_data = self._normalize_weight(
-            table_data,
-            includes_parent_aggregate=includes_parent_aggregate,
-        )
-    
-        return table_data, weighted_data
+        if normalize_weight:
+            table_data, weighted_data = self._normalize_weight(
+                table_data,
+                includes_parent_aggregate=includes_parent_aggregate,
+            )
+        
+        return table_data, weighted_data 
     
     def get_source(
         self,
@@ -567,6 +617,22 @@ class DataManager:
         group_filter: list[str] | None = None,
         includes_parent_aggregate: bool = True,
     ) -> ReturnData:
+        """Beregner månedlig sesongjustert endring og vektet bidrag for valgt periode.
+
+        Utfører rullerende beregninger for én måned frem i tid på en gitt serie
+        og vekter. Returnerer strukturerte data for tabellvisning, figurer og sparkline-grafer.
+
+        Args:
+            source (DataSource): Et Datasource object med en gitt serie.
+            period (str or None): Valgfri referanseperiode, som '2023-03'. Hvis None, brukes siste tilgjengelige.
+            max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn). Brukes for å filtrere detaljeringsnivå.
+            group_filter: (list[str] or None): Filter for hva du ønsker å ha med i tabellen.
+            includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
+
+        Returns:
+            ReturnData: Et objekt med kolonneoverskrifter, formaterte tabeller, figursøyledata
+            og sparkline-serier for visualisering eller rapportering.
+        """
         skip = self._prep_skip(period)
     
         header, weight = self.weight_source.n_month(1, skip=skip)
@@ -605,7 +671,7 @@ class DataManager:
             )
     
         if group_filter:
-            table_data, weighted_pct = self._apply_group_filter(
+            table_data, weighted_pct = self._apply_group_column_filter(
                 table_data,
                 weighted_pct,
                 group_filter,
@@ -646,16 +712,15 @@ class DataManager:
         tabell, figurer og sparkline-format for rapportering eller visualisering.
 
         Args:
-            period (str or None): Valgfri referanseperiode som '2023M03'. Hvis None,
-                brukes siste tilgjengelige periode.
-            max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn).
-                Brukes til å filtrere detaljeringsnivå i resultatene.
-            nace_filter: (list[str] or None): Filter for hvilke nacer du ønsker å ha med i tabellen.
+            source (DataSource): Et Datasource object med en gitt serie.
+            period (str or None): Valgfri referanseperiode, som '2023-03'. Hvis None, brukes siste tilgjengelige.
+            max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn). Brukes for å filtrere detaljeringsnivå.
+            group_filter: (list[str] or None): Filter for hva du ønsker å ha med i tabellen.
             includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
 
         Returns:
-            ReturnData: Et objekt som inneholder overskrifter, formaterte resultatdata,
-            figursøyledata og sparkline-serier for de valgte periodene.
+            ReturnData: Et objekt med kolonneoverskrifter, formaterte tabeller, figursøyledata
+            og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
         header, weight = self.weight_source.n_mean_rolling(3, skip=skip)
@@ -697,7 +762,7 @@ class DataManager:
                 max_nace_level,
             )
         if group_filter:
-            table_data, weighted_pct = self._apply_group_filter(
+            table_data, weighted_pct = self._apply_group_column_filter(
                 table_data,
                 weighted_pct,
                 group_filter,
@@ -738,14 +803,15 @@ class DataManager:
         datasett som inkluderer både råverdier, endringer og vektet påvirkning.
 
         Args:
-            period (str or None): Valgfri referanseperiode, som '2023M03'. Hvis None, brukes siste tilgjengelige periode.
-            max_nace_level (int or None): Maksimalt antall tegn i NACE-koder som brukes til å filtrere detaljeringsnivå i resultatene.
-            nace_filter: (list[str] or None): Filter for hvilke nacer du ønsker å ha med i tabellen.
+            source (DataSource): Et Datasource object med en gitt serie.
+            period (str or None): Valgfri referanseperiode, som '2023-03'. Hvis None, brukes siste tilgjengelige.
+            max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn). Brukes for å filtrere detaljeringsnivå.
+            group_filter: (list[str] or None): Filter for hva du ønsker å ha med i tabellen.
             includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
 
         Returns:
-            ReturnData: Objekt med tabelloverskrifter, datasett for visning og analyse,
-            og vektede figurtall. Sparkline-data er ikke inkludert i denne varianten.
+            ReturnData: Et objekt med kolonneoverskrifter, formaterte tabeller, figursøyledata
+            og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
         header, weight = self.weight_source.n_month(1, skip=skip)
@@ -777,7 +843,7 @@ class DataManager:
                 max_nace_level,
             )
         if group_filter:
-            table_data, weighted_pct = self._apply_group_filter(
+            table_data, weighted_pct = self._apply_group_column_filter(
                 table_data,
                 weighted_pct,
                 group_filter,
@@ -811,6 +877,7 @@ class DataManager:
         settes sammen til et tabellvennlig datasett med riktige overskrifter.
 
         Args:
+            source (DataSource): Et Datasource object med en gitt serie.
             period (str or None): Valgfri referanseperiode (f.eks. '2023M03'). Hvis None, brukes siste tilgjengelige periode.
 
         Returns:
