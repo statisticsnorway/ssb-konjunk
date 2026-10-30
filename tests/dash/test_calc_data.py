@@ -17,7 +17,6 @@ def test_data_manager_init(data):
     assert data.categorical_columns is not None
     assert data.id_columns is not None
     assert data.available_values is not None
-    
 
 
 def test_pad_single():
@@ -27,7 +26,9 @@ def test_pad_single():
 
 
 def test_calc_indirect(data, test_df_data):
-    assert data.calc_indirect(test_df_data, data.value_columns[0]) == pytest.approx(30221.80466, rel=1e-4)
+    assert data.calc_indirect(test_df_data, data.value_columns[0]) == pytest.approx(
+        30221.80466, rel=1e-4
+    )
 
 
 def test_to_percent(data):
@@ -38,6 +39,7 @@ def test_to_percent(data):
 
     percent_change = data.to_percent(weight, chg_rate)
     assert percent_change[0] == pytest.approx(0.083084, rel=1e-4)
+
 
 def get_group_col(data):
     assert data.get_nacer() == [
@@ -189,10 +191,10 @@ def test_get_sesonal_adjusted_3_mth_change(data, test_df_datasource):
                 "  H - Transport og lagring",
                 "  J - Informasjon og kommunikasjon",
             ],
-           'weight': [34.6, 36.9],
-            'value': [115.7, 97.1],
-            'value1': [16.5, -8.5],
-            'weighted_value': [4.0, -2.8],
+            "weight": [34.6, 36.9],
+            "value": [115.7, 97.1],
+            "value1": [16.5, -8.5],
+            "weighted_value": [4.0, -2.8],
         }
     )
 
@@ -203,10 +205,10 @@ def test_get_sesonal_adjusted_3_mth_change(data, test_df_datasource):
                 "        49.1 - Passasjertransport med je",
                 "        49.2 - Godstransport med jernban",
             ],
-            'weight': [34.6, 28.4, 34.6],
-            'value': [115.7, 96.9, 109.5],
-            'value1': [16.5, 9.6, 19.3],
-            'weighted_value': [4.0, 4.1, 6.1],
+            "weight": [34.6, 28.4, 34.6],
+            "value": [115.7, 96.9, 109.5],
+            "value1": [16.5, 9.6, 19.3],
+            "weighted_value": [4.0, 4.1, 6.1],
         }
     )
     expected_res_data_3 = pd.DataFrame(
@@ -215,10 +217,10 @@ def test_get_sesonal_adjusted_3_mth_change(data, test_df_datasource):
                 "  H - Transport og lagring",
                 "  J - Informasjon og kommunikasjon",
             ],
-            'weight': [34.6, 36.9],
-            'value': [115.7, 97.1],
-            'value1': [16.5, -8.5],
-            'weighted_value': [4.0, -2.8],
+            "weight": [34.6, 36.9],
+            "value": [115.7, 97.1],
+            "value1": [16.5, -8.5],
+            "weighted_value": [4.0, -2.8],
         }
     )
 
@@ -253,17 +255,17 @@ def test_get_sesonal_adjusted_mth_change(data, test_df_datasource):
         "Nov 2024 - Dec 2024",
         "Nov 2024 - Dec 2024",
     ]
-    
+
     expected_res_data_1 = pd.DataFrame(
         {
             "nar": [
                 "  H - Transport og lagring",
                 "  J - Informasjon og kommunikasjon",
             ],
-            'weight': [34.7, 44.7],
-            'value': [114.7, 89.5],
-            'value1': [-1.8, 8.5],
-            'weighted_value': [-0.6, 3.8],
+            "weight": [34.7, 44.7],
+            "value": [114.7, 89.5],
+            "value1": [-1.8, 8.5],
+            "weighted_value": [-0.6, 3.8],
         }
     )
 
@@ -274,10 +276,10 @@ def test_get_sesonal_adjusted_mth_change(data, test_df_datasource):
                 "        49.1 - Passasjertransport med je",
                 "        49.2 - Godstransport med jernban",
             ],
-            'weight': [34.7, 11.6, 21.9],
-            'value': [114.7, 83.2, 89.3],
-            'value1': [-1.8, -29.7, -25.4],
-            'weighted_value': [-0.6, -3.4, -5.6],
+            "weight": [34.7, 11.6, 21.9],
+            "value": [114.7, 83.2, 89.3],
+            "value1": [-1.8, -29.7, -25.4],
+            "weighted_value": [-0.6, -3.4, -5.6],
         }
     )
     expected_res_data_3 = pd.DataFrame(
@@ -286,10 +288,10 @@ def test_get_sesonal_adjusted_mth_change(data, test_df_datasource):
                 "  H - Transport og lagring",
                 "  J - Informasjon og kommunikasjon",
             ],
-            'weight': [34.7, 44.7],
-            'value': [114.7, 89.5],
-            'value1': [-1.8, 8.5],
-            'weighted_value': [-0.6, 3.8],
+            "weight": [34.7, 44.7],
+            "value": [114.7, 89.5],
+            "value1": [-1.8, 8.5],
+            "weighted_value": [-0.6, 3.8],
         }
     )
 
@@ -330,10 +332,10 @@ def test_get_sesonal_adjusted_12_mth_change(data, test_df_datasource):
                 "  H - Transport og lagring",
                 "  J - Informasjon og kommunikasjon",
             ],
-            'weight': [34.7, 44.7],
-            'value': [114.7, 89.5],
-            'value1': [-3.2, -22.5],
-            'weighted_value': [-1.1, -6.1],
+            "weight": [34.7, 44.7],
+            "value": [114.7, 89.5],
+            "value1": [-3.2, -22.5],
+            "weighted_value": [-1.1, -6.1],
         }
     )
 
@@ -344,10 +346,10 @@ def test_get_sesonal_adjusted_12_mth_change(data, test_df_datasource):
                 "        49.1 - Passasjertransport med je",
                 "        49.2 - Godstransport med jernban",
             ],
-            'weight': [34.7, 11.6, 21.9],
-            'value': [114.7, 83.2, 89.3],
-            'value1': [-3.2, -0.1, 0.0],
-            'weighted_value': [-1.1, -0.0, 0.0]
+            "weight": [34.7, 11.6, 21.9],
+            "value": [114.7, 83.2, 89.3],
+            "value1": [-3.2, -0.1, 0.0],
+            "weighted_value": [-1.1, -0.0, 0.0],
         }
     )
 
@@ -357,10 +359,10 @@ def test_get_sesonal_adjusted_12_mth_change(data, test_df_datasource):
                 "  H - Transport og lagring",
                 "  J - Informasjon og kommunikasjon",
             ],
-            'weight': [34.7, 44.7],
-            'value': [114.7, 89.5],
-            'value1': [-3.2, -22.5],
-            'weighted_value': [-1.1, -6.1],
+            "weight": [34.7, 44.7],
+            "value": [114.7, 89.5],
+            "value1": [-3.2, -22.5],
+            "weighted_value": [-1.1, -6.1],
         }
     )
 
@@ -424,6 +426,7 @@ def test_get_table_1(data, test_df_datasource):
     assert get_table_1.header_1 == expected_header_1
     assert get_table_1.header_2 == expected_header_2
     pd.testing.assert_frame_equal(get_table_1.res_data, expected_res_data)
+
 
 def test_data_manager(data):
     assert isinstance(data, DataManager)

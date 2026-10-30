@@ -76,7 +76,7 @@ class DataManager:
         self.data = data
         self.period_col = period_column
         self.group_col = group_column
-        
+
         self.weight_source = DataSource(
             pl.from_pandas(weight_data).with_columns(
                 pl.col(self.period_col).str.strptime(
@@ -99,24 +99,17 @@ class DataManager:
             self.group_col,
             *self.categorical_columns,
         ]
-        
+
         self.available_values = {
-            col: sorted(
-                data[col].dropna().unique().tolist()
-            )
+            col: sorted(data[col].dropna().unique().tolist())
             for col in self.categorical_columns
         }
 
-        
         self.class_codes = self._load_classification()
         self.root_code = None
         self._sort_order = self._build_sort_order()
-        
-        self.periods = AllPeriods(
-            data[self.period_col].unique().tolist()
-        )
 
-    
+        self.periods = AllPeriods(data[self.period_col].unique().tolist())
 
     @staticmethod
     def pad_single(x: str) -> str:
@@ -133,17 +126,15 @@ class DataManager:
         """
         first_item_len = len(x.split("-")[0]) - 1
         return ("  " * first_item_len) + x
-        
+
     def _load_classification(self) -> pd.DataFrame:
         nus = KlassClassification(
             classification_id="6",
             language="nb",
             include_future=False,
         )
-    
-        return nus.get_codes(
-            from_date="2023-01-01"
-        ).data[
+
+        return nus.get_codes(from_date="2023-01-01").data[
             ["code", "parentCode", "name"]
         ]
 
@@ -184,7 +175,6 @@ class DataManager:
             pd.DataFrame or pd.Series: Prosentvis påvirkning.
         """
         return (weights * chg_rate) / 100
-
 
     def get_group_col(self) -> list[str]:
         """Returnerer en liste over unike næringskoder fra datasettet.
@@ -310,7 +300,8 @@ class DataManager:
                 )
             )
         col = next(
-            (c for c in ["value", "season1", "calendar1"] if c in table_data.columns), None
+            (c for c in ["value", "season1", "calendar1"] if c in table_data.columns),
+            None,
         )
         if col is None:
             raise ValueError("Wrong column name in table_data")
@@ -436,7 +427,7 @@ class DataManager:
             latest = latest.subtract(months=step)
             all_periods.append(latest)
         return all_periods
-        
+
     def _build_return_data(
         self,
         table_data: pl.DataFrame,
@@ -446,18 +437,18 @@ class DataManager:
         header_2: list[str],
     ) -> ReturnData:
         """A simplefied Returndata that does some usual coputations to keep the calls simpler.
-    
+
         A simplifie version of the ReturnData that does the standard calcualtions that is used, if you want more customization
         you have to use the ReturnData directly.
-    
-        args:
+
+        Args:
             table_data (pl.DataFrame) : The dataframe you want to display.
             figure_data (tuple[pl.DataFrame, str]) | None: a touple with the dataframe you want to graph, and the column name of the datacolumn.
             sparkline_data (list[pl.DataFrame] | None): a small line diagram that shows some timeseries data of a given column in every data row.
             header_1 (list[str]): the top row of column names in the data.
             header_2 (list[str]): the second row of column names in the data.
-    
-        returns:
+
+        Returns:
             ReturnData: A ReturnData object with some given parameters.
         """
         result_df = (
@@ -469,18 +460,18 @@ class DataManager:
             )
             .reset_index(drop=True)
         )
-        
+
         figure_data_df = None
-        
+
         if figure_data:
             figure_data_df = (
                 self._prep_df(figure_data[0], self.group_col)
                 .set_index(self.group_col)[figure_data[1]]
                 .iloc[::-1]
             )
-    
+
         sparkline_df = None
-    
+
         if sparkline_data:
             sparkline_df = (
                 multi_join(sparkline_data, on=self.group_col)
@@ -490,7 +481,7 @@ class DataManager:
                     key=self.sort_aggregates,
                 )
             )
-    
+
         return ReturnData(
             header_1=header_1,
             header_2=header_2,
@@ -512,7 +503,7 @@ class DataManager:
         max_nace_level 2 give only F, 41 ,42, 43
         max_nace_level 3 gives F, 41, 41.1, 41.2 ..... and so on.
 
-        args:
+        Args:
             data (pl.DataFrame): the dataframe you want to diaplay.
             max_nace_level (int): the number 'level' you want to filter the nace to.
         """
@@ -521,7 +512,7 @@ class DataManager:
             .str.replace(".", "", literal=True)
             .str.contains(r"^\d+$")
         )
-    
+
         return data.filter(
             (
                 numeric_mask
@@ -544,54 +535,48 @@ class DataManager:
         includes_parent_aggregate: bool = True,
     ) -> tuple[pl.DataFrame, pl.DataFrame]:
         """A way to filter the data on specific group column (nace, kommune, fylke...) values.
-    
+
         A list that filters specific values for the group column, so the data can show precisely what you want. and also
-    
-        args:
+
+        Args:
             table_data (pl.DataFrame): the data you want to filter down.
             weighted_data (pl.DataFrame | None): if you also want to normalize the weights you must include this
             group_filter (list[str]): the list of strings that filters the group column.
             normalize_weight (bool): if you want to normalize weigths at all.
             includes_parent_aggregate (bool): if you want to also include the parent aggregat (F to 41,42,43 foreksample) in the normalization.
-            
-        
+
+
         """
-        table_data = table_data.filter(
-            pl.col(self.group_col).is_in(group_filter)
-        )
+        table_data = table_data.filter(pl.col(self.group_col).is_in(group_filter))
         if normalize_weight:
             table_data, weighted_data = self._normalize_weight(
                 table_data,
                 includes_parent_aggregate=includes_parent_aggregate,
             )
-        
-        return table_data, weighted_data 
-    
+
+        return table_data, weighted_data
+
     def get_source(
         self,
         value_column: str,
         filters: dict[str, str] | None = None,
     ) -> DataSource:
-    
+
         if value_column not in self.value_columns:
-            raise ValueError(
-                f"Unknown value column: {value_column}"
-            )
-    
+            raise ValueError(f"Unknown value column: {value_column}")
+
         subset = self.data.copy()
-    
+
         if filters:
             for column, value in filters.items():
-    
+
                 if column not in self.categorical_columns:
-                    raise ValueError(
-                        f"Unknown categorical column: {column}"
-                    )
-    
+                    raise ValueError(f"Unknown categorical column: {column}")
+
                 subset = subset[subset[column] == value]
-    
+
         polars_data = pl.from_pandas(subset)
-    
+
         polars_data = polars_data.with_columns(
             pl.col(value_column).cast(pl.Float64),
             pl.col(self.period_col).str.strptime(
@@ -634,32 +619,30 @@ class DataManager:
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
-    
+
         header, weight = self.weight_source.n_month(1, skip=skip)
         header_i, index = source.n_month(1, skip=skip)
         header_i_pct, index_pct = source.n_month_percent(
             1,
             skip=skip,
         )
-        
+
         weighted_pct = (
             index_pct.join(weight, on=self.group_col)
             .with_columns(
-                weighted_value=(
-                    pl.col("value") * (pl.col("weight") / 100)
-                ).round(2)
+                weighted_value=(pl.col("value") * (pl.col("weight") / 100)).round(2)
             )
             .drop("weight", "value")
         )
-        
+
         sparkline_data = [source.n_month(1, i)[1] for i in range(6)]
         sparkline_data.reverse()
-    
+
         table_data = multi_join(
             [weight, index, index_pct, weighted_pct],
             on=self.group_col,
         )
-    
+
         if max_nace_level:
             table_data = self._filter_max_nace_level(
                 table_data,
@@ -669,7 +652,7 @@ class DataManager:
                 weighted_pct,
                 max_nace_level,
             )
-    
+
         if group_filter:
             table_data, weighted_pct = self._apply_group_column_filter(
                 table_data,
@@ -677,18 +660,12 @@ class DataManager:
                 group_filter,
                 includes_parent_aggregate,
             )
-    
+
         return self._build_return_data(
             table_data=table_data,
-            figure_data=(weighted_pct, 'weighted_value'),
+            figure_data=(weighted_pct, "weighted_value"),
             sparkline_data=sparkline_data,
-            header_1 = [
-                "",
-                "Vekt %",
-                "Indeks",
-                "% Endring",
-                "% Endring vektet"
-            ],
+            header_1=["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"],
             header_2=[
                 "",
                 header,
@@ -697,6 +674,7 @@ class DataManager:
                 header_i_pct,
             ],
         )
+
     def get_3_mth_change(
         self,
         source: DataSource,
@@ -725,17 +703,15 @@ class DataManager:
         skip = self._prep_skip(period)
         header, weight = self.weight_source.n_mean_rolling(3, skip=skip)
 
-        #This is used to get the weigth right when the weight the previous 3 months and the 3 months before that is not the same 
+        # This is used to get the weigth right when the weight the previous 3 months and the 3 months before that is not the same
         _, comparison_weight = self.weight_source.n_mean_rolling(3, skip=3)
-        
+
         header_i, index = source.n_mean_rolling(3, skip=skip)
 
-        header_i_pct, index_pct = (
-            source.n_month_rolling_percent_compare(3, skip, skip + 3)
+        header_i_pct, index_pct = source.n_month_rolling_percent_compare(
+            3, skip, skip + 3
         )
-        index_pct = index_pct.with_columns(
-            value=pl.col("value").round(1)
-        )
+        index_pct = index_pct.with_columns(value=pl.col("value").round(1))
         weighted_pct = (
             index_pct.join(comparison_weight, on=self.group_col)
             .with_columns(
@@ -743,15 +719,13 @@ class DataManager:
             )
             .drop("weight", "value")
         )
-        sparkline_data = [
-            source.n_mean_rolling(3, i * 3)[1] for i in range(4)
-        ]
+        sparkline_data = [source.n_mean_rolling(3, i * 3)[1] for i in range(4)]
         sparkline_data.reverse()
 
         table_data = multi_join(
             [weight, index, index_pct, weighted_pct], on=self.group_col
         )
-        
+
         if max_nace_level:
             table_data = self._filter_max_nace_level(
                 table_data,
@@ -770,15 +744,9 @@ class DataManager:
             )
         return self._build_return_data(
             table_data=table_data,
-            figure_data=(weighted_pct, 'weighted_value'),
+            figure_data=(weighted_pct, "weighted_value"),
             sparkline_data=sparkline_data,
-            header_1 = [
-                "",
-                "Vekt %",
-                "Indeks",
-                "% Endring",
-                "% Endring vektet"
-            ],
+            header_1=["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"],
             header_2=[
                 "",
                 header,
@@ -787,7 +755,7 @@ class DataManager:
                 header_i_pct,
             ],
         )
-        
+
     def get_12_mth_change(
         self,
         source: DataSource,
@@ -817,12 +785,8 @@ class DataManager:
         header, weight = self.weight_source.n_month(1, skip=skip)
         _, comparison_weight = self.weight_source.n_mean_rolling(1, skip=12)
         header_i, index = source.n_month(1, skip=skip)
-        header_i_pct, index_pct = source.n_percent_rolling(
-            13, skip=skip
-        )
-        index_pct = index_pct.with_columns(
-            value=pl.col("value").round(1)
-        )
+        header_i_pct, index_pct = source.n_percent_rolling(13, skip=skip)
+        index_pct = index_pct.with_columns(value=pl.col("value").round(1))
         weighted_pct = (
             index_pct.join(comparison_weight, on=self.group_col)
             .with_columns(
@@ -851,15 +815,9 @@ class DataManager:
             )
         return self._build_return_data(
             table_data=table_data,
-            figure_data=(weighted_pct, 'weighted_value'),
+            figure_data=(weighted_pct, "weighted_value"),
             sparkline_data=None,
-            header_1 = [
-                "",
-                "Vekt %",
-                "Indeks",
-                "% Endring",
-                "% Endring vektet"
-            ],
+            header_1=["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"],
             header_2=[
                 "",
                 header,
@@ -868,7 +826,7 @@ class DataManager:
                 header_i_pct,
             ],
         )
-        
+
     def get_table_1(self, source: DataSource, period: str | None = None) -> ReturnData:
         """Genererer samleskjema med månedlige nivåer, endringer og vektet bidrag.
 
@@ -900,9 +858,7 @@ class DataManager:
 
         header, weight = self.weight_source.n_month(1, skip=skip)
         _, index_pct = source.n_month_percent(1, skip=skip)
-        index_pct = index_pct.with_columns(
-            value=pl.col("value").round(1)
-        )
+        index_pct = index_pct.with_columns(value=pl.col("value").round(1))
         weighted_pct = (
             index_pct.join(weight, on=self.group_col)
             .with_columns(
@@ -912,23 +868,24 @@ class DataManager:
         )
 
         return self._build_return_data(
-                    table_data=multi_join(df_data, on=self.group_col),
-                    figure_data=(weighted_pct, 'weighted_value'),
-                    sparkline_data=None,
-                    header_1=[
-                        "",
-                        "",
-                        "",
-                        "",
-                        "% Endring",
-                        "% Endring",
-                        "% Endring",
-                        "% Endring",
-                        "% Endring",
-                    ],
-                    header_2=["", *headers],
-                )
-        
+            table_data=multi_join(df_data, on=self.group_col),
+            figure_data=(weighted_pct, "weighted_value"),
+            sparkline_data=None,
+            header_1=[
+                "",
+                "",
+                "",
+                "",
+                "% Endring",
+                "% Endring",
+                "% Endring",
+                "% Endring",
+                "% Endring",
+            ],
+            header_2=["", *headers],
+        )
+
+
 @cache
 def get_data_manager(path: str) -> DataManager:
     """Laster inn et Parquet-datasett og returnerer en DataManager-instans.
