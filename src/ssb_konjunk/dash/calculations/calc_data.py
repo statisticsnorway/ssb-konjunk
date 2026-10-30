@@ -72,7 +72,7 @@ class DataManager:
         value_columns: list[str] | None = None,
         categorical_columns: list[str] | None = None,
     ) -> None:
-
+        """Creates the neccecary obectd belonging to the class"""
         self.data = data
         self.period_col = period_column
         self.group_col = group_column
@@ -443,7 +443,7 @@ class DataManager:
 
         Args:
             table_data (pl.DataFrame) : The dataframe you want to display.
-            figure_data (tuple[pl.DataFrame, str]) | None: a touple with the dataframe you want to graph, and the column name of the datacolumn.
+            figure_data (tuple[pl.DataFrame, str] | None): a touple with the dataframe you want to graph, and the column name of the datacolumn.
             sparkline_data (list[pl.DataFrame] | None): a small line diagram that shows some timeseries data of a given column in every data row.
             header_1 (list[str]): the top row of column names in the data.
             header_2 (list[str]): the second row of column names in the data.
@@ -561,7 +561,23 @@ class DataManager:
         value_column: str,
         filters: dict[str, str] | None = None,
     ) -> DataSource:
+        """Creates a Datasource object from a filtered DataManager object.
 
+        Example:
+            source = data_manager.get_source(
+                        value_column="volumindeks",
+                        filters={
+                            "sesongjustering": "Y",
+                        },
+                    )
+        args:
+            value_column: the calue you want to create the series with
+            filters: the different values in the category columns you want the series to be built from.
+
+        returns:
+            A Datasource object made from your filtered series.
+        
+        """
         if value_column not in self.value_columns:
             raise ValueError(f"Unknown value column: {value_column}")
 
