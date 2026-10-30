@@ -574,9 +574,9 @@ class DataManager:
             value_column: the calue you want to create the series with
             filters: the different values in the category columns you want the series to be built from.
 
-        returns:
+        Returns:
             A Datasource object made from your filtered series.
-        
+
         """
         if value_column not in self.value_columns:
             raise ValueError(f"Unknown value column: {value_column}")
