@@ -427,7 +427,7 @@ class DataManager:
     def _build_return_data(
         self,
         table_data: pl.DataFrame,
-        weighted_data: pl.DataFrame,
+        figure_data: tuple[pl.DataFrame, str] | None,
         sparkline_data: list[pl.DataFrame] | None,
         header_1: list[str],
         header_2: list[str],
@@ -442,12 +442,15 @@ class DataManager:
             )
             .reset_index(drop=True)
         )
-    
-        figure_data = (
-            self._prep_df(weighted_data, self.group_col)
-            .set_index(self.group_col)["weighted_value"]
-            .iloc[::-1]
-        )
+        
+        figure_data_df = None
+        
+        if figure_data:
+            figure_data_df = (
+                self._prep_df(figure_data[0], self.group_col)
+                .set_index(self.group_col)[figure_data[1]]
+                .iloc[::-1]
+            )
     
         sparkline_df = None
     
@@ -465,7 +468,7 @@ class DataManager:
             header_1=header_1,
             header_2=header_2,
             res_data=result_df,
-            figure_data=figure_data,
+            figure_data=figure_data_df,
             sparkline_data=sparkline_df,
             indirect=None,
             groupby_col=self.group_col,
@@ -611,7 +614,7 @@ class DataManager:
     
         return self._build_return_data(
             table_data=table_data,
-            weighted_data=weighted_pct,
+            figure_data=(weighted_pct, 'weighted_value'),
             sparkline_data=sparkline_data,
             header_1 = [
                 "",
@@ -702,7 +705,7 @@ class DataManager:
             )
         return self._build_return_data(
             table_data=table_data,
-            weighted_data=weighted_pct,
+            figure_data=(weighted_pct, 'weighted_value'),
             sparkline_data=sparkline_data,
             header_1 = [
                 "",
@@ -782,7 +785,7 @@ class DataManager:
             )
         return self._build_return_data(
             table_data=table_data,
-            weighted_data=weighted_pct,
+            figure_data=(weighted_pct, 'weighted_value'),
             sparkline_data=None,
             header_1 = [
                 "",
@@ -843,7 +846,7 @@ class DataManager:
 
         return self._build_return_data(
                     table_data=multi_join(df_data, on=self.group_col),
-                    weighted_data=weighted_pct,
+                    figure_data=(weighted_pct, 'weighted_value'),
                     sparkline_data=None,
                     header_1=[
                         "",
