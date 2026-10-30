@@ -91,8 +91,8 @@ class DataManager:
             internal_col="weight",
         )
 
-        self.value_columns = value_columns
-        self.categorical_columns = categorical_columns
+        self.value_columns: list[str] = value_columns or []
+        self.categorical_columns: list[str] = categorical_columns or []
 
         self.id_columns = [
             self.period_col,
@@ -529,7 +529,7 @@ class DataManager:
     def _apply_group_column_filter(
         self,
         table_data: pl.DataFrame,
-        weighted_data: pl.DataFrame | None,
+        weighted_data: pl.DataFrame,
         group_filter: list[str],
         normalize_weight: bool = True,
         includes_parent_aggregate: bool = True,
@@ -903,17 +903,19 @@ class DataManager:
 
 
 @cache
-def get_data_manager(path: str) -> DataManager:
+def get_data_manager(data_path: str, weight_path: str) -> DataManager:
     """Laster inn et Parquet-datasett og returnerer en DataManager-instans.
 
     Leser en Parquet-fil fra gitt filbane og oppretter en `DataManager` med de leste dataene.
 
     Args:
-        path (str): Filbane til Parquet-filen som skal leses.
+        data_path (str): Filbane til Parquet-filen med data som skal leses.
+        weight_path (str): Filbane til Parquet-filen med vekt data som skal leses.
 
     Returns:
         DataManager: En instans som inneholder og håndterer de leste dataene.
     """
-    data = pd.read_parquet(path)
-    data_manager = DataManager(data)
+    data = pd.read_parquet(data_path)
+    weight_data = pd.read_parquet(weight_path)
+    data_manager = DataManager(data, weight_data)
     return data_manager
