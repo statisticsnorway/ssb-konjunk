@@ -72,7 +72,7 @@ class DataManager:
         value_columns: list[str] | None = None,
         categorical_columns: list[str] | None = None,
     ) -> None:
-        """Creates the neccecary obectd belonging to the class"""
+        """Creates the neccecary obectd belonging to the class."""
         self.data = data
         self.period_col = period_column
         self.group_col = group_column
