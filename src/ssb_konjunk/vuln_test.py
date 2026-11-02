@@ -74,10 +74,11 @@ def check_vulnerable_packages() -> dict[str, list] | None:
             f"aiai jeg fikk ikke til dette, enda jeg prøvde i {timeout_limit} sekunder. gir opp livet ass",
             stacklevel=2,
         )
-        return None
+        return
     except Exception as e:
         print("funka ikke, idk why")
         print(e)
-        return None
+        return
 
     _report(data)
+    return
