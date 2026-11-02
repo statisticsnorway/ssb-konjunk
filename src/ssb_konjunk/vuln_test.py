@@ -40,6 +40,7 @@ def _report(data: dict[str, list]) -> None:
 
     if not fixable or unfixable:
         print("Alle pakker ok!👍")
+    return None
 
 
 def check_vulnerable_packages() -> dict[str, list] | None:
