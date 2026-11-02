@@ -1,8 +1,8 @@
+import importlib.util
 import json
 import subprocess
 import sys
 import warnings
-import importlib.util
 
 
 class VulnerablePackagesError(RuntimeError):
