@@ -1,4 +1,7 @@
-import json, subprocess, sys, warnings
+import json
+import subprocess
+import sys
+import warnings
 
 
 class VulnerablePackagesError(RuntimeError):
