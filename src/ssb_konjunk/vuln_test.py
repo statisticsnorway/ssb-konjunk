@@ -9,7 +9,7 @@ class VulnerablePackagesError(RuntimeError):
     """raised når det fins pakker med svakheter *og* det fins en fiks for dem."""
 
 
-def _report(data: dict[str, list]):
+def _report(data: dict[str, list]) -> None:
     """Lag rapport på eventuelle svakheter."""
     fixable, unfixable = [], []
     for dep in data.get("dependencies", []):
