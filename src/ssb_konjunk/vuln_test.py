@@ -50,7 +50,7 @@ def check_vulnerable_packages() -> dict[str, list] | None:
         raise ImportError(  # bruker du denne funksjonen som pakke skal den jo alltid være installert, men i tilfelle noen eks. bare kopierer dette til eget repo elns
             "pip-audit trengs for å sjekke svakheter."  # subprocess gir nemlig ikke feilmelding hvis pip-audit ikke er installert
             "Kjør `poetry add pip-audit`, restart kernel og prøv igjen."
-        ) from e
+        )
     try:
         r = subprocess.run(
             [
