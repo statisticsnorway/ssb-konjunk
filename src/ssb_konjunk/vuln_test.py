@@ -42,8 +42,10 @@ def check_vulnerable_packages():
     """Funksjon for å sjekke om python-miljøet ditt har pakker som har kjente svakheter."""
     timeout_limit = 60
     try:
-        import pip_audit  # (importerer bare for å force installering. subprocess gir nemlig ikke feilmelding). 
-    except ImportError as e: # bruker du denne funksjonen som pakke skal den jo alltid være installert, men i tilfelle noen eks. bare kopierer dette til eget repo elns
+        import pip_audit  # (importerer bare for å force installering. subprocess gir nemlig ikke feilmelding).
+    except (
+        ImportError
+    ) as e:  # bruker du denne funksjonen som pakke skal den jo alltid være installert, men i tilfelle noen eks. bare kopierer dette til eget repo elns
         raise ImportError(
             "pip-audit trengs for å sjekke svakheter."
             "Kjør `poetry add pip-audit`, restart kernel og prøv igjen."
