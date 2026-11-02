@@ -2,10 +2,11 @@ import json
 import subprocess
 import sys
 import warnings
+import importlib.util
 
 
 class VulnerablePackagesError(RuntimeError):
-    """raised når det fins pakker med svakheter *og* det fins en fiks for dem"""
+    """raised når det fins pakker med svakheter *og* det fins en fiks for dem."""
 
 
 def _report(data: dict[str, list]):
@@ -41,16 +42,13 @@ def _report(data: dict[str, list]):
         print("Alle pakker ok!👍")
 
 
-def check_vulnerable_packages():
+def check_vulnerable_packages() -> dict[str, list] | None:
     """Funksjon for å sjekke om python-miljøet ditt har pakker som har kjente svakheter."""
     timeout_limit = 60
-    try:
-        import pip_audit  # (importerer bare for å force installering. subprocess gir nemlig ikke feilmelding).
-    except (
-        ImportError
-    ) as e:  # bruker du denne funksjonen som pakke skal den jo alltid være installert, men i tilfelle noen eks. bare kopierer dette til eget repo elns
-        raise ImportError(
-            "pip-audit trengs for å sjekke svakheter."
+    spec = importlib.util.find_spec("pip_audit")
+    if spec is None:
+        raise ImportError(  # bruker du denne funksjonen som pakke skal den jo alltid være installert, men i tilfelle noen eks. bare kopierer dette til eget repo elns
+            "pip-audit trengs for å sjekke svakheter."  # subprocess gir nemlig ikke feilmelding hvis pip-audit ikke er installert
             "Kjør `poetry add pip-audit`, restart kernel og prøv igjen."
         ) from e
     try:
