@@ -38,7 +38,7 @@ def _report(data: dict[str, list]) -> None:
             + "\nÅpne terminal, skriv poetry update [pakkenavn]"
         )
 
-    if not fixable or unfixable:
+    if not fixable and not unfixable:
         print("Alle pakker ok!👍")
     return None
 
