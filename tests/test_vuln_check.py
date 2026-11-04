@@ -1,10 +1,12 @@
-import ssb_konjunk.vuln_check as mod
-import pytest
 import subprocess  # for å "late som" subprocess gir TimeoutExpired error.
+
+import pytest
+
+import ssb_konjunk.vuln_check as mod
 
 
 def lag_data(*vulns_per_pakke):
-    """lager et liksom-pip-audit-resultat. Hver vuln er (id, fix_versions)."""
+    """Lager et liksom-pip-audit-resultat. Hver vuln er (id, fix_versions)."""
     return {
         "dependencies": [
             {
