@@ -66,7 +66,7 @@ class DataManager:
     def __init__(
         self,
         data: pd.DataFrame,
-        weight_data: pd.DataFrame,
+        weight_data: pd.DataFrame | None = None,
         period_column: str = "periode",
         group_column: str = "nar",
         value_columns: list[str] | None = None,
@@ -77,19 +77,22 @@ class DataManager:
         self.period_col = period_column
         self.group_col = group_column
 
-        self.weight_source = DataSource(
-            pl.from_pandas(weight_data).with_columns(
-                pl.col(self.period_col).str.strptime(
-                    pl.Date,
-                    "%Y-%m",
-                    strict=False,
-                )
-            ),
-            self.period_col,
-            "vekt",
-            self.group_col,
-            internal_col="weight",
-        )
+        self.weight_source = None 
+        
+        if weight_data is not None:
+            self.weight_source = DataSource(
+                pl.from_pandas(weight_data).with_columns(
+                    pl.col(self.period_col).str.strptime(
+                        pl.Date,
+                        "%Y-%m",
+                        strict=False,
+                    )
+                ),
+                self.period_col,
+                "vekt",
+                self.group_col,
+                internal_col="weight",
+            )
 
         self.value_columns: list[str] = value_columns or []
         self.categorical_columns: list[str] = categorical_columns or []
@@ -126,8 +129,9 @@ class DataManager:
         """
         first_item_len = len(x.split("-")[0]) - 1
         return ("  " * first_item_len) + x
-
-    def _load_classification(self) -> pd.DataFrame:
+        
+    @staticmethod
+    def _load_classification() -> pd.DataFrame:
         nus = KlassClassification(
             classification_id="6",
             language="nb",
@@ -350,7 +354,8 @@ class DataManager:
             int: Antall måneder mellom siste dato og ønsket periode.
         """
         skip = 0
-        latest = self.weight_source.latest_date()
+        latest = pd.to_datetime(self.data[self.period_col].iloc[-1])
+        latest = df
         if (period is not None) and (latest is not None) and (period != "None"):
             skip = monthdelta(latest, parse_period(period))
         return skip
@@ -559,20 +564,20 @@ class DataManager:
     def get_source(
         self,
         value_column: str,
-        filters: dict[str, str] | None = None,
+        categorical_columns_filter: dict[str, str] | None = None,
     ) -> DataSource:
         """Creates a Datasource object from a filtered DataManager object.
 
         Example:
             source = data_manager.get_source(
                         value_column="volumindeks",
-                        filters={
+                        categorical_columns_filter={
                             "sesongjustering": "Y",
                         },
                     )
         args:
             value_column: the calue you want to create the series with
-            filters: the different values in the category columns you want the series to be built from.
+            categorical_columns_filter: the different values in the category columns you want the series to be built from.
 
         Returns:
             A Datasource object made from your filtered series.
@@ -583,8 +588,8 @@ class DataManager:
 
         subset = self.data.copy()
 
-        if filters:
-            for column, value in filters.items():
+        if categorical_columns_filter:
+            for column, value in categorical_columns_filter.items():
 
                 if column not in self.categorical_columns:
                     raise ValueError(f"Unknown categorical column: {column}")
@@ -658,7 +663,6 @@ class DataManager:
             [weight, index, index_pct, weighted_pct],
             on=self.group_col,
         )
-
         if max_nace_level:
             table_data = self._filter_max_nace_level(
                 table_data,
@@ -905,6 +909,8 @@ class DataManager:
 @cache
 def get_data_manager(data_path: str, weight_path: str) -> DataManager:
     """Laster inn et Parquet-datasett og returnerer en DataManager-instans.
+
+    Denne burde erstattes og tilpasses hver enkelt statestikk, dette er mer en bear bones versjon av funskjonen.
 
     Leser en Parquet-fil fra gitt filbane og oppretter en `DataManager` med de leste dataene.
 

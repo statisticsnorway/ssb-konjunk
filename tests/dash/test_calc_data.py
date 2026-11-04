@@ -4,6 +4,7 @@ import polars as pl
 import pytest
 
 from ssb_konjunk.dash.calculations.calc_data import DataManager
+from ssb_konjunk.dash.calculations.helper_functions import DataSource
 from ssb_konjunk.dash.calculations.period_utils import Period
 
 
@@ -24,6 +25,15 @@ def test_pad_single():
     assert DataManager.pad_single("64") == "  64"
     assert DataManager.pad_single("49.1") == "      49.1"
 
+def test_load_classification():
+    df = DataManager._load_classification()
+    assert not df.empty
+    assert df["code"].notna().all()
+    assert df["name"].notna().all()
+    # alt under her er sn07 spesefikt, har noen harde tester på dette som må endre seg når vi skal begynne å bruke sn25
+    assert len(df) == 1811 
+    top_levels = df[df["parentCode"].isna()]
+    assert len(top_levels) == 21  # A-U
 
 def test_calc_indirect(data, test_df_data):
     assert data.calc_indirect(test_df_data, data.value_columns[0]) == pytest.approx(
@@ -33,7 +43,6 @@ def test_calc_indirect(data, test_df_data):
 
 def test_to_percent(data):
     np.random.seed(0)
-    print(data.weight_source.data)
     weight = data.weight_source.data.filter(pl.col("nar") == "J")["vekt"]
     chg_rate = pl.Series("chg_rate", np.random.uniform(-2, 2, 38))
 
@@ -157,81 +166,46 @@ def test_create_period_range(data):
     period_range_skip = data.create_period_range(None, 2, 3)
     assert period_range == [Period("2024-12"), Period("2024-11")]
     assert period_range_skip == [Period("2024-12"), Period("2024-09")]
-
-
-def test_get_sesonal_adjusted_3_mth_change(data, test_df_datasource):
-    seasonal_3_mnt_change_1 = data.get_3_mth_change(
-        test_df_datasource,
-        group_filter=["H", "J"],
-        includes_parent_aggregate=False,
+    
+def test_get_source(data):
+    source_1 = data.get_source(
+        value_column="volumindeks",
+        categorical_columns_filter={
+            "sesongjustering": "Y",
+        },
     )
-    seasonal_3_mnt_change_2 = data.get_3_mth_change(
-        test_df_datasource,
-        group_filter=["H", "49.1", "49.2"],
-        includes_parent_aggregate=False,
-    )
-    seasonal_3_mnt_change_3 = data.get_3_mth_change(
-        test_df_datasource,
-        max_nace_level=1,
-    )
+    
+    assert isinstance(source_1, DataSource)
+    
+    assert source_1.data["sesongjustering"].n_unique() == 1
+    assert source_1.data["sesongjustering"].item(0) == "Y"
+    assert source_1.data["volumindeks"].dtype == pl.Float64
+    assert source_1.data["periode"].dtype == pl.Date
 
-    expected_header_1 = ["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"]
-    expected_header_2 = [
-        "",
-        "Oct 2024 - Dec 2024",
-        "Oct 2024 - Dec 2024",
-        "Jul 2024 - Sep 2024 / Oct 2024 - Dec 2024",
-        "Jul 2024 - Sep 2024 / Oct 2024 - Dec 2024",
-    ]
-    result = seasonal_3_mnt_change_3.res_data.to_dict(orient="list")
-    print(result)
-    expected_res_data_1 = pd.DataFrame(
-        {
-            "nar": [
-                "  H - Transport og lagring",
-                "  J - Informasjon og kommunikasjon",
-            ],
-            "weight": [34.6, 36.9],
-            "value": [115.7, 97.1],
-            "value1": [16.5, -8.5],
-            "weighted_value": [4.0, -2.8],
-        }
+    source_2 = data.get_source(
+        value_column="volumindeks",
+        categorical_columns_filter = None,
     )
+    assert source_2.data["sesongjustering"].n_unique() == 4
+    assert source_2.data.height == len(data.data)
+    
+    with pytest.raises(ValueError, match="Unknown categorical column"):
+        data.get_source(
+            value_column="volumindeks",
+            categorical_columns_filter={
+                "kategori som ikke finnes": "x",
+            },
+        )
 
-    expected_res_data_2 = pd.DataFrame(
-        {
-            "nar": [
-                "  H - Transport og lagring",
-                "        49.1 - Passasjertransport med je",
-                "        49.2 - Godstransport med jernban",
-            ],
-            "weight": [34.6, 28.4, 34.6],
-            "value": [115.7, 96.9, 109.5],
-            "value1": [16.5, 9.6, 19.3],
-            "weighted_value": [4.0, 4.1, 6.1],
-        }
-    )
-    expected_res_data_3 = pd.DataFrame(
-        {
-            "nar": [
-                "  H - Transport og lagring",
-                "  J - Informasjon og kommunikasjon",
-            ],
-            "weight": [34.6, 36.9],
-            "value": [115.7, 97.1],
-            "value1": [16.5, -8.5],
-            "weighted_value": [4.0, -2.8],
-        }
-    )
-
-    assert seasonal_3_mnt_change_1.header_1 == expected_header_1
-    assert seasonal_3_mnt_change_1.header_2 == expected_header_2
-    pd.testing.assert_frame_equal(seasonal_3_mnt_change_1.res_data, expected_res_data_1)
-    pd.testing.assert_frame_equal(seasonal_3_mnt_change_2.res_data, expected_res_data_2)
-    pd.testing.assert_frame_equal(seasonal_3_mnt_change_3.res_data, expected_res_data_3)
-
-
-def test_get_sesonal_adjusted_mth_change(data, test_df_datasource):
+    with pytest.raises(ValueError, match="Unknown value column"):
+        data.get_source(
+            value_column="verdi som ikke finnes",
+            categorical_columns_filter={
+                "sesongjustering": "Y",
+            },
+        )
+        
+def test_get_mth_change(data, test_df_datasource):
     seasonal_mnt_change_1 = data.get_mth_change(
         test_df_datasource,
         group_filter=["H", "J"],
@@ -302,7 +276,78 @@ def test_get_sesonal_adjusted_mth_change(data, test_df_datasource):
     pd.testing.assert_frame_equal(seasonal_mnt_change_3.res_data, expected_res_data_3)
 
 
-def test_get_sesonal_adjusted_12_mth_change(data, test_df_datasource):
+def test_get_3_mth_change(data, test_df_datasource):
+    seasonal_3_mnt_change_1 = data.get_3_mth_change(
+        test_df_datasource,
+        group_filter=["H", "J"],
+        includes_parent_aggregate=False,
+    )
+    seasonal_3_mnt_change_2 = data.get_3_mth_change(
+        test_df_datasource,
+        group_filter=["H", "49.1", "49.2"],
+        includes_parent_aggregate=False,
+    )
+    seasonal_3_mnt_change_3 = data.get_3_mth_change(
+        test_df_datasource,
+        max_nace_level=1,
+    )
+
+    expected_header_1 = ["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"]
+    expected_header_2 = [
+        "",
+        "Oct 2024 - Dec 2024",
+        "Oct 2024 - Dec 2024",
+        "Jul 2024 - Sep 2024 / Oct 2024 - Dec 2024",
+        "Jul 2024 - Sep 2024 / Oct 2024 - Dec 2024",
+    ]
+    result = seasonal_3_mnt_change_3.res_data.to_dict(orient="list")
+    expected_res_data_1 = pd.DataFrame(
+        {
+            "nar": [
+                "  H - Transport og lagring",
+                "  J - Informasjon og kommunikasjon",
+            ],
+            "weight": [34.6, 36.9],
+            "value": [115.7, 97.1],
+            "value1": [16.5, -8.5],
+            "weighted_value": [4.0, -2.8],
+        }
+    )
+
+    expected_res_data_2 = pd.DataFrame(
+        {
+            "nar": [
+                "  H - Transport og lagring",
+                "        49.1 - Passasjertransport med je",
+                "        49.2 - Godstransport med jernban",
+            ],
+            "weight": [34.6, 28.4, 34.6],
+            "value": [115.7, 96.9, 109.5],
+            "value1": [16.5, 9.6, 19.3],
+            "weighted_value": [4.0, 4.1, 6.1],
+        }
+    )
+    expected_res_data_3 = pd.DataFrame(
+        {
+            "nar": [
+                "  H - Transport og lagring",
+                "  J - Informasjon og kommunikasjon",
+            ],
+            "weight": [34.6, 36.9],
+            "value": [115.7, 97.1],
+            "value1": [16.5, -8.5],
+            "weighted_value": [4.0, -2.8],
+        }
+    )
+
+    assert seasonal_3_mnt_change_1.header_1 == expected_header_1
+    assert seasonal_3_mnt_change_1.header_2 == expected_header_2
+    pd.testing.assert_frame_equal(seasonal_3_mnt_change_1.res_data, expected_res_data_1)
+    pd.testing.assert_frame_equal(seasonal_3_mnt_change_2.res_data, expected_res_data_2)
+    pd.testing.assert_frame_equal(seasonal_3_mnt_change_3.res_data, expected_res_data_3)
+
+
+def test_get_12_mth_change(data, test_df_datasource):
     seasonal_12_mnt_change_1 = data.get_12_mth_change(
         test_df_datasource,
         group_filter=["H", "J"],

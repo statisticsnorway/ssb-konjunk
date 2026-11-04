@@ -92,7 +92,6 @@ class DataSource:
             eller None dersom verdien ikke er en gyldig datetime.
         """
         latest = self.data.get_column(self._date).last()
-        print(latest)
         if isinstance(latest, datetime):
             return latest
         elif isinstance(latest, date):  # <- use date directly

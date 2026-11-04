@@ -71,7 +71,7 @@ def data(test_df_data, test_df_vekt):
 def test_df_datasource(data):
     return data.get_source(
         value_column="volumindeks",
-        filters={
+        categorical_columns_filter={
             "sesongjustering": "Y",
         },
     )
