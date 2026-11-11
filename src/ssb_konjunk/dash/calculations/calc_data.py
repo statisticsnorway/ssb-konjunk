@@ -77,8 +77,8 @@ class DataManager:
         self.period_col = period_column
         self.group_col = group_column
 
-        self.weight_source = None 
-        
+        self.weight_source = None
+
         if weight_data is not None:
             self.weight_source = DataSource(
                 pl.from_pandas(weight_data).with_columns(
@@ -129,7 +129,7 @@ class DataManager:
         """
         first_item_len = len(x.split("-")[0]) - 1
         return ("  " * first_item_len) + x
-        
+
     @staticmethod
     def _load_classification() -> pd.DataFrame:
         nus = KlassClassification(
