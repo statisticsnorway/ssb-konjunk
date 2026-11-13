@@ -4297,7 +4297,7 @@ version = "2.9.2"
 description = "A modern CSS selector implementation for Beautiful Soup."
 optional = false
 python-versions = ">=3.10"
-groups = ["main", "dev", "doc"]
+groups = ["dev", "doc"]
 files = [
     {file = "soupsieve-2.9.2-py3-none-any.whl", hash = "sha256:8089a26fd974ca7a1f30276d3d8492ab266ab15af581642dfe8aa162e0c1c823"},
     {file = "soupsieve-2.9.2.tar.gz", hash = "sha256:4a55d8cf158a9c2e587fa4922f1bbb91d68ac829e2d6f25403a85747c71daf74"},
@@ -5308,4 +5308,4 @@ dash = ["dash", "plotly", "polars", "ssb-dash-components"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "0b0410380fd9bf91257a483ac5ce14dca7494adaeddecdbad140de96551c306f"
+content-hash = "4f75851e3997f4a5ec9270578303436508662c3ae1f808e019833ac923891929"
