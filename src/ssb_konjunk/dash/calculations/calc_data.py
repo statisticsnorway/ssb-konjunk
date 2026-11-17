@@ -639,7 +639,8 @@ class DataManager:
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
-
+        if self.weight_source is None:
+            raise ValueError("Weight data required")
         header, weight = self.weight_source.n_month(1, skip=skip)
         header_i, index = source.n_month(1, skip=skip)
         header_i_pct, index_pct = source.n_month_percent(
@@ -720,6 +721,8 @@ class DataManager:
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
+        if self.weight_source is None:
+            raise ValueError("Weight data required")
         header, weight = self.weight_source.n_mean_rolling(3, skip=skip)
 
         # This is used to get the weigth right when the weight the previous 3 months and the 3 months before that is not the same
@@ -801,6 +804,8 @@ class DataManager:
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
+        if self.weight_source is None:
+            raise ValueError("Weight data required")
         header, weight = self.weight_source.n_month(1, skip=skip)
         _, comparison_weight = self.weight_source.n_mean_rolling(1, skip=12)
         header_i, index = source.n_month(1, skip=skip)
