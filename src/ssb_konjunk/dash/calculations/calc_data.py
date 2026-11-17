@@ -879,7 +879,7 @@ class DataManager:
             header, data = source.n_month_percent(1, i + skip)
             df_data.append(data)
             headers.append(header)
-            
+
         if self.weight_source is None:
             raise ValueError("Weight data required")
         header, weight = self.weight_source.n_month(1, skip=skip)
