@@ -3,6 +3,9 @@ import tempfile
 from functools import cache
 from pathlib import Path
 
+import ssb_konjunk
+
+
 @cache
 def get_assets_folder() -> str:
     """Lager en temp mappe som har assets fra pakken og assets lokalt.

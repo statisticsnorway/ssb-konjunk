@@ -25,15 +25,17 @@ def test_pad_single():
     assert DataManager.pad_single("64") == "  64"
     assert DataManager.pad_single("49.1") == "      49.1"
 
+
 def test_load_classification():
     df = DataManager._load_classification()
     assert not df.empty
     assert df["code"].notna().all()
     assert df["name"].notna().all()
     # alt under her er sn07 spesefikt, har noen harde tester på dette som må endre seg når vi skal begynne å bruke sn25
-    assert len(df) == 1811 
+    assert len(df) == 1811
     top_levels = df[df["parentCode"].isna()]
     assert len(top_levels) == 21  # A-U
+
 
 def test_calc_indirect(data, test_df_data):
     assert data.calc_indirect(test_df_data, data.value_columns[0]) == pytest.approx(
@@ -166,7 +168,8 @@ def test_create_period_range(data):
     period_range_skip = data.create_period_range(None, 2, 3)
     assert period_range == [Period("2024-12"), Period("2024-11")]
     assert period_range_skip == [Period("2024-12"), Period("2024-09")]
-    
+
+
 def test_get_source(data):
     source_1 = data.get_source(
         value_column="volumindeks",
@@ -174,9 +177,9 @@ def test_get_source(data):
             "sesongjustering": "Y",
         },
     )
-    
+
     assert isinstance(source_1, DataSource)
-    
+
     assert source_1.data["sesongjustering"].n_unique() == 1
     assert source_1.data["sesongjustering"].item(0) == "Y"
     assert source_1.data["volumindeks"].dtype == pl.Float64
@@ -184,11 +187,11 @@ def test_get_source(data):
 
     source_2 = data.get_source(
         value_column="volumindeks",
-        categorical_columns_filter = None,
+        categorical_columns_filter=None,
     )
     assert source_2.data["sesongjustering"].n_unique() == 4
     assert source_2.data.height == len(data.data)
-    
+
     with pytest.raises(ValueError, match="Unknown categorical column"):
         data.get_source(
             value_column="volumindeks",
@@ -204,7 +207,8 @@ def test_get_source(data):
                 "sesongjustering": "Y",
             },
         )
-        
+
+
 def test_get_mth_change(data, test_df_datasource):
     seasonal_mnt_change_1 = data.get_mth_change(
         test_df_datasource,
@@ -300,7 +304,7 @@ def test_get_3_mth_change(data, test_df_datasource):
         "Jul 2024 - Sep 2024 / Oct 2024 - Dec 2024",
         "Jul 2024 - Sep 2024 / Oct 2024 - Dec 2024",
     ]
-    result = seasonal_3_mnt_change_3.res_data.to_dict(orient="list")
+    
     expected_res_data_1 = pd.DataFrame(
         {
             "nar": [
