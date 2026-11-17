@@ -304,7 +304,7 @@ def test_get_3_mth_change(data, test_df_datasource):
         "Jul 2024 - Sep 2024 / Oct 2024 - Dec 2024",
         "Jul 2024 - Sep 2024 / Oct 2024 - Dec 2024",
     ]
-    
+
     expected_res_data_1 = pd.DataFrame(
         {
             "nar": [
