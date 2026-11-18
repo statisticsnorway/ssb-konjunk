@@ -314,7 +314,7 @@ class DataManager:
             (0.01 * pl.col(col) * pl.col("weight")).round(2).alias("weighted")
         )
 
-        weighted_pct = table_data.select([self.group_col, "weighted"])
+        weighted_pct = table_data.select([self.group_col, "weighted_value"])
         return table_data, weighted_pct
 
     def get_all_periods(self) -> list[str]:
@@ -857,7 +857,7 @@ class DataManager:
             categorical_columns_filter
         ).n_month(1, skip=skip)
         
-        _, comparison_weight = self.self._get_weight_source(
+        _, comparison_weight = self._get_weight_source(
             categorical_columns_filter
         ).n_mean_rolling(1, skip=12)
         
@@ -939,7 +939,7 @@ class DataManager:
 
         header, weight = self._get_weight_source(
             categorical_columns_filter
-        .n_month(1, skip=skip)
+        ).n_month(1, skip=skip)
         _, index_pct = source.n_month_percent(1, skip=skip)
         index_pct = index_pct.with_columns(value=pl.col("value").round(1))
         weighted_pct = (

@@ -91,7 +91,7 @@ def test_normalize_weight(data):
             "weight": [24.23, 18.37, 42.60],
             "season": [87.518523, 97.889373, 103.823473],
             "season1": [-16.4, -3.3, 14.5],
-            "weighted": [-4.46, -1.24, 23.5],
+            "weighted_value": [-4.46, -1.24, 23.5],
         }
     )
 
@@ -100,7 +100,7 @@ def test_normalize_weight(data):
     )
 
     assert test_table_data["weight"].cast(pl.Float64).sum() == 200
-    assert test_weighted["weighted"].to_list() == test_table_data["weighted"].to_list()
+    assert test_weighted["weighted_value"].to_list() == test_table_data["weighted_value"].to_list()
 
     test_table_data_2 = pl.DataFrame(
         {
@@ -108,7 +108,7 @@ def test_normalize_weight(data):
             "weight": [24.236229, 18.370044],
             "season": [87.518523, 97.889373],
             "season1": [-16.4, -3.3],
-            "weighted": [-4.46, -1.24],
+            "weighted_value": [-4.46, -1.24],
         }
     )
 
@@ -123,7 +123,7 @@ def test_normalize_weight(data):
             "nar": ["K", "H"],
             "weight": [24.236229, 18.370044],
             "season": [87.518523, 97.889373],
-            "weighted": [-4.46, -1.24],
+            "weighted_value": [-4.46, -1.24],
         }
     )
 
