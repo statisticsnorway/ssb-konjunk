@@ -660,6 +660,7 @@ class DataManager:
         max_nace_level: int | None = None,
         group_filter: list[str] | None = None,
         includes_parent_aggregate: bool = True,
+        normalize_weight: bool = False,
         categorical_columns_filter: dict[str, str] | None = None,
     ) -> ReturnData:
         """Beregner månedlig sesongjustert endring og vektet bidrag for valgt periode.
@@ -721,6 +722,7 @@ class DataManager:
                 weighted_pct,
                 group_filter,
                 includes_parent_aggregate,
+                normalize_weight
             )
 
         return self._build_return_data(
@@ -744,6 +746,7 @@ class DataManager:
         max_nace_level: int | None = None,
         group_filter: list[str] | None = None,
         includes_parent_aggregate: bool = True,
+        normalize_weight: bool = False,
         categorical_columns_filter: dict[str, str] | None = None,
     ) -> ReturnData:
         """Henter sesongjusterte 3-måneders endringer og beregner vektede bidrag.
@@ -810,6 +813,7 @@ class DataManager:
                 weighted_pct,
                 group_filter,
                 includes_parent_aggregate,
+                normalize_weight
             )
         return self._build_return_data(
             table_data=table_data,
@@ -832,6 +836,7 @@ class DataManager:
         max_nace_level: int | None = None,
         group_filter: list[str] | None = None,
         includes_parent_aggregate: bool = True,
+        normalize_weight: bool = False,
         categorical_columns_filter: dict[str, str] | None = None,
     ) -> ReturnData:
         """Beregner 12-måneders kalenderjusterte endringer og tilhørende vektede bidrag.
@@ -889,6 +894,7 @@ class DataManager:
                 weighted_pct,
                 group_filter,
                 includes_parent_aggregate,
+                normalize_weight
             )
         return self._build_return_data(
             table_data=table_data,
