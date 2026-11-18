@@ -560,6 +560,45 @@ class DataManager:
 
         return table_data, weighted_data
 
+    def _get_weight_source(
+        self,
+        categorical_columns_filter: dict[str, str] | None = None,
+    ) -> DataSource:
+        """Return a weight source filtered to the same dimensions as the data source."""
+    
+        if self.weight_source is None:
+            raise ValueError("Weight data required")
+    
+        weight_data = self.weight_source.data
+    
+        if categorical_columns_filter:
+            for col, val in categorical_columns_filter.items():
+                if col in weight_data.columns:
+                    weight_data = weight_data.filter(pl.col(col) == val)
+    
+        group_keys = [self.group_col]
+        if self.period_col in weight_data.columns:
+            group_keys.insert(0, self.period_col)
+    
+        duplicates = (
+            weight_data.group_by(group_keys)
+            .len()
+            .filter(pl.col("len") > 1)
+        )
+    
+        if duplicates.height:
+            raise ValueError(
+                "Multiple weights found for the same period and group after applying filters"
+            )
+    
+        return DataSource(
+            weight_data,
+            self.period_col,
+            "vekt",
+            self.group_col,
+            internal_col="weight",
+        )
+
     def get_source(
         self,
         value_column: str,
@@ -621,6 +660,7 @@ class DataManager:
         max_nace_level: int | None = None,
         group_filter: list[str] | None = None,
         includes_parent_aggregate: bool = True,
+        categorical_columns_filter: dict[str, str] | None = None,
     ) -> ReturnData:
         """Beregner månedlig sesongjustert endring og vektet bidrag for valgt periode.
 
@@ -639,9 +679,11 @@ class DataManager:
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
-        if self.weight_source is None:
-            raise ValueError("Weight data required")
-        header, weight = self.weight_source.n_month(1, skip=skip)
+        
+        header, weight = self._get_weight_source(
+            categorical_columns_filter
+        ).n_month(1, skip=skip)
+        
         header_i, index = source.n_month(1, skip=skip)
         header_i_pct, index_pct = source.n_month_percent(
             1,
@@ -702,6 +744,7 @@ class DataManager:
         max_nace_level: int | None = None,
         group_filter: list[str] | None = None,
         includes_parent_aggregate: bool = True,
+        categorical_columns_filter: dict[str, str] | None = None,
     ) -> ReturnData:
         """Henter sesongjusterte 3-måneders endringer og beregner vektede bidrag.
 
@@ -721,12 +764,16 @@ class DataManager:
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
-        if self.weight_source is None:
-            raise ValueError("Weight data required")
-        header, weight = self.weight_source.n_mean_rolling(3, skip=skip)
+        
+        header, weight = self._get_weight_source(
+            categorical_columns_filter
+        ).n_mean_rolling(3, skip=skip)
 
         # This is used to get the weigth right when the weight the previous 3 months and the 3 months before that is not the same
-        _, comparison_weight = self.weight_source.n_mean_rolling(3, skip=3)
+        
+        _, comparison_weight = self._get_weight_source(
+            categorical_columns_filter
+        ).n_mean_rolling(3, skip=3)
 
         header_i, index = source.n_mean_rolling(3, skip=skip)
 
@@ -785,6 +832,7 @@ class DataManager:
         max_nace_level: int | None = None,
         group_filter: list[str] | None = None,
         includes_parent_aggregate: bool = True,
+        categorical_columns_filter: dict[str, str] | None = None,
     ) -> ReturnData:
         """Beregner 12-måneders kalenderjusterte endringer og tilhørende vektede bidrag.
 
@@ -804,10 +852,15 @@ class DataManager:
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
-        if self.weight_source is None:
-            raise ValueError("Weight data required")
-        header, weight = self.weight_source.n_month(1, skip=skip)
-        _, comparison_weight = self.weight_source.n_mean_rolling(1, skip=12)
+        
+        header, weight = self._get_weight_source(
+            categorical_columns_filter
+        ).n_month(1, skip=skip)
+        
+        _, comparison_weight = self.self._get_weight_source(
+            categorical_columns_filter
+        ).n_mean_rolling(1, skip=12)
+        
         header_i, index = source.n_month(1, skip=skip)
         header_i_pct, index_pct = source.n_percent_rolling(13, skip=skip)
         index_pct = index_pct.with_columns(value=pl.col("value").round(1))
@@ -851,7 +904,11 @@ class DataManager:
             ],
         )
 
-    def get_table_1(self, source: DataSource, period: str | None = None) -> ReturnData:
+    def get_table_1(
+        self, source: DataSource,
+        period: str | None = None,
+        categorical_columns_filter: dict[str, str] | None = None,
+    ) -> ReturnData:
         """Genererer samleskjema med månedlige nivåer, endringer og vektet bidrag.
 
         Samler sesongjusterte nivådata for de tre siste månedene og prosentvise endringer
@@ -880,9 +937,9 @@ class DataManager:
             df_data.append(data)
             headers.append(header)
 
-        if self.weight_source is None:
-            raise ValueError("Weight data required")
-        header, weight = self.weight_source.n_month(1, skip=skip)
+        header, weight = self._get_weight_source(
+            categorical_columns_filter
+        .n_month(1, skip=skip)
         _, index_pct = source.n_month_percent(1, skip=skip)
         index_pct = index_pct.with_columns(value=pl.col("value").round(1))
         weighted_pct = (
