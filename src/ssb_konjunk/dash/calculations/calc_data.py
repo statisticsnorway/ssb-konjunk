@@ -535,7 +535,7 @@ class DataManager:
         table_data: pl.DataFrame,
         weighted_data: pl.DataFrame,
         group_filter: list[str],
-        normalize_weight: bool = True,
+        normalize_weight: bool = False,
         includes_parent_aggregate: bool = True,
     ) -> tuple[pl.DataFrame, pl.DataFrame]:
         """A way to filter the data on specific group column (nace, kommune, fylke...) values.
