@@ -323,7 +323,7 @@ class DataSource:
             self.data.sort([self._group, self._date]),
             n,
             skip,
-            pl.col(self._col).mean().alias(self._avg),
+            pl.col(self._col).mean().round(1).alias(self._avg),
             pl.col(self._col).last().alias(self._col),
         )
         

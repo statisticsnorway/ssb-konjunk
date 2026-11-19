@@ -632,7 +632,7 @@ class DataManager:
         polars_data = pl.from_pandas(subset)
 
         polars_data = polars_data.with_columns(
-            pl.col(value_column).cast(pl.Float64),
+            pl.col(value_column).cast(pl.Float64).round(1),
             pl.col(self.period_col).str.strptime(
                 pl.Date,
                 "%Y-%m",
