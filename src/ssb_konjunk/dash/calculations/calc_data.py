@@ -304,14 +304,14 @@ class DataManager:
                 )
             )
         col = next(
-            (c for c in ["value", "season1", "calendar1"] if c in table_data.columns),
+            (c for c in ["value1", "season1", "calendar1"] if c in table_data.columns),
             None,
         )
         if col is None:
             raise ValueError("Wrong column name in table_data")
 
         table_data = table_data.with_columns(
-            (0.01 * pl.col(col) * pl.col("weight")).round(2).alias("weighted")
+            (0.01 * pl.col(col) * pl.col("weight")).round(2).alias("weighted_value")
         )
 
         weighted_pct = table_data.select([self.group_col, "weighted_value"])
@@ -565,32 +565,27 @@ class DataManager:
         categorical_columns_filter: dict[str, str] | None = None,
     ) -> DataSource:
         """Return a weight source filtered to the same dimensions as the data source."""
-    
         if self.weight_source is None:
             raise ValueError("Weight data required")
-    
+
         weight_data = self.weight_source.data
-    
+
         if categorical_columns_filter:
             for col, val in categorical_columns_filter.items():
                 if col in weight_data.columns:
                     weight_data = weight_data.filter(pl.col(col) == val)
-    
+
         group_keys = [self.group_col]
         if self.period_col in weight_data.columns:
             group_keys.insert(0, self.period_col)
-    
-        duplicates = (
-            weight_data.group_by(group_keys)
-            .len()
-            .filter(pl.col("len") > 1)
-        )
-    
+
+        duplicates = weight_data.group_by(group_keys).len().filter(pl.col("len") > 1)
+
         if duplicates.height:
             raise ValueError(
                 "Multiple weights found for the same period and group after applying filters"
             )
-    
+
         return DataSource(
             weight_data,
             self.period_col,
@@ -680,11 +675,11 @@ class DataManager:
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
-        
-        header, weight = self._get_weight_source(
-            categorical_columns_filter
-        ).n_month(1, skip=skip)
-        
+
+        header, weight = self._get_weight_source(categorical_columns_filter).n_month(
+            1, skip=skip
+        )
+
         header_i, index = source.n_month(1, skip=skip)
         header_i_pct, index_pct = source.n_month_percent(
             1,
@@ -722,7 +717,7 @@ class DataManager:
                 weighted_pct,
                 group_filter,
                 includes_parent_aggregate,
-                normalize_weight
+                normalize_weight,
             )
 
         return self._build_return_data(
@@ -767,13 +762,13 @@ class DataManager:
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
-        
+
         header, weight = self._get_weight_source(
             categorical_columns_filter
         ).n_mean_rolling(3, skip=skip)
 
         # This is used to get the weigth right when the weight the previous 3 months and the 3 months before that is not the same
-        
+
         _, comparison_weight = self._get_weight_source(
             categorical_columns_filter
         ).n_mean_rolling(3, skip=3)
@@ -813,7 +808,7 @@ class DataManager:
                 weighted_pct,
                 group_filter,
                 includes_parent_aggregate,
-                normalize_weight
+                normalize_weight,
             )
         return self._build_return_data(
             table_data=table_data,
@@ -857,15 +852,15 @@ class DataManager:
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
-        
-        header, weight = self._get_weight_source(
-            categorical_columns_filter
-        ).n_month(1, skip=skip)
-        
+
+        header, weight = self._get_weight_source(categorical_columns_filter).n_month(
+            1, skip=skip
+        )
+
         _, comparison_weight = self._get_weight_source(
             categorical_columns_filter
         ).n_mean_rolling(1, skip=12)
-        
+
         header_i, index = source.n_month(1, skip=skip)
         header_i_pct, index_pct = source.n_percent_rolling(13, skip=skip)
         index_pct = index_pct.with_columns(value=pl.col("value").round(1))
@@ -894,7 +889,7 @@ class DataManager:
                 weighted_pct,
                 group_filter,
                 includes_parent_aggregate,
-                normalize_weight
+                normalize_weight,
             )
         return self._build_return_data(
             table_data=table_data,
@@ -911,7 +906,8 @@ class DataManager:
         )
 
     def get_table_1(
-        self, source: DataSource,
+        self,
+        source: DataSource,
         period: str | None = None,
         categorical_columns_filter: dict[str, str] | None = None,
     ) -> ReturnData:
@@ -943,9 +939,9 @@ class DataManager:
             df_data.append(data)
             headers.append(header)
 
-        header, weight = self._get_weight_source(
-            categorical_columns_filter
-        ).n_month(1, skip=skip)
+        header, weight = self._get_weight_source(categorical_columns_filter).n_month(
+            1, skip=skip
+        )
         _, index_pct = source.n_month_percent(1, skip=skip)
         index_pct = index_pct.with_columns(value=pl.col("value").round(1))
         weighted_pct = (

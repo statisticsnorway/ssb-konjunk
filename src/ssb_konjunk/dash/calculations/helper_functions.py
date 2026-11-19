@@ -253,19 +253,38 @@ class DataSource:
                 )
             return x
 
-        return _gen_header(n, skip), (
-            self.data.rolling(
-                pl.col(self._date),
+        df_sorted = self.data.sort([self._group, self._date])
+
+        roll = (
+            df_sorted.lazy()
+            .rolling(
+                index_column=self._date,
                 period=f"{n}mo",
+                offset=f"-{skip+n}mo",
                 closed="right",
                 group_by=self._group,
-                offset=f"-{skip+n}mo",
             )
-            .map_groups(map_test, None)
+            .agg(
+                self._percent_change(
+                    pl.col(self._col).last(),
+                    pl.col(self._col).first(),
+                ).alias(self._avg),
+                pl.col(self._col).last().alias(self._col),
+            )
+            .with_columns(
+                pl.when(pl.len().over(self._group) < n)
+                .then(pl.col(self._col).fill_null(strategy="backward"))
+                .otherwise(pl.col(self._avg))
+                .alias(self._avg)
+            )
             .group_by(self._group)
-            .agg(pl.col(self._avg).tail(1))
-            .explode(self._avg)
+            .agg(
+                pl.col(self._avg).last().alias(self._avg),
+                pl.col(self._col).last().alias(self._col),
+            )
+            .select(self._group, self._avg)
         )
+        return _gen_header(n, skip), roll.collect()
 
     def n_mean_rolling(self, n: int, skip: int = 0) -> tuple[str, pl.DataFrame]:
         """Beregner et rullerende gjennomsnitt for hver gruppe i datasettet og returnerer med datoperiode-header.

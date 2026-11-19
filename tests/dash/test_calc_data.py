@@ -100,7 +100,10 @@ def test_normalize_weight(data):
     )
 
     assert test_table_data["weight"].cast(pl.Float64).sum() == 200
-    assert test_weighted["weighted_value"].to_list() == test_table_data["weighted_value"].to_list()
+    assert (
+        test_weighted["weighted_value"].to_list()
+        == test_table_data["weighted_value"].to_list()
+    )
 
     test_table_data_2 = pl.DataFrame(
         {
