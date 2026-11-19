@@ -439,6 +439,7 @@ class DataManager:
         sparkline_data: list[pl.DataFrame] | None,
         header_1: list[str],
         header_2: list[str],
+        num_of_digits: int = 2
     ) -> ReturnData:
         """A simplefied Returndata that does some usual coputations to keep the calls simpler.
 
@@ -451,13 +452,14 @@ class DataManager:
             sparkline_data (list[pl.DataFrame] | None): a small line diagram that shows some timeseries data of a given column in every data row.
             header_1 (list[str]): the top row of column names in the data.
             header_2 (list[str]): the second row of column names in the data.
+            num_of_digits (int): Number of digits to round to.
 
         Returns:
             ReturnData: A ReturnData object with some given parameters.
         """
         result_df = (
             self._prep_df(table_data, self.group_col)
-            .round(2)
+            .round(num_of_digits)
             .sort_values(
                 by=self.group_col,
                 key=self.sort_aggregates,
@@ -657,6 +659,7 @@ class DataManager:
         includes_parent_aggregate: bool = True,
         normalize_weight: bool = False,
         categorical_columns_filter: dict[str, str] | None = None,
+        num_of_digits: int = 2
     ) -> ReturnData:
         """Beregner månedlig sesongjustert endring og vektet bidrag for valgt periode.
 
@@ -669,6 +672,7 @@ class DataManager:
             max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn). Brukes for å filtrere detaljeringsnivå.
             group_filter: (list[str] or None): Filter for hva du ønsker å ha med i tabellen.
             includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
+            num_of_digits (int): Antall siffere å runde av til.
 
         Returns:
             ReturnData: Et objekt med kolonneoverskrifter, formaterte tabeller, figursøyledata
@@ -732,6 +736,7 @@ class DataManager:
                 header_i_pct,
                 header_i_pct,
             ],
+            num_of_digits=num_of_digits
         )
 
     def get_3_mth_change(
@@ -743,6 +748,7 @@ class DataManager:
         includes_parent_aggregate: bool = True,
         normalize_weight: bool = False,
         categorical_columns_filter: dict[str, str] | None = None,
+        num_of_digits: int = 2
     ) -> ReturnData:
         """Henter sesongjusterte 3-måneders endringer og beregner vektede bidrag.
 
@@ -756,6 +762,7 @@ class DataManager:
             max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn). Brukes for å filtrere detaljeringsnivå.
             group_filter: (list[str] or None): Filter for hva du ønsker å ha med i tabellen.
             includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
+            num_of_digits (int): Antall siffere å runde av til.
 
         Returns:
             ReturnData: Et objekt med kolonneoverskrifter, formaterte tabeller, figursøyledata
@@ -822,6 +829,7 @@ class DataManager:
                 header_i_pct,
                 header_i_pct,
             ],
+            num_of_digits=num_of_digits
         )
 
     def get_12_mth_change(
@@ -833,6 +841,7 @@ class DataManager:
         includes_parent_aggregate: bool = True,
         normalize_weight: bool = False,
         categorical_columns_filter: dict[str, str] | None = None,
+        num_of_digits: int = 2
     ) -> ReturnData:
         """Beregner 12-måneders kalenderjusterte endringer og tilhørende vektede bidrag.
 
@@ -846,6 +855,7 @@ class DataManager:
             max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn). Brukes for å filtrere detaljeringsnivå.
             group_filter: (list[str] or None): Filter for hva du ønsker å ha med i tabellen.
             includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
+            num_of_digits (int): Antall siffere å runde av til.
 
         Returns:
             ReturnData: Et objekt med kolonneoverskrifter, formaterte tabeller, figursøyledata
@@ -903,6 +913,7 @@ class DataManager:
                 header_i_pct,
                 header_i_pct,
             ],
+            num_of_digits=num_of_digits
         )
 
     def get_table_1(
@@ -910,6 +921,7 @@ class DataManager:
         source: DataSource,
         period: str | None = None,
         categorical_columns_filter: dict[str, str] | None = None,
+        num_of_digits: int = 2
     ) -> ReturnData:
         """Genererer samleskjema med månedlige nivåer, endringer og vektet bidrag.
 
@@ -920,6 +932,7 @@ class DataManager:
         Args:
             source (DataSource): Et Datasource object med en gitt serie.
             period (str or None): Valgfri referanseperiode (f.eks. '2023M03'). Hvis None, brukes siste tilgjengelige periode.
+            num_of_digits (int): Antall siffere å runde av til.
 
         Returns:
             ReturnData: Et objekt som inneholder overskrifter, samlet tabell for visning,
@@ -968,6 +981,7 @@ class DataManager:
                 "% Endring",
             ],
             header_2=["", *headers],
+            num_of_digits = num_of_digits
         )
 
 
