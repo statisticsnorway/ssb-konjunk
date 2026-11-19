@@ -457,7 +457,7 @@ class DataManager:
         """
         result_df = (
             self._prep_df(table_data, self.group_col)
-            .round(1)
+            .round(2)
             .sort_values(
                 by=self.group_col,
                 key=self.sort_aggregates,
@@ -689,7 +689,7 @@ class DataManager:
         weighted_pct = (
             index_pct.join(weight, on=self.group_col)
             .with_columns(
-                weighted_value=(pl.col("value") * (pl.col("weight") / 100)).round(2)
+                weighted_value=(pl.col("value") * (pl.col("weight") / 100))
             )
             .drop("weight", "value")
         )
@@ -782,7 +782,7 @@ class DataManager:
         weighted_pct = (
             index_pct.join(comparison_weight, on=self.group_col)
             .with_columns(
-                weighted_value=(pl.col("value") * (pl.col("weight") / 100)).round(2)
+                weighted_value=(pl.col("value") * (pl.col("weight") / 100))
             )
             .drop("weight", "value")
         )
@@ -867,7 +867,7 @@ class DataManager:
         weighted_pct = (
             index_pct.join(comparison_weight, on=self.group_col)
             .with_columns(
-                weighted_value=(pl.col("value") * (pl.col("weight") / 100)).round(2)
+                weighted_value=(pl.col("value") * (pl.col("weight") / 100))
             )
             .drop("weight", "value")
         )
@@ -947,7 +947,7 @@ class DataManager:
         weighted_pct = (
             index_pct.join(weight, on=self.group_col)
             .with_columns(
-                weighted_value=(pl.col("value") * (pl.col("weight") / 100)).round(2)
+                weighted_value=(pl.col("value") * (pl.col("weight") / 100))
             )
             .drop("weight", "value")
         )
