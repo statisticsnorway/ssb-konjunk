@@ -537,8 +537,8 @@ class DataManager:
         table_data: pl.DataFrame,
         weighted_data: pl.DataFrame,
         group_filter: list[str],
-        normalize_weight: bool = False,
         includes_parent_aggregate: bool = True,
+        normalize_weight: bool = False,
     ) -> tuple[pl.DataFrame, pl.DataFrame]:
         """A way to filter the data on specific group column (nace, kommune, fylke...) values.
 
@@ -655,7 +655,7 @@ class DataManager:
         source: DataSource,
         period: str | None = None,
         max_nace_level: int | None = None,
-        group_filter: list[str] | None = None,
+        group_filter: list[str] | None = None, 
         includes_parent_aggregate: bool = True,
         normalize_weight: bool = False,
         categorical_columns_filter: dict[str, str] | None = None,
@@ -681,7 +681,6 @@ class DataManager:
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
-
         header, weight = self._get_weight_source(categorical_columns_filter).n_month(
             1, skip=skip
         )
@@ -714,7 +713,6 @@ class DataManager:
                 weighted_pct,
                 max_nace_level,
             )
-
         if group_filter:
             table_data, weighted_pct = self._apply_group_column_filter(
                 table_data,
@@ -771,12 +769,12 @@ class DataManager:
             og sparkline-serier for visualisering eller rapportering.
         """
         skip = self._prep_skip(period)
-
         header, weight = self._get_weight_source(
             categorical_columns_filter
         ).n_mean_rolling(3, skip=skip)
 
-        # This is used to get the weigth right when the weight the previous 3 months and the 3 months before that is not the same
+        # comparison_weight is what is multiplied with index_pct to get the right weighted_pct
+        # if you use weight you get the wrong weighted_pct
 
         _, comparison_weight = self._get_weight_source(
             categorical_columns_filter
@@ -869,6 +867,9 @@ class DataManager:
             1, skip=skip
         )
 
+        # comparison_weight is what is multiplied with index_pct to get the right weighted_pct
+        # if you use weight you get the wrong weighted_pct
+        
         _, comparison_weight = self._get_weight_source(
             categorical_columns_filter
         ).n_mean_rolling(1, skip=12)

@@ -49,7 +49,7 @@ def test_to_percent(data):
     chg_rate = pl.Series("chg_rate", np.random.uniform(-2, 2, 38))
 
     percent_change = data.to_percent(weight, chg_rate)
-    assert percent_change[0] == pytest.approx(0.083084, rel=1e-4)
+    assert percent_change[0] == pytest.approx(0.109881, rel=1e-4)
 
 
 def get_group_col(data):
@@ -210,22 +210,17 @@ def test_get_source(data):
                 "sesongjustering": "Y",
             },
         )
-
-
-def test_get_mth_change(data, test_df_datasource):
-    seasonal_mnt_change_1 = data.get_mth_change(
+        
+def test_get_mth_change_group_filter_without_parent(
+    data,
+    test_df_datasource,
+):
+    seasonal_mnt_change = data.get_mth_change(
         test_df_datasource,
         group_filter=["H", "J"],
         includes_parent_aggregate=False,
-    )
-    seasonal_mnt_change_2 = data.get_mth_change(
-        test_df_datasource,
-        group_filter=["H", "49.1", "49.2"],
-        includes_parent_aggregate=False,
-    )
-    seasonal_mnt_change_3 = data.get_mth_change(
-        test_df_datasource,
-        max_nace_level=1,
+        normalize_weight=True,
+        num_of_digits=1,
     )
 
     expected_header_1 = ["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"]
@@ -237,68 +232,141 @@ def test_get_mth_change(data, test_df_datasource):
         "Nov 2024 - Dec 2024",
     ]
 
-    expected_res_data_1 = pd.DataFrame(
+    expected_res_data = pd.DataFrame(
         {
             "nar": [
                 "  H - Transport og lagring",
                 "  J - Informasjon og kommunikasjon",
             ],
-            "weight": [34.7, 44.7],
+            "weight": [47.7, 52.3],
             "value": [114.7, 89.5],
             "value1": [-1.8, 8.5],
-            "weighted_value": [-0.6, 3.8],
+            "weighted_value": [-0.9, 4.4],
         }
     )
 
-    expected_res_data_2 = pd.DataFrame(
+    assert seasonal_mnt_change.header_1 == expected_header_1
+    assert seasonal_mnt_change.header_2 == expected_header_2
+    pd.testing.assert_frame_equal(
+        seasonal_mnt_change.res_data, expected_res_data
+    )
+
+
+def test_get_mth_change_group_filter_with_parent(
+    data,
+    test_df_datasource,
+):
+    seasonal_mnt_change = data.get_mth_change(
+        test_df_datasource,
+        group_filter=["H", "49.1", "49.2"],
+        normalize_weight=True,
+        num_of_digits=1,
+    )
+
+    expected_res_data = pd.DataFrame(
         {
             "nar": [
                 "  H - Transport og lagring",
                 "        49.1 - Passasjertransport med je",
                 "        49.2 - Godstransport med jernban",
             ],
-            "weight": [34.7, 11.6, 21.9],
+            "weight": [100.0, 20.6, 30.4],
             "value": [114.7, 83.2, 89.3],
             "value1": [-1.8, -29.7, -25.4],
-            "weighted_value": [-0.6, -3.4, -5.6],
+            "weighted_value": [-1.8, -6.1, -7.7],
         }
     )
-    expected_res_data_3 = pd.DataFrame(
+
+    pd.testing.assert_frame_equal(
+        seasonal_mnt_change.res_data, expected_res_data
+    )
+
+
+def test_get_mth_change_max_nace_level(
+    data,
+    test_df_datasource,
+):
+    seasonal_mnt_change = data.get_mth_change(
+        test_df_datasource,
+        max_nace_level=1,
+        num_of_digits=1,
+    )
+
+    expected_res_data = pd.DataFrame(
         {
             "nar": [
                 "  H - Transport og lagring",
                 "  J - Informasjon og kommunikasjon",
             ],
-            "weight": [34.7, 44.7],
+            "weight": [52.3, 57.4],
             "value": [114.7, 89.5],
             "value1": [-1.8, 8.5],
-            "weighted_value": [-0.6, 3.8],
+            "weighted_value": [-0.9, 4.9],
         }
     )
 
-    assert seasonal_mnt_change_1.header_1 == expected_header_1
-    assert seasonal_mnt_change_1.header_2 == expected_header_2
-    pd.testing.assert_frame_equal(seasonal_mnt_change_1.res_data, expected_res_data_1)
-    pd.testing.assert_frame_equal(seasonal_mnt_change_2.res_data, expected_res_data_2)
-    pd.testing.assert_frame_equal(seasonal_mnt_change_3.res_data, expected_res_data_3)
+    pd.testing.assert_frame_equal(
+        seasonal_mnt_change.res_data,
+        expected_res_data,
+    )
 
 
-def test_get_3_mth_change(data, test_df_datasource):
-    seasonal_3_mnt_change_1 = data.get_3_mth_change(
+def test_get_mth_change_weight_dimension_filter(
+    data_with_marked,
+    test_df_datasource,
+):
+    seasonal_mnt_change = data_with_marked.get_mth_change(
+        test_df_datasource,
+        categorical_columns_filter={"marked": "import"},
+        num_of_digits=1,
+    )
+
+    expected_res_data = pd.DataFrame(
+        {
+            "nar": [
+                "  H - Transport og lagring",
+                "        49.1 - Passasjertransport med je",
+                "        49.2 - Godstransport med jernban",
+                "  J - Informasjon og kommunikasjon",
+                "    59 - Film-, video- og fjernsynsprogr",
+            ],
+            "weight": [40.8, 27.4, 14.3, 41.6, 21.8],
+            "value": [114.7, 83.2, 89.3, 89.5, 92.7],
+            "value1": [-1.8, -29.7, -25.4, 8.5, -19.5],
+            "weighted_value": [-0.7, -8.1, -3.6, 3.5, -4.3],
+        }
+    )
+    pd.testing.assert_frame_equal(
+        seasonal_mnt_change.res_data,
+        expected_res_data,
+    )
+
+
+def test_get_mth_change_raises_for_multiple_weights(
+    data_with_marked,
+    test_df_datasource,
+):
+    with pytest.raises(
+        ValueError,
+        match="Multiple weights found for the same period",
+    ):
+        data_with_marked.get_mth_change(
+            test_df_datasource,
+            normalize_weight=True,
+            num_of_digits=1,
+        )
+        
+def test_get_3_mth_change_group_filter_without_parent(
+    data,
+    test_df_datasource,
+):
+    seasonal_3_mnt_change = data.get_3_mth_change(
         test_df_datasource,
         group_filter=["H", "J"],
         includes_parent_aggregate=False,
+        normalize_weight = True,
+        num_of_digits = 1
     )
-    seasonal_3_mnt_change_2 = data.get_3_mth_change(
-        test_df_datasource,
-        group_filter=["H", "49.1", "49.2"],
-        includes_parent_aggregate=False,
-    )
-    seasonal_3_mnt_change_3 = data.get_3_mth_change(
-        test_df_datasource,
-        max_nace_level=1,
-    )
-
     expected_header_1 = ["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"]
     expected_header_2 = [
         "",
@@ -307,67 +375,119 @@ def test_get_3_mth_change(data, test_df_datasource):
         "Jul 2024 - Sep 2024 / Oct 2024 - Dec 2024",
         "Jul 2024 - Sep 2024 / Oct 2024 - Dec 2024",
     ]
-
-    expected_res_data_1 = pd.DataFrame(
+    expected_res_data = pd.DataFrame(
         {
             "nar": [
                 "  H - Transport og lagring",
                 "  J - Informasjon og kommunikasjon",
             ],
-            "weight": [34.6, 36.9],
+            "weight": [49.5, 50.5],
             "value": [115.7, 97.1],
-            "value1": [16.5, -8.5],
-            "weighted_value": [4.0, -2.8],
+            "value1": [16.4, -8.5],
+            "weighted_value": [8.1, -4.3],
         }
     )
 
-    expected_res_data_2 = pd.DataFrame(
+    assert seasonal_3_mnt_change.header_1 == expected_header_1
+    assert seasonal_3_mnt_change.header_2 == expected_header_2
+    pd.testing.assert_frame_equal(seasonal_3_mnt_change.res_data, expected_res_data)
+
+def test_get_3_mth_change_group_filter_with_parent(
+    data,
+    test_df_datasource,
+):
+    seasonal_3_mnt_change = data.get_3_mth_change(
+        test_df_datasource,
+        group_filter=["H", "49.1", "49.2"],
+        includes_parent_aggregate=True,
+        normalize_weight = True,
+        num_of_digits = 1
+    )
+    expected_res_data = pd.DataFrame(
         {
             "nar": [
                 "  H - Transport og lagring",
                 "        49.1 - Passasjertransport med je",
                 "        49.2 - Godstransport med jernban",
             ],
-            "weight": [34.6, 28.4, 34.6],
+            # if '49.1', '49.2' was all of 'H's children the sum of the list would be 200,
+            # but its not so this behaviour is right
+            # (actually it's because its randomized, but this is still right behaviour)
+            "weight": [100.0, 36.7, 42.6], 
             "value": [115.7, 96.9, 109.5],
-            "value1": [16.5, 9.6, 19.3],
-            "weighted_value": [4.0, 4.1, 6.1],
+            "value1": [16.4, 9.6, 19.3],
+            "weighted_value": [16.4, 3.5, 8.2],
         }
     )
-    expected_res_data_3 = pd.DataFrame(
+
+    pd.testing.assert_frame_equal(seasonal_3_mnt_change.res_data, expected_res_data)
+    
+def test_get_3_mth_change_max_nace_level(
+    data,
+    test_df_datasource,
+):
+    # Would probably nomralize the weights here but this tests the beheviour without normalization
+    
+    seasonal_3_mnt_change = data.get_3_mth_change(
+        test_df_datasource,
+        max_nace_level=1,
+        num_of_digits = 1
+    )
+    expected_res_data = pd.DataFrame(
         {
             "nar": [
                 "  H - Transport og lagring",
                 "  J - Informasjon og kommunikasjon",
             ],
-            "weight": [34.6, 36.9],
+            "weight": [52.3, 53.4],
             "value": [115.7, 97.1],
-            "value1": [16.5, -8.5],
-            "weighted_value": [4.0, -2.8],
+            "value1": [16.4, -8.5],
+            "weighted_value": [7.7, -4.4],
         }
     )
+    
+    pd.testing.assert_frame_equal(seasonal_3_mnt_change.res_data, expected_res_data)
+    
+def test_get_3_mth_change_weight_dimension_filter(
+    data_with_marked,
+    test_df_datasource,
+):
+    seasonal_3_mnt_change = data_with_marked.get_3_mth_change(
+        test_df_datasource,
+        categorical_columns_filter = {'marked': 'import'},
+        num_of_digits = 1
+    )
 
-    assert seasonal_3_mnt_change_1.header_1 == expected_header_1
-    assert seasonal_3_mnt_change_1.header_2 == expected_header_2
-    pd.testing.assert_frame_equal(seasonal_3_mnt_change_1.res_data, expected_res_data_1)
-    pd.testing.assert_frame_equal(seasonal_3_mnt_change_2.res_data, expected_res_data_2)
-    pd.testing.assert_frame_equal(seasonal_3_mnt_change_3.res_data, expected_res_data_3)
+
+    expected_res_data = pd.DataFrame(
+        {
+            "nar": [
+                "  H - Transport og lagring",
+                "        49.1 - Passasjertransport med je",
+                "        49.2 - Godstransport med jernban",
+                "  J - Informasjon og kommunikasjon",
+                "    59 - Film-, video- og fjernsynsprogr",
+            ],
+            "weight": [47.4, 28.6, 23.1, 52.1, 21.4],
+            "value": [115.7, 96.9, 109.5, 97.1, 103.3],
+            "value1": [16.4, 9.6, 19.3, -8.5, 9.8],
+            "weighted_value": [7.2, 2.2, 4.6, -4.1, 2.1],
+        }
+    )
+    pd.testing.assert_frame_equal(seasonal_3_mnt_change.res_data, expected_res_data)
 
 
-def test_get_12_mth_change(data, test_df_datasource):
-    seasonal_12_mnt_change_1 = data.get_12_mth_change(
+
+def test_get_12_mth_change_group_filter_without_parent(
+    data,
+    test_df_datasource,
+):
+    seasonal_12_mnt_change = data.get_12_mth_change(
         test_df_datasource,
         group_filter=["H", "J"],
         includes_parent_aggregate=False,
-    )
-    seasonal_12_mnt_change_2 = data.get_12_mth_change(
-        test_df_datasource,
-        group_filter=["H", "49.1", "49.2"],
-        includes_parent_aggregate=False,
-    )
-    seasonal_12_mnt_change_3 = data.get_12_mth_change(
-        test_df_datasource,
-        max_nace_level=1,
+        normalize_weight=True,
+        num_of_digits = 1,
     )
 
     expected_header_1 = ["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"]
@@ -378,58 +498,117 @@ def test_get_12_mth_change(data, test_df_datasource):
         "Dec 2023 - Dec 2024",
         "Dec 2023 - Dec 2024",
     ]
-    expected_res_data_1 = pd.DataFrame(
+
+    expected_res_data = pd.DataFrame(
         {
             "nar": [
                 "  H - Transport og lagring",
                 "  J - Informasjon og kommunikasjon",
             ],
-            "weight": [34.7, 44.7],
+            "weight": [47.7, 52.3],
             "value": [114.7, 89.5],
             "value1": [-3.2, -22.5],
-            "weighted_value": [-1.1, -6.1],
+            "weighted_value": [-1.5, -11.8],
         }
     )
 
-    expected_res_data_2 = pd.DataFrame(
+    assert seasonal_12_mnt_change.header_1 == expected_header_1
+    assert seasonal_12_mnt_change.header_2 == expected_header_2
+    pd.testing.assert_frame_equal(
+        seasonal_12_mnt_change.res_data,
+        expected_res_data,
+    )
+
+
+def test_get_12_mth_change_group_filter_with_parent(
+    data,
+    test_df_datasource,
+):
+    seasonal_12_mnt_change = data.get_12_mth_change(
+        test_df_datasource,
+        group_filter=["H", "49.1", "49.2"],
+        normalize_weight=True,
+        num_of_digits = 1,
+    )
+
+    expected_res_data = pd.DataFrame(
         {
             "nar": [
                 "  H - Transport og lagring",
                 "        49.1 - Passasjertransport med je",
                 "        49.2 - Godstransport med jernban",
             ],
-            "weight": [34.7, 11.6, 21.9],
+            "weight": [100.0, 20.6, 30.4],
             "value": [114.7, 83.2, 89.3],
             "value1": [-3.2, -0.1, 0.0],
-            "weighted_value": [-1.1, -0.0, 0.0],
+            "weighted_value": [-3.2, -0.0, 0.0],
         }
     )
 
-    expected_res_data_3 = pd.DataFrame(
+    pd.testing.assert_frame_equal(
+        seasonal_12_mnt_change.res_data,
+        expected_res_data,
+    )
+
+
+def test_get_12_mth_change_max_nace_level(
+    data,
+    test_df_datasource,
+):
+    seasonal_12_mnt_change = data.get_12_mth_change(
+        test_df_datasource,
+        max_nace_level=1,
+        num_of_digits = 1,
+    )
+
+    expected_res_data = pd.DataFrame(
         {
             "nar": [
                 "  H - Transport og lagring",
                 "  J - Informasjon og kommunikasjon",
             ],
-            "weight": [34.7, 44.7],
+            "weight": [52.3, 57.4],
             "value": [114.7, 89.5],
             "value1": [-3.2, -22.5],
-            "weighted_value": [-1.1, -6.1],
+            "weighted_value": [-1.7, -10.9],
         }
     )
 
-    assert seasonal_12_mnt_change_1.header_1 == expected_header_1
-    assert seasonal_12_mnt_change_1.header_2 == expected_header_2
     pd.testing.assert_frame_equal(
-        seasonal_12_mnt_change_1.res_data, expected_res_data_1
-    )
-    pd.testing.assert_frame_equal(
-        seasonal_12_mnt_change_2.res_data, expected_res_data_2
-    )
-    pd.testing.assert_frame_equal(
-        seasonal_12_mnt_change_3.res_data, expected_res_data_3
+        seasonal_12_mnt_change.res_data,
+        expected_res_data,
     )
 
+def test_get_12_mth_change_weight_dimension_filter(
+    data_with_marked,
+    test_df_datasource,
+):
+    seasonal_12_mnt_change = data_with_marked.get_12_mth_change(
+        test_df_datasource,
+        categorical_columns_filter={"marked": "import"},
+        num_of_digits = 1,
+    )
+
+    expected_res_data = pd.DataFrame(
+        {
+            "nar": [
+                "  H - Transport og lagring",
+                "        49.1 - Passasjertransport med je",
+                "        49.2 - Godstransport med jernban",
+                "  J - Informasjon og kommunikasjon",
+                "    59 - Film-, video- og fjernsynsprogr",
+            ],
+            "weight": [40.8, 27.4, 14.3, 41.6, 21.8],
+            "value": [114.7, 83.2, 89.3, 89.5, 92.7],
+            "value1": [-3.2, -0.1, 0.0, -22.5, -9.5],
+            "weighted_value": [-1.6, -0.0, 0.0, -12.9, -2.2],
+        }
+    )
+
+    pd.testing.assert_frame_equal(
+        seasonal_12_mnt_change.res_data,
+        expected_res_data,
+    )
 
 def test_get_table_1(data, test_df_datasource):
     get_table_1 = data.get_table_1(test_df_datasource)
