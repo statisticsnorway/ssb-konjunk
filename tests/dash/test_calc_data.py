@@ -210,7 +210,8 @@ def test_get_source(data):
                 "sesongjustering": "Y",
             },
         )
-        
+
+
 def test_get_mth_change_group_filter_without_parent(
     data,
     test_df_datasource,
@@ -247,9 +248,7 @@ def test_get_mth_change_group_filter_without_parent(
 
     assert seasonal_mnt_change.header_1 == expected_header_1
     assert seasonal_mnt_change.header_2 == expected_header_2
-    pd.testing.assert_frame_equal(
-        seasonal_mnt_change.res_data, expected_res_data
-    )
+    pd.testing.assert_frame_equal(seasonal_mnt_change.res_data, expected_res_data)
 
 
 def test_get_mth_change_group_filter_with_parent(
@@ -277,9 +276,7 @@ def test_get_mth_change_group_filter_with_parent(
         }
     )
 
-    pd.testing.assert_frame_equal(
-        seasonal_mnt_change.res_data, expected_res_data
-    )
+    pd.testing.assert_frame_equal(seasonal_mnt_change.res_data, expected_res_data)
 
 
 def test_get_mth_change_max_nace_level(
@@ -355,7 +352,8 @@ def test_get_mth_change_raises_for_multiple_weights(
             normalize_weight=True,
             num_of_digits=1,
         )
-        
+
+
 def test_get_3_mth_change_group_filter_without_parent(
     data,
     test_df_datasource,
@@ -364,8 +362,8 @@ def test_get_3_mth_change_group_filter_without_parent(
         test_df_datasource,
         group_filter=["H", "J"],
         includes_parent_aggregate=False,
-        normalize_weight = True,
-        num_of_digits = 1
+        normalize_weight=True,
+        num_of_digits=1,
     )
     expected_header_1 = ["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"]
     expected_header_2 = [
@@ -392,6 +390,7 @@ def test_get_3_mth_change_group_filter_without_parent(
     assert seasonal_3_mnt_change.header_2 == expected_header_2
     pd.testing.assert_frame_equal(seasonal_3_mnt_change.res_data, expected_res_data)
 
+
 def test_get_3_mth_change_group_filter_with_parent(
     data,
     test_df_datasource,
@@ -400,8 +399,8 @@ def test_get_3_mth_change_group_filter_with_parent(
         test_df_datasource,
         group_filter=["H", "49.1", "49.2"],
         includes_parent_aggregate=True,
-        normalize_weight = True,
-        num_of_digits = 1
+        normalize_weight=True,
+        num_of_digits=1,
     )
     expected_res_data = pd.DataFrame(
         {
@@ -413,7 +412,7 @@ def test_get_3_mth_change_group_filter_with_parent(
             # if '49.1', '49.2' was all of 'H's children the sum of the list would be 200,
             # but its not so this behaviour is right
             # (actually it's because its randomized, but this is still right behaviour)
-            "weight": [100.0, 36.7, 42.6], 
+            "weight": [100.0, 36.7, 42.6],
             "value": [115.7, 96.9, 109.5],
             "value1": [16.4, 9.6, 19.3],
             "weighted_value": [16.4, 3.5, 8.2],
@@ -421,17 +420,16 @@ def test_get_3_mth_change_group_filter_with_parent(
     )
 
     pd.testing.assert_frame_equal(seasonal_3_mnt_change.res_data, expected_res_data)
-    
+
+
 def test_get_3_mth_change_max_nace_level(
     data,
     test_df_datasource,
 ):
     # Would probably nomralize the weights here but this tests the beheviour without normalization
-    
+
     seasonal_3_mnt_change = data.get_3_mth_change(
-        test_df_datasource,
-        max_nace_level=1,
-        num_of_digits = 1
+        test_df_datasource, max_nace_level=1, num_of_digits=1
     )
     expected_res_data = pd.DataFrame(
         {
@@ -445,19 +443,19 @@ def test_get_3_mth_change_max_nace_level(
             "weighted_value": [7.7, -4.4],
         }
     )
-    
+
     pd.testing.assert_frame_equal(seasonal_3_mnt_change.res_data, expected_res_data)
-    
+
+
 def test_get_3_mth_change_weight_dimension_filter(
     data_with_marked,
     test_df_datasource,
 ):
     seasonal_3_mnt_change = data_with_marked.get_3_mth_change(
         test_df_datasource,
-        categorical_columns_filter = {'marked': 'import'},
-        num_of_digits = 1
+        categorical_columns_filter={"marked": "import"},
+        num_of_digits=1,
     )
-
 
     expected_res_data = pd.DataFrame(
         {
@@ -477,7 +475,6 @@ def test_get_3_mth_change_weight_dimension_filter(
     pd.testing.assert_frame_equal(seasonal_3_mnt_change.res_data, expected_res_data)
 
 
-
 def test_get_12_mth_change_group_filter_without_parent(
     data,
     test_df_datasource,
@@ -487,7 +484,7 @@ def test_get_12_mth_change_group_filter_without_parent(
         group_filter=["H", "J"],
         includes_parent_aggregate=False,
         normalize_weight=True,
-        num_of_digits = 1,
+        num_of_digits=1,
     )
 
     expected_header_1 = ["", "Vekt %", "Indeks", "% Endring", "% Endring vektet"]
@@ -528,7 +525,7 @@ def test_get_12_mth_change_group_filter_with_parent(
         test_df_datasource,
         group_filter=["H", "49.1", "49.2"],
         normalize_weight=True,
-        num_of_digits = 1,
+        num_of_digits=1,
     )
 
     expected_res_data = pd.DataFrame(
@@ -558,7 +555,7 @@ def test_get_12_mth_change_max_nace_level(
     seasonal_12_mnt_change = data.get_12_mth_change(
         test_df_datasource,
         max_nace_level=1,
-        num_of_digits = 1,
+        num_of_digits=1,
     )
 
     expected_res_data = pd.DataFrame(
@@ -579,6 +576,7 @@ def test_get_12_mth_change_max_nace_level(
         expected_res_data,
     )
 
+
 def test_get_12_mth_change_weight_dimension_filter(
     data_with_marked,
     test_df_datasource,
@@ -586,7 +584,7 @@ def test_get_12_mth_change_weight_dimension_filter(
     seasonal_12_mnt_change = data_with_marked.get_12_mth_change(
         test_df_datasource,
         categorical_columns_filter={"marked": "import"},
-        num_of_digits = 1,
+        num_of_digits=1,
     )
 
     expected_res_data = pd.DataFrame(
@@ -609,6 +607,7 @@ def test_get_12_mth_change_weight_dimension_filter(
         seasonal_12_mnt_change.res_data,
         expected_res_data,
     )
+
 
 def test_get_table_1(data, test_df_datasource):
     get_table_1 = data.get_table_1(test_df_datasource)

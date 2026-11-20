@@ -655,7 +655,7 @@ class DataManager:
         source: DataSource,
         period: str | None = None,
         max_nace_level: int | None = None,
-        group_filter: list[str] | None = None, 
+        group_filter: list[str] | None = None,
         includes_parent_aggregate: bool = True,
         normalize_weight: bool = False,
         categorical_columns_filter: dict[str, str] | None = None,
@@ -869,7 +869,7 @@ class DataManager:
 
         # comparison_weight is what is multiplied with index_pct to get the right weighted_pct
         # if you use weight you get the wrong weighted_pct
-        
+
         _, comparison_weight = self._get_weight_source(
             categorical_columns_filter
         ).n_mean_rolling(1, skip=12)

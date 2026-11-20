@@ -76,14 +76,15 @@ def test_df_vekt_marked():
                         "periode": periode,
                         "marked": marked,
                         "vekt": (
-                        np.random.uniform(40, 60)
-                        if nar in ["H", "J"]
-                        else np.random.uniform(10, 30)
-                    ),
+                            np.random.uniform(40, 60)
+                            if nar in ["H", "J"]
+                            else np.random.uniform(10, 30)
+                        ),
                     }
                 )
 
     return pd.DataFrame(rows)
+
 
 @pytest.fixture(scope="module")
 def data(test_df_data, test_df_vekt):
@@ -96,6 +97,7 @@ def data(test_df_data, test_df_vekt):
         categorical_columns=["sesongjustering"],
     )
 
+
 @pytest.fixture
 def data_with_marked(test_df_data, test_df_vekt_marked):
     return DataManager(
@@ -106,7 +108,8 @@ def data_with_marked(test_df_data, test_df_vekt_marked):
         value_columns=["volumindeks"],
         categorical_columns=["sesongjustering"],
     )
-    
+
+
 @pytest.fixture
 def test_df_datasource(data):
     return data.get_source(
