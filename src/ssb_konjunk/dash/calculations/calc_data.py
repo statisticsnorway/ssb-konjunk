@@ -672,6 +672,8 @@ class DataManager:
             max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn). Brukes for å filtrere detaljeringsnivå.
             group_filter: (list[str] or None): Filter for hva du ønsker å ha med i tabellen.
             includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
+            normalize_weight (bool): En variabel som bestemmer om du skal normalisere vektene.
+            categorical_columns_filter (dict[str, str]  or None): En dictionary som viser hvilker filter du bruker som du må ha med om vektene har flere dimensjoner.
             num_of_digits (int): Antall siffere å runde av til.
 
         Returns:
@@ -760,6 +762,8 @@ class DataManager:
             max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn). Brukes for å filtrere detaljeringsnivå.
             group_filter: (list[str] or None): Filter for hva du ønsker å ha med i tabellen.
             includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
+            normalize_weight (bool): En variabel som bestemmer om du skal normalisere vektene.
+            categorical_columns_filter (dict[str, str]  or None): En dictionary som viser hvilker filter du bruker som du må ha med om vektene har flere dimensjoner.
             num_of_digits (int): Antall siffere å runde av til.
 
         Returns:
@@ -851,6 +855,8 @@ class DataManager:
             max_nace_level (int or None): Maksimalt tillatt lengde på NACE-koder (antall tegn). Brukes for å filtrere detaljeringsnivå.
             group_filter: (list[str] or None): Filter for hva du ønsker å ha med i tabellen.
             includes_parent_aggregate (bool): En variabel som sier om du har hovudaggregatet og underaggregat i normaliseringen.
+            normalize_weight (bool): En variabel som bestemmer om du skal normalisere vektene.
+            categorical_columns_filter (dict[str, str]  or None): En dictionary som viser hvilker filter du bruker som du må ha med om vektene har flere dimensjoner.
             num_of_digits (int): Antall siffere å runde av til.
 
         Returns:
@@ -926,6 +932,7 @@ class DataManager:
         Args:
             source (DataSource): Et Datasource object med en gitt serie.
             period (str or None): Valgfri referanseperiode (f.eks. '2023M03'). Hvis None, brukes siste tilgjengelige periode.
+            categorical_columns_filter (dict[str, str]  or None): En dictionary som viser hvilker filter du bruker som du må ha med om vektene har flere dimensjoner.
             num_of_digits (int): Antall siffere å runde av til.
 
         Returns:
