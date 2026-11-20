@@ -439,7 +439,7 @@ class DataManager:
         sparkline_data: list[pl.DataFrame] | None,
         header_1: list[str],
         header_2: list[str],
-        num_of_digits: int = 2
+        num_of_digits: int = 2,
     ) -> ReturnData:
         """A simplefied Returndata that does some usual coputations to keep the calls simpler.
 
@@ -659,7 +659,7 @@ class DataManager:
         includes_parent_aggregate: bool = True,
         normalize_weight: bool = False,
         categorical_columns_filter: dict[str, str] | None = None,
-        num_of_digits: int = 2
+        num_of_digits: int = 2,
     ) -> ReturnData:
         """Beregner månedlig sesongjustert endring og vektet bidrag for valgt periode.
 
@@ -692,9 +692,7 @@ class DataManager:
 
         weighted_pct = (
             index_pct.join(weight, on=self.group_col)
-            .with_columns(
-                weighted_value=(pl.col("value") * (pl.col("weight") / 100))
-            )
+            .with_columns(weighted_value=(pl.col("value") * (pl.col("weight") / 100)))
             .drop("weight", "value")
         )
 
@@ -736,7 +734,7 @@ class DataManager:
                 header_i_pct,
                 header_i_pct,
             ],
-            num_of_digits=num_of_digits
+            num_of_digits=num_of_digits,
         )
 
     def get_3_mth_change(
@@ -748,7 +746,7 @@ class DataManager:
         includes_parent_aggregate: bool = True,
         normalize_weight: bool = False,
         categorical_columns_filter: dict[str, str] | None = None,
-        num_of_digits: int = 2
+        num_of_digits: int = 2,
     ) -> ReturnData:
         """Henter sesongjusterte 3-måneders endringer og beregner vektede bidrag.
 
@@ -788,9 +786,7 @@ class DataManager:
         index_pct = index_pct.with_columns(value=pl.col("value").round(1))
         weighted_pct = (
             index_pct.join(comparison_weight, on=self.group_col)
-            .with_columns(
-                weighted_value=(pl.col("value") * (pl.col("weight") / 100))
-            )
+            .with_columns(weighted_value=(pl.col("value") * (pl.col("weight") / 100)))
             .drop("weight", "value")
         )
         sparkline_data = [source.n_mean_rolling(3, i * 3)[1] for i in range(4)]
@@ -829,7 +825,7 @@ class DataManager:
                 header_i_pct,
                 header_i_pct,
             ],
-            num_of_digits=num_of_digits
+            num_of_digits=num_of_digits,
         )
 
     def get_12_mth_change(
@@ -841,7 +837,7 @@ class DataManager:
         includes_parent_aggregate: bool = True,
         normalize_weight: bool = False,
         categorical_columns_filter: dict[str, str] | None = None,
-        num_of_digits: int = 2
+        num_of_digits: int = 2,
     ) -> ReturnData:
         """Beregner 12-måneders kalenderjusterte endringer og tilhørende vektede bidrag.
 
@@ -876,9 +872,7 @@ class DataManager:
         index_pct = index_pct.with_columns(value=pl.col("value").round(1))
         weighted_pct = (
             index_pct.join(comparison_weight, on=self.group_col)
-            .with_columns(
-                weighted_value=(pl.col("value") * (pl.col("weight") / 100))
-            )
+            .with_columns(weighted_value=(pl.col("value") * (pl.col("weight") / 100)))
             .drop("weight", "value")
         )
         table_data = multi_join(
@@ -913,7 +907,7 @@ class DataManager:
                 header_i_pct,
                 header_i_pct,
             ],
-            num_of_digits=num_of_digits
+            num_of_digits=num_of_digits,
         )
 
     def get_table_1(
@@ -921,7 +915,7 @@ class DataManager:
         source: DataSource,
         period: str | None = None,
         categorical_columns_filter: dict[str, str] | None = None,
-        num_of_digits: int = 2
+        num_of_digits: int = 2,
     ) -> ReturnData:
         """Genererer samleskjema med månedlige nivåer, endringer og vektet bidrag.
 
@@ -959,9 +953,7 @@ class DataManager:
         index_pct = index_pct.with_columns(value=pl.col("value").round(1))
         weighted_pct = (
             index_pct.join(weight, on=self.group_col)
-            .with_columns(
-                weighted_value=(pl.col("value") * (pl.col("weight") / 100))
-            )
+            .with_columns(weighted_value=(pl.col("value") * (pl.col("weight") / 100)))
             .drop("weight", "value")
         )
 
@@ -981,7 +973,7 @@ class DataManager:
                 "% Endring",
             ],
             header_2=["", *headers],
-            num_of_digits = num_of_digits
+            num_of_digits=num_of_digits,
         )
 
 

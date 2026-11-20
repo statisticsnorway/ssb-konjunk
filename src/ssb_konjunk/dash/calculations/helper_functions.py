@@ -1,11 +1,11 @@
+from collections.abc import Iterable
 from datetime import date
 from datetime import datetime
-from typing import Iterable, Literal
+from typing import Literal
 
 import pandas as pd
 import pendulum
 import polars as pl
-import time
 
 
 def monthdelta(d1: datetime, d2: datetime) -> int:
@@ -223,7 +223,7 @@ class DataSource:
         *aggs: Iterable[pl.Expr] | pl.Expr,
     ):
         """Intern funksjon for rullerende aggregering.
-        
+
         Args:
             df_sorted (pl.DataFrame): Den sorterte dataframen som skal aggregeres.
             n (int): Lengden på rullevinduet i måneder.
@@ -294,7 +294,7 @@ class DataSource:
             ).alias(self._avg),
             pl.col(self._col).last().alias(self._col),
         )
-        
+
         return _gen_header(n, skip), roll.collect()
 
     def n_mean_rolling(self, n: int, skip: int = 0) -> tuple[str, pl.DataFrame]:
@@ -326,7 +326,7 @@ class DataSource:
             pl.col(self._col).mean().round(1).alias(self._avg),
             pl.col(self._col).last().alias(self._col),
         )
-        
+
         data = _gen_header(n, skip), roll.collect()
         return data
 
