@@ -6,11 +6,11 @@ import warnings
 
 
 class VulnerablePackagesError(RuntimeError):
-    """raised når det fins pakker med svakheter *og* det fins en fiks for dem."""
+    """raised når det fins pakker med sårbarheter *og* det fins en fiks for dem."""
 
 
 def _report(data: dict[str, list]) -> None:
-    """Lag rapport på eventuelle svakheter."""
+    """Lag rapport på eventuelle sårbarheter."""
     fixable, unfixable = [], []
     for dep in data.get("dependencies", []):
         for v in dep.get("vulns", []):
@@ -25,14 +25,14 @@ def _report(data: dict[str, list]) -> None:
 
     if unfixable:
         warnings.warn(
-            "OBS: fant pakker med svakheter, men det fins ingen fiks for dem ennå. Vurder å vente med å kjøre resten av koden.\n"
+            "OBS: fant pakker med sårbarheter, men det fins ingen fiks for dem ennå. Vurder å vente med å kjøre resten av koden.\n"
             + "\n".join(unfixable),
             stacklevel=3,
         )
 
     if fixable:
         raise VulnerablePackagesError(
-            "OBS! 🚨🚨🚨🚨🚨🚨🚨🚨 Fant pakker med svakheter:\n"
+            "OBS! 🚨🚨🚨🚨🚨🚨🚨🚨 Fant pakker med sårbarheter:\n"
             + "\n".join(fixable)
             + "\nOppdater disse før du fortsetter!"
             + "\nÅpne terminal, skriv poetry update [pakkenavn]"
@@ -44,12 +44,12 @@ def _report(data: dict[str, list]) -> None:
 
 
 def check_vulnerable_packages() -> dict[str, list] | None:
-    """Funksjon for å sjekke om python-miljøet ditt har pakker som har kjente svakheter."""
+    """Funksjon for å sjekke om python-miljøet ditt har pakker som har kjente sårbarheter."""
     timeout_limit = 60
     spec = importlib.util.find_spec("pip_audit")
     if spec is None:
         raise ImportError(  # bruker du denne funksjonen som pakke skal den jo alltid være installert, men i tilfelle noen eks. bare kopierer dette til eget repo elns
-            "pip-audit trengs for å sjekke svakheter."  # subprocess gir nemlig ikke feilmelding hvis pip-audit ikke er installert
+            "pip-audit trengs for å sjekke sårbarheter."  # subprocess gir nemlig ikke feilmelding hvis pip-audit ikke er installert
             "Kjør `poetry add pip-audit`, restart kernel og prøv igjen."
         )
     try:
