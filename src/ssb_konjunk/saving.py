@@ -19,16 +19,6 @@ from ssb_konjunk.lineage import register_input
 from ssb_konjunk.lineage import register_output
 
 
-# used for some backwards compatibility stuff with seperator / separator, in order to differentiate having explicitly passed
-# seperator as None vs not having passed it at all
-class _UnsetType:
-    def __repr__(self) -> str:
-        return "<UNSET>"
-
-
-_UNSET = _UnsetType()  # default value of seperator from now on
-
-
 def _remove_edge_slashes(input_string: str, only_last: bool = False) -> str:
     """Function to remove edge slashes in strings.
 
@@ -245,7 +235,7 @@ def _save_df(
     df: pd.DataFrame | pl.DataFrame | dict,
     file_path: str,
     filetype: str,
-    separator: str,  # breaking change 16.09.26 (seperator -> separator), men hvis du bruker fuksjoner som begynner med _ noe sted er det din egen feil
+    separator: str,
     encoding: str,
     json_type: str,
 ) -> None:
@@ -303,9 +293,6 @@ def write_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     encoding: str = "latin1",
     json_type: str = "df",
     lineage: str | None = "production",
-    seperator: (
-        str | _UnsetType
-    ) = _UNSET,  # dont use this. just for backwards compatibility
 ) -> None:
     """Function to write and save a dataframe at SSB-format.
 
@@ -324,19 +311,10 @@ def write_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
         encoding: Encoding for file, base is latin1.
         json_type: a flag used to save JSON in the correct format, depending on whether the input is a DataFrame or a dictionary.
         lineage: a flag used to create a lineage log, showing which files are being saved.
-        seperator: old, misspelled argument. Kept for backwards compatibility. Will trigger a warning if used.
-            Keep at the end always, if you ever wanna add more variables to this function
 
     Raises:
         ValueError: if df has no rows.
     """
-    if not isinstance(seperator, _UnsetType):
-        warnings.warn(
-            "You are using the old, misspelled 'seperator' argument. For now, it works fine, but at some point it is likely to be removed. Replace with 'separator' (with an 'a').",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-        separator = seperator
     # Check content in df
     if not len(df) > 0:
         raise ValueError("Dataframen har ingen rader. Fiks dette og prøv igjen.")
@@ -396,9 +374,6 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     json_type: str = "df",
     dataframe_type: type[T] | None = None,
     lineage: str | None = "production",
-    seperator: (
-        str | _UnsetType
-    ) = _UNSET,  # misspelled. Keeping it for backwards compatibility.
 ) -> T | None:
     """Function to read a saved file, stored at SSB-format.
 
@@ -422,8 +397,6 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
         json_type (str): A marker to read a json file in the rigth format as a df or a dict, depends how its saved.
         dataframe_type: Type of DataFrame to return, either pd.DataFrame or pl.DataFrame. Defaults to pd.DataFrame.
         lineage: a flag used to create a lineage log, showing which files are being read.
-        seperator: old, misspelled argument. Kept for backwards compatibility. Will trigger a warning if used.
-            Keep at the end always, if you ever wanna add more variables to this function
 
     Raises:
         FileNotFoundError: If no files matching the file path and filetype are found.
@@ -431,14 +404,6 @@ def read_ssb_file[T: (pd.DataFrame, pl.DataFrame)](
     Returns:
         pd.DataFrame: file as a data frame.
     """
-    if not isinstance(seperator, _UnsetType):
-        warnings.warn(
-            "You are using the old, misspelled 'seperator' argument. For now, it works fine, but at some point it is likely to be removed. Replace with 'separator' (with an 'a').",
-            category=FutureWarning,
-            stacklevel=2,
-        )
-        separator = seperator
-
     # neccecary for mypy to be happy
     if dataframe_type is None:
         dataframe_type = cast(type[T], pd.DataFrame)

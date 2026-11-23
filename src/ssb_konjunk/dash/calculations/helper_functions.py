@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from datetime import date
 from datetime import datetime
 from typing import Literal
@@ -92,7 +93,6 @@ class DataSource:
             eller None dersom verdien ikke er en gyldig datetime.
         """
         latest = self.data.get_column(self._date).last()
-        print(latest)
         if isinstance(latest, datetime):
             return latest
         elif isinstance(latest, date):  # <- use date directly
@@ -207,9 +207,57 @@ class DataSource:
             skip,
             **{
                 self._avg: self._percent_change(
-                    pl.col(self._avg), pl.col(self._avg).shift(1)
-                ).get(-1 - skip)
+                    pl.col(self._avg),
+                    pl.col(self._avg).shift(1),
+                )
+                .round(1)
+                .get(-1 - skip)
             },
+        )
+
+    def _rolling_internal(
+        self,
+        df_sorted: pl.DataFrame,
+        n: int,
+        skip: int,
+        *aggs: Iterable[pl.Expr] | pl.Expr,
+    ):
+        """Intern funksjon for rullerende aggregering.
+
+        Args:
+            df_sorted (pl.DataFrame): Den sorterte dataframen som skal aggregeres.
+            n (int): Lengden på rullevinduet i måneder.
+            skip (int, valgfritt): Antall perioder som skal hoppes over fra nyeste dato. Standard er 0.
+            *aggs (Iterable[pl.Expr] | pl.Expr): Uttrykk som blir brukt i aggregeringen av hvert vindu i dataframen
+
+        Returns:
+            pl.LazyFrame: Dataframen ferdig aggregert i de rullende vinduene.
+
+        """
+        return (
+            df_sorted.lazy()
+            .rolling(
+                index_column=self._date,
+                period=f"{n}mo",
+                offset=f"-{skip+n}mo",
+                closed="right",
+                group_by=self._group,
+            )
+            .agg(
+                *aggs,
+            )
+            .with_columns(
+                pl.when(pl.len().over(self._group) < n)
+                .then(pl.col(self._col).fill_null(strategy="backward"))
+                .otherwise(pl.col(self._avg))
+                .alias(self._avg)
+            )
+            .group_by(self._group)
+            .agg(
+                pl.col(self._avg).last().alias(self._avg),
+                pl.col(self._col).last().alias(self._col),
+            )
+            .select(self._group, self._avg)
         )
 
     def n_percent_rolling(self, n: int, skip: int = 0) -> tuple[str, pl.DataFrame]:
@@ -235,35 +283,19 @@ class DataSource:
             oldest: date = dates[-1 - ((skip) + n - 1)]
             return f"{self._create_date(oldest)} - {self._create_date(latest)}"
 
-        def map_test(x: pl.DataFrame):
-            """Lager det rullende gjennomsnittet for hver periodegruppe."""
-            if x.shape[0] != n:
-                x = x.with_columns(
-                    **{self._avg: pl.col(self._col).fill_null(strategy="backward")}
-                )
-            else:
-                x = x.with_columns(
-                    **{
-                        self._avg: self._percent_change(
-                            pl.col(self._col), pl.col(self._col).shift(n - 1)
-                        ).get(-1)
-                    }
-                )
-            return x
-
-        return _gen_header(n, skip), (
-            self.data.rolling(
-                pl.col(self._date),
-                period=f"{n}mo",
-                closed="right",
-                group_by=self._group,
-                offset=f"-{skip+n}mo",
-            )
-            .map_groups(map_test, None)
-            .group_by(self._group)
-            .agg(pl.col(self._avg).tail(1))
-            .explode(self._avg)
+        df_sorted = self.data.sort([self._group, self._date])
+        roll = self._rolling_internal(
+            df_sorted,
+            n,
+            skip,
+            self._percent_change(
+                pl.col(self._col).last(),
+                pl.col(self._col).first(),
+            ).alias(self._avg),
+            pl.col(self._col).last().alias(self._col),
         )
+
+        return _gen_header(n, skip), roll.collect()
 
     def n_mean_rolling(self, n: int, skip: int = 0) -> tuple[str, pl.DataFrame]:
         """Beregner et rullerende gjennomsnitt for hver gruppe i datasettet og returnerer med datoperiode-header.
@@ -282,35 +314,21 @@ class DataSource:
         """
 
         def _gen_header(n: int, skip: int = 0):
-            """Lager overskrift for hver perioden."""
             dates = self.data.get_column(self._date).unique().sort()
-            latest: date = dates[-1 - (skip)]
-            oldest: date = dates[-1 - ((skip) + n - 1)]
+            latest: date = dates[-1 - skip]
+            oldest: date = dates[-1 - (skip + n - 1)]
             return f"{self._create_date(oldest)} - {self._create_date(latest)}"
 
-        def map_test(x: pl.DataFrame):
-            """Lager det rullende gjennomsnittet for hver periodegruppe."""
-            if x.shape[0] != n:
-                x = x.with_columns(
-                    **{self._avg: pl.col(self._col).fill_null(strategy="backward")}
-                )
-            else:
-                x = x.with_columns(**{self._avg: pl.col(self._col).mean()})
-            return x
-
-        return _gen_header(n, skip), (
-            self.data.rolling(
-                pl.col(self._date),
-                period=f"{n}mo",
-                closed="right",
-                group_by=self._group,
-                offset=f"-{skip+n}mo",
-            )
-            .map_groups(map_test, None)
-            .group_by(self._group)
-            .agg(pl.col(self._avg).tail(1))
-            .explode(self._avg)
+        roll = self._rolling_internal(
+            self.data.sort([self._group, self._date]),
+            n,
+            skip,
+            pl.col(self._col).mean().round(1).alias(self._avg),
+            pl.col(self._col).last().alias(self._col),
         )
+
+        data = _gen_header(n, skip), roll.collect()
+        return data
 
     def n_month_rolling_percent_compare(
         self, n: int, skip: int = 0, skip_1: int = 1

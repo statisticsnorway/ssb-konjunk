@@ -51,7 +51,7 @@ class FileSwitcher(html.Div):
         select_dropdown = Dropdown(
             items=complete_options,
             id=self.ids.toogle,
-            value="latest",
+            value=complete_options[0]["id"],
             description="Select the file to use",
             showDescription=True,
             searchable=searchable,
