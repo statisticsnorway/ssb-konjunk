@@ -30,7 +30,7 @@ def test_manglende_pip_audit_gir_importerror(monkeypatch):
         mod.importlib.util, "find_spec", none_funksjon
     )  # dette bascially gjør så find_spec returnerer None (men bare akkurat her, monkeypatch resetter det automatisk), som det jo vil gjøre hvis pip-audit ikke er installert
     with pytest.raises(
-        ImportError, match="pip-audit trengs for å sjekke svakheter"
+        ImportError, match="pip-audit trengs for å sjekke sårbarheter"
     ):  # bascially "assert at det kom en warning, og at denne inneholdt den custom teksten jeg lagde"
         mod.check_vulnerable_packages()
 
@@ -60,7 +60,7 @@ def test_timeout_gir_warning_og_none(monkeypatch):
         )  # og gitt at det kom en warning, også at funksjonen returnerte None
 
 
-def test_report_ingen_svakheter(capsys):
+def test_report_ingen_saarbarheter(capsys):
     mod._report(lag_data([]))
     assert "Alle pakker ok" in capsys.readouterr().out
 
@@ -78,6 +78,6 @@ def test_report_uten_fiks_gir_bare_warning():
     # skal ikke throwe error (men skal gi warning, som inneholder warning-teksten)
     with pytest.warns(
         UserWarning,
-        match="OBS: fant pakker med svakheter, men det fins ingen fiks for dem",
+        match="OBS: fant pakker med sårbarheter, men det fins ingen fiks for dem",
     ):
         mod._report(data)
