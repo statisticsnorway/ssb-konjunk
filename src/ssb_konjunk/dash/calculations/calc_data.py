@@ -355,7 +355,7 @@ class DataManager:
         """
         skip = 0
         latest = pd.to_datetime(self.data[self.period_col].iloc[-1])
-        if (period is not None) and (latest is not None) and (period != "None"):
+        if period and period != "None":
             skip = monthdelta(latest, parse_period(period))
         return skip
 
